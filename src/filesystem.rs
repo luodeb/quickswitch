@@ -10,13 +10,20 @@ use crate::models::FileItem;
 pub fn load_directory(current_dir: &PathBuf) -> Result<Vec<FileItem>> {
     let mut files = Vec::new();
 
-    if let Some(parent) = current_dir.parent() {
-        files.push(FileItem {
-            name: "..".to_string(),
-            path: parent.to_path_buf(),
-            is_dir: true,
-        });
-    }
+    // 添加当前目录
+    files.push(FileItem {
+        name: ".".to_string(),
+        path: current_dir.clone(),
+        is_dir: true,
+    });
+
+    // if let Some(parent) = current_dir.parent() {
+    //     files.push(FileItem {
+    //         name: "..".to_string(),
+    //         path: parent.to_path_buf(),
+    //         is_dir: true,
+    //     });
+    // }
 
     let entries = fs::read_dir(current_dir)?;
     let mut items: Vec<FileItem> = entries

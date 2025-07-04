@@ -12,6 +12,12 @@ pub fn handle_key_event(app: &mut App, key: KeyCode) -> Result<bool> {
     match key {
         KeyCode::Esc => return Ok(false),
         KeyCode::Enter => {
+            // if key_event.modifiers.contains(KeyModifiers::CONTROL) {
+            //     // Ctrl+Enter 进入当前正在显示的文件夹（退出并返回当前目录）
+            //     handle_exit(app, None)?;
+            // } else {
+            //     handle_exit(app, app.get_selected_file())?;
+            // }
             handle_exit(app, app.get_selected_file())?;
         }
         KeyCode::Up => {
