@@ -75,10 +75,12 @@ impl App {
 
     fn save_current_position(&mut self) {
         if let Some(selected) = self.state.file_list_state.selected() {
-            self.state.dir_positions.insert(self.state.current_dir.clone(), selected);
+            self.state
+                .dir_positions
+                .insert(self.state.current_dir.clone(), selected);
         }
     }
-    
+
     fn restore_position(&mut self) {
         if let Some(&saved_position) = self.state.dir_positions.get(&self.state.current_dir) {
             // 确保保存的位置在当前过滤结果范围内
@@ -87,7 +89,9 @@ impl App {
             } else {
                 // 如果保存的位置超出范围，选择最后一个
                 if !self.state.filtered_files.is_empty() {
-                    self.state.file_list_state.select(Some(self.state.filtered_files.len() - 1));
+                    self.state
+                        .file_list_state
+                        .select(Some(self.state.filtered_files.len() - 1));
                 } else {
                     self.state.file_list_state.select(None);
                 }
@@ -103,7 +107,6 @@ impl App {
     }
 
     pub fn change_directory(&mut self, new_dir: PathBuf) -> Result<()> {
-
         self.save_current_position();
 
         self.state.current_dir = new_dir;

@@ -1,4 +1,4 @@
-use quickswitch::{run_interactive_mode, run_non_interactive, Result};
+use quickswitch::{Result, run_interactive_mode, run_non_interactive};
 use std::env;
 
 #[tokio::main]
