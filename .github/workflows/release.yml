@@ -64,21 +64,15 @@ jobs:
           - platform: 'macos-latest'
             target: 'universal-apple-darwin'
             arch: 'universal'
-            file_extension: 'dylib'
-            lib_prefix: 'lib'
-            lib_suffix: '.dylib'
+            lib_suffix: ''
           - platform: 'ubuntu-22.04'
             target: 'x86_64-unknown-linux-gnu'
             arch: 'x86_64'
-            file_extension: 'so'
-            lib_prefix: 'lib'
-            lib_suffix: '.so'
+            lib_suffix: ''
           - platform: 'windows-latest'
             target: 'x86_64-pc-windows-msvc'
             arch: 'x86_64'
-            file_extension: 'dll'
-            lib_prefix: ''
-            lib_suffix: '.dll'
+            lib_suffix: '.exe'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -92,12 +86,8 @@ jobs:
           PACKAGE_NAME=$(grep '^name' Cargo.toml | head -n1 | cut -d'=' -f2 | tr -d ' "')
           echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
 
-          # Check if there's a lib name specified, otherwise use package name
-          LIB_BASE_NAME=$(grep -A 10 '^\[lib\]' Cargo.toml | grep '^name' | cut -d'=' -f2 | tr -d ' "' || echo "$PACKAGE_NAME")
-          echo "lib_base_name=$LIB_BASE_NAME" >> $GITHUB_OUTPUT
-
           # Generate library name based on platform
-          LIB_NAME="quickswitch"
+          LIB_NAME="${PACKAGE_NAME}${{ matrix.lib_suffix }}"
           echo "lib_name=$LIB_NAME" >> $GITHUB_OUTPUT
 
           echo "Package name: $PACKAGE_NAME"
