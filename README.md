@@ -87,7 +87,7 @@ function qs() {
   fi
 }
 
-# 绑定到 Ctrl+Alt+D
+# 绑定到 Ctrl+Alt+E
 bind -x '"\C-\M-E": qs'
 ```
 
