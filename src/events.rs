@@ -42,23 +42,13 @@ pub fn handle_key_event(app: &mut App, key: KeyCode) -> Result<bool> {
         KeyCode::Right => {
             if let Some(file) = app.get_selected_file() {
                 if file.is_dir {
-                    app.state.current_dir = file.path.clone();
-                    app.reload_directory()?;
-                    app.state.search_input.clear();
-                    app.update_filter();
-                    app.state.file_list_state.select(Some(0));
-                    app.update_preview();
+                    app.change_directory(file.path.clone())?;
                 }
             }
         }
         KeyCode::Left => {
             if let Some(parent) = app.state.current_dir.parent() {
-                app.state.current_dir = parent.to_path_buf();
-                app.reload_directory()?;
-                app.state.search_input.clear();
-                app.update_filter();
-                app.state.file_list_state.select(Some(0));
-                app.update_preview();
+                app.change_directory(parent.to_path_buf())?;
             }
         }
         KeyCode::Backspace => {

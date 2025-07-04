@@ -1,5 +1,5 @@
 use ratatui::{text::Line, widgets::ListState};
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
 
 #[derive(Clone)]
 pub struct FileItem {
@@ -17,6 +17,7 @@ pub struct AppState {
     pub preview_content: Vec<Line<'static>>,
     pub preview_title: String,
     pub output_file: Option<String>,
+    pub dir_positions: HashMap<PathBuf, usize>,
 }
 
 impl AppState {
@@ -31,6 +32,7 @@ impl AppState {
             preview_content: Vec::new(),
             preview_title: String::new(),
             output_file,
+            dir_positions: HashMap::new(),
         })
     }
 }
