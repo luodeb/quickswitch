@@ -13,8 +13,15 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
 };
 use std::{
-    env, fs, io::{self, Stdout}, path::PathBuf
+    env, fs,
+    io::{self, IsTerminal},
+    path::PathBuf,
 };
+
+// 添加这个函数来检测是否在终端中运行
+fn is_tty() -> bool {
+    io::stdin().is_terminal() && io::stdout().is_terminal() && io::stderr().is_terminal()
+}
 
 struct App {
     search_input: String,
@@ -24,6 +31,7 @@ struct App {
     file_list_state: ListState,
     preview_content: Vec<Line<'static>>,
     preview_title: String,
+    output_file: Option<String>,
 }
 
 #[derive(Clone)]
@@ -34,7 +42,7 @@ struct FileItem {
 }
 
 impl App {
-    fn new() -> Result<Self> {
+    fn new(output_file: Option<String>) -> Result<Self> {
         let current_dir = std::env::current_dir()?;
         let mut app = Self {
             search_input: String::new(),
@@ -44,6 +52,7 @@ impl App {
             file_list_state: ListState::default(),
             preview_content: Vec::new(),
             preview_title: String::new(),
+            output_file,
         };
         app.load_directory()?;
         app.update_filter();
@@ -52,7 +61,7 @@ impl App {
         Ok(app)
     }
 
-    // ... 其他方法保持不变 ...
+    // ... 保持其他方法不变 ...
     fn load_directory(&mut self) -> Result<()> {
         self.files.clear();
 
@@ -274,14 +283,23 @@ impl App {
                         disable_raw_mode()?;
                         execute!(io::stdout(), LeaveAlternateScreen)?;
                         format!("{}", file.path.display())
-
                     } else {
                         disable_raw_mode()?;
                         execute!(io::stdout(), LeaveAlternateScreen)?;
                         format!("{}", self.current_dir.display())
                     };
                     unsafe { env::set_var("QS_SELECT_PATH", &select_path) };
-                    println!("{}", select_path);
+                    // 根据是否有输出文件参数来决定输出方式
+                    if let Some(ref output_file) = self.output_file {
+                        // 输出到文件
+                        if let Ok(mut file) = std::fs::File::create(output_file) {
+                            use std::io::Write;
+                            let _ = writeln!(file, "{}", select_path);
+                        }
+                    } else {
+                        // 输出到 stdout
+                        println!("{}", select_path);
+                    }
                     std::process::exit(0);
                 } else {
                     disable_raw_mode()?;
@@ -347,7 +365,13 @@ impl App {
     }
 }
 
-// UI 函数保持不变
+// 非交互模式：直接返回当前目录
+fn run_non_interactive() -> Result<()> {
+    println!("{}", std::env::current_dir()?.display());
+    Ok(())
+}
+
+// UI 和其他函数保持不变...
 fn ui(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -467,23 +491,84 @@ fn highlight_search_term<'a>(text: &'a str, search: &'a str) -> Vec<Span<'a>> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    enable_raw_mode()?;
-    let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen)?;
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+    let args: Vec<String> = env::args().collect();
+    let mut output_file = None;
 
-    let mut app = App::new()?;
-    let result = run_app(&mut terminal, &mut app).await;
+    let mut i = 1;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--output-file" => {
+                if i + 1 < args.len() {
+                    output_file = Some(args[i + 1].clone());
+                    i += 2;
+                } else {
+                    eprintln!("Error: --output-file requires a filename");
+                    std::process::exit(1);
+                }
+            }
+            "--non-interactive" => {
+                // 非交互模式
+                return run_non_interactive();
+            }
+            _ => {
+                i += 1;
+            }
+        }
+    }
 
-    disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-    terminal.show_cursor()?;
+    // 尝试直接打开 /dev/tty 来获得终端访问
+    let terminal_result = if !is_tty() {
+        // 不在 TTY 中时，尝试直接访问 /dev/tty
+        match std::fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open("/dev/tty")
+        {
+            Ok(tty_file) => {
+                // 创建一个使用 /dev/tty 的后端
+                enable_raw_mode()?;
+                let backend = CrosstermBackend::new(tty_file);
+                let mut terminal = Terminal::new(backend)?;
 
-    result
+                let mut app = App::new(output_file)?;
+                let result = run_app(&mut terminal, &mut app).await;
+
+                disable_raw_mode()?;
+                // 注意：不需要 execute 因为我们直接使用了 /dev/tty
+                terminal.show_cursor()?;
+
+                Ok(result?)
+            }
+            Err(_) => {
+                // 如果无法访问 /dev/tty，回退到非交互模式
+                run_non_interactive()
+            }
+        }
+    } else {
+        // 正常的 TTY 模式
+        enable_raw_mode()?;
+        let mut stdout = io::stdout();
+        execute!(stdout, EnterAlternateScreen)?;
+        let backend = CrosstermBackend::new(stdout);
+        let mut terminal = Terminal::new(backend)?;
+
+        let mut app = App::new(output_file)?;
+        let result = run_app(&mut terminal, &mut app).await;
+
+        disable_raw_mode()?;
+        execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+        terminal.show_cursor()?;
+
+        Ok(result?)
+    };
+
+    terminal_result
 }
 
-async fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, app: &mut App) -> Result<()> {
+async fn run_app<W>(terminal: &mut Terminal<CrosstermBackend<W>>, app: &mut App) -> Result<()>
+where
+    W: std::io::Write,
+{
     loop {
         terminal.draw(|f| ui(f, app))?;
 
