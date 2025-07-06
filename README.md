@@ -66,26 +66,7 @@ sudo cp target/release/quickswitch /usr/local/bin/
 1. 将以下函数添加到你的 `~/.bashrc` 或 `~/.zshrc` 文件中：
 
 ```bash
-function qs() {
-  local tmp_file
-  tmp_file=$(mktemp)
-
-  # 修改为你的 quickswitch 可执行文件路径
-  /path/to/quickswitch/target/release/quickswitch --output-file "$tmp_file"
-
-  local dest_path
-  dest_path=$(cat "$tmp_file")
-
-  rm "$tmp_file"
-
-  if [[ -n "$dest_path" && -d "$dest_path" ]]; then
-    cd "$dest_path"
-  else
-    if [[ -n "$dest_path" ]]; then
-        echo "错误: TUI 程序输出的路径无效: '$dest_path'" >&2
-    fi
-  fi
-}
+eval "$(quickswitch --init)"
 
 # 绑定到 Ctrl+Alt+E
 bind -x '"\C-\M-E": qs'
