@@ -7,6 +7,7 @@ use ratatui::{
 use crate::{app::App, renderers::Renderer};
 
 /// Renderer for preview panel showing file/directory content
+#[derive(Default)]
 pub struct PreviewRenderer;
 
 impl PreviewRenderer {

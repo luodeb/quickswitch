@@ -19,6 +19,12 @@ pub struct HistoryModeHandler {
     help_renderer: Box<dyn Renderer>,
 }
 
+impl Default for HistoryModeHandler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HistoryModeHandler {
     pub fn new() -> Self {
         Self {

@@ -9,6 +9,7 @@ use ratatui::{
 use crate::{app::App, renderers::Renderer, utils};
 
 /// Renderer for file list in Normal and Search modes
+#[derive(Default)]
 pub struct FileListRenderer;
 
 impl FileListRenderer {

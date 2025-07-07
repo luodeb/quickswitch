@@ -20,6 +20,12 @@ pub struct SearchModeHandler {
     help_renderer: Box<dyn Renderer>,
 }
 
+impl Default for SearchModeHandler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SearchModeHandler {
     pub fn new() -> Self {
         Self {

@@ -95,12 +95,7 @@ impl App {
                 }
             }
         } else {
-            // 如果没有保存的位置，默认选择第一个
-            if !self.state.filtered_files.is_empty() {
-                self.state.file_list_state.select(None);
-            } else {
-                self.state.file_list_state.select(None);
-            }
+            self.state.file_list_state.select(None);
         }
     }
 

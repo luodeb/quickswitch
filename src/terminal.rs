@@ -18,7 +18,7 @@ use std::{fs::OpenOptions, io};
 use crate::{events, models::AppMode, modes::AppController, utils};
 
 pub async fn run_interactive_mode() -> Result<()> {
-    let terminal_result = if !utils::is_tty() {
+    if !utils::is_tty() {
         match OpenOptions::new().read(true).write(true).open("/dev/tty") {
             Ok(mut tty_file) => {
                 enable_raw_mode()?;
@@ -43,9 +43,7 @@ pub async fn run_interactive_mode() -> Result<()> {
         let result = run_app_loop(&mut terminal, &mut controller).await;
         cleanup_terminal(&mut terminal)?;
         Ok(result?)
-    };
-
-    terminal_result
+    }
 }
 
 pub fn setup_terminal() -> Result<Terminal<CrosstermBackend<io::Stdout>>> {
@@ -76,10 +74,10 @@ where
 
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
-                if key.kind == KeyEventKind::Press {
-                    if !events::handle_key_event(controller, key.code)? {
-                        break;
-                    }
+                if key.kind == KeyEventKind::Press
+                    && !events::handle_key_event(controller, key.code)?
+                {
+                    break;
                 }
             }
         }

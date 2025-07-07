@@ -20,6 +20,12 @@ pub struct NormalModeHandler {
     help_renderer: Box<dyn Renderer>,
 }
 
+impl Default for NormalModeHandler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl NormalModeHandler {
     pub fn new() -> Self {
         Self {

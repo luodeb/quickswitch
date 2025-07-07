@@ -8,6 +8,7 @@ use ratatui::{
 use crate::{app::App, renderers::Renderer};
 
 /// Renderer for history list in History mode
+#[derive(Default)]
 pub struct HistoryListRenderer;
 
 impl HistoryListRenderer {

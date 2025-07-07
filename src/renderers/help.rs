@@ -8,6 +8,7 @@ use ratatui::{
 use crate::{app::App, renderers::Renderer};
 
 /// Renderer for Normal mode help
+#[derive(Default)]
 pub struct NormalHelpRenderer;
 
 impl NormalHelpRenderer {
@@ -35,7 +36,7 @@ impl Renderer for NormalHelpRenderer {
         let help_widget = List::new(
             help_content
                 .into_iter()
-                .map(|line| ListItem::new(line))
+                .map(ListItem::new)
                 .collect::<Vec<_>>(),
         )
         .block(
@@ -50,6 +51,12 @@ impl Renderer for NormalHelpRenderer {
 
 /// Renderer for Search mode help
 pub struct SearchHelpRenderer;
+
+impl Default for SearchHelpRenderer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl SearchHelpRenderer {
     pub fn new() -> Self {
@@ -76,7 +83,7 @@ impl Renderer for SearchHelpRenderer {
         let help_widget = List::new(
             help_content
                 .into_iter()
-                .map(|line| ListItem::new(line))
+                .map(ListItem::new)
                 .collect::<Vec<_>>(),
         )
         .block(
@@ -90,6 +97,7 @@ impl Renderer for SearchHelpRenderer {
 }
 
 /// Renderer for History mode help
+#[derive(Default)]
 pub struct HistoryHelpRenderer;
 
 impl HistoryHelpRenderer {
@@ -114,7 +122,7 @@ impl Renderer for HistoryHelpRenderer {
         let help_widget = List::new(
             help_content
                 .into_iter()
-                .map(|line| ListItem::new(line))
+                .map(ListItem::new)
                 .collect::<Vec<_>>(),
         )
         .block(
