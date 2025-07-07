@@ -8,7 +8,7 @@ use ratatui::{
 
 use crate::{
     app::App,
-    modes::{ModeHandler, ModeAction},
+    modes::{ModeAction, ModeHandler},
     renderers::{Renderer, RendererType, create_renderer, should_show_help},
     services::state::StateService,
 };
@@ -33,9 +33,7 @@ impl SearchModeHandler {
 impl ModeHandler for SearchModeHandler {
     fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<ModeAction> {
         match key {
-            KeyCode::Esc => {
-                Ok(ModeAction::Switch(crate::models::AppMode::Normal))
-            }
+            KeyCode::Esc => Ok(ModeAction::Switch(crate::models::AppMode::Normal)),
             KeyCode::Enter => {
                 let selected_file = app.get_selected_file().cloned();
                 Ok(ModeAction::Exit(selected_file))

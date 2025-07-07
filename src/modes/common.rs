@@ -8,7 +8,11 @@ pub struct CommonModeLogic;
 
 impl CommonModeLogic {
     /// Handle common exit functionality (Esc key in normal mode, Enter for selection)
-    pub fn handle_exit_keys(app: &mut App, key: KeyCode, current_mode: &crate::models::AppMode) -> Result<Option<ModeAction>> {
+    pub fn handle_exit_keys(
+        app: &mut App,
+        key: KeyCode,
+        current_mode: &crate::models::AppMode,
+    ) -> Result<Option<ModeAction>> {
         match key {
             KeyCode::Esc => {
                 // In normal mode, Esc exits the application
@@ -26,48 +30,34 @@ impl CommonModeLogic {
             _ => Ok(None),
         }
     }
-    
+
     /// Handle common navigation for file-based modes (Normal/Search)
     pub fn handle_file_navigation(app: &mut App, key: KeyCode) -> Result<bool> {
         match key {
-            KeyCode::Char('k') | KeyCode::Up => {
-                Ok(NavigationHelper::navigate_file_list_up(app))
-            }
+            KeyCode::Char('k') | KeyCode::Up => Ok(NavigationHelper::navigate_file_list_up(app)),
             KeyCode::Char('j') | KeyCode::Down => {
                 Ok(NavigationHelper::navigate_file_list_down(app))
             }
-            KeyCode::Char('l') | KeyCode::Right => {
-                NavigationHelper::navigate_into_directory(app)
-            }
-            KeyCode::Char('h') | KeyCode::Left => {
-                NavigationHelper::navigate_to_parent(app)
-            }
+            KeyCode::Char('l') | KeyCode::Right => NavigationHelper::navigate_into_directory(app),
+            KeyCode::Char('h') | KeyCode::Left => NavigationHelper::navigate_to_parent(app),
             _ => Ok(false),
         }
     }
-    
+
     /// Handle common navigation for history mode
     pub fn handle_history_navigation(app: &mut App, key: KeyCode) -> Result<bool> {
         match key {
-            KeyCode::Char('k') | KeyCode::Up => {
-                Ok(NavigationHelper::navigate_history_up(app))
-            }
-            KeyCode::Char('j') | KeyCode::Down => {
-                Ok(NavigationHelper::navigate_history_down(app))
-            }
+            KeyCode::Char('k') | KeyCode::Up => Ok(NavigationHelper::navigate_history_up(app)),
+            KeyCode::Char('j') | KeyCode::Down => Ok(NavigationHelper::navigate_history_down(app)),
             _ => Ok(false),
         }
     }
-    
+
     /// Handle mode switching keys
     pub fn handle_mode_switches(_app: &mut App, key: KeyCode) -> Result<Option<ModeAction>> {
         match key {
-            KeyCode::Char('/') => {
-                Ok(Some(ModeAction::Switch(crate::models::AppMode::Search)))
-            }
-            KeyCode::Char('v') => {
-                Ok(Some(ModeAction::Switch(crate::models::AppMode::History)))
-            }
+            KeyCode::Char('/') => Ok(Some(ModeAction::Switch(crate::models::AppMode::Search))),
+            KeyCode::Char('v') => Ok(Some(ModeAction::Switch(crate::models::AppMode::History))),
             _ => Ok(None),
         }
     }

@@ -8,15 +8,14 @@ use crossterm::{
     },
 };
 use ratatui::{
-    Terminal, 
+    Frame, Terminal,
     backend::CrosstermBackend,
-    Frame,
     layout::{Constraint, Direction, Layout},
     widgets::{Block, Borders, Paragraph},
 };
 use std::{fs::OpenOptions, io};
 
-use crate::{events, utils, models::AppMode, modes::AppController};
+use crate::{events, models::AppMode, modes::AppController, utils};
 
 pub async fn run_interactive_mode() -> Result<()> {
     let terminal_result = if !utils::is_tty() {

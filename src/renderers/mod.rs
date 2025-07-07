@@ -3,9 +3,9 @@ use ratatui::{Frame, layout::Rect};
 use crate::app::App;
 
 pub mod file_list;
+pub mod help;
 pub mod history_list;
 pub mod preview;
-pub mod help;
 
 /// Core trait for UI rendering components
 pub trait Renderer {

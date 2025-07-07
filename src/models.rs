@@ -3,9 +3,9 @@ use std::{collections::HashMap, path::PathBuf};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AppMode {
-    Normal,    // Default navigation mode (command mode)
-    Search,    // Search input mode
-    History,   // History selection mode
+    Normal,  // Default navigation mode (command mode)
+    Search,  // Search input mode
+    History, // History selection mode
 }
 
 #[derive(Clone, Debug, PartialEq)]

@@ -8,7 +8,7 @@ use ratatui::{
 
 use crate::{
     app::App,
-    modes::{ModeHandler, ModeAction, common::CommonModeLogic},
+    modes::{ModeAction, ModeHandler, common::CommonModeLogic},
     renderers::{Renderer, RendererType, create_renderer},
     services::state::StateService,
 };
@@ -31,9 +31,7 @@ impl HistoryModeHandler {
 impl ModeHandler for HistoryModeHandler {
     fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<ModeAction> {
         match key {
-            KeyCode::Esc => {
-                Ok(ModeAction::Switch(crate::models::AppMode::Normal))
-            }
+            KeyCode::Esc => Ok(ModeAction::Switch(crate::models::AppMode::Normal)),
             KeyCode::Enter => {
                 // Check if it's Ctrl+Enter for special behavior
                 if key.is_modifier(ModifierKeyCode::LeftControl) {

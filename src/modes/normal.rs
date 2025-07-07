@@ -8,7 +8,7 @@ use ratatui::{
 
 use crate::{
     app::App,
-    modes::{ModeHandler, ModeAction, common::CommonModeLogic},
+    modes::{ModeAction, ModeHandler, common::CommonModeLogic},
     renderers::{Renderer, RendererType, create_renderer, should_show_help},
     services::state::StateService,
 };
@@ -33,7 +33,9 @@ impl NormalModeHandler {
 impl ModeHandler for NormalModeHandler {
     fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<ModeAction> {
         // Handle common exit keys first
-        if let Some(action) = CommonModeLogic::handle_exit_keys(app, key, &crate::models::AppMode::Normal)? {
+        if let Some(action) =
+            CommonModeLogic::handle_exit_keys(app, key, &crate::models::AppMode::Normal)?
+        {
             return Ok(action);
         }
 

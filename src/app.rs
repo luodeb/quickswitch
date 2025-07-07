@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use std::fs;
+use std::path::PathBuf;
 
 use anyhow::Result;
 use ratatui::{
@@ -8,8 +8,8 @@ use ratatui::{
 };
 
 use crate::{
-    services::FilesystemService,
     models::{AppState, FileItem},
+    services::FilesystemService,
 };
 
 pub struct App {
@@ -22,9 +22,7 @@ impl App {
         let files = FilesystemService::load_directory(&state.current_dir)?;
         state.files = files;
 
-        let mut app = Self { 
-            state,
-        };
+        let mut app = Self { state };
         app.load_history().unwrap_or(()); // Ignore errors when loading history
         app.update_filter();
         app.state.file_list_state.select(None);
@@ -48,7 +46,6 @@ impl App {
         }
 
         self.state.file_list_state.select(None);
-        
     }
 
     pub fn get_selected_file(&self) -> Option<&FileItem> {
@@ -140,12 +137,14 @@ impl App {
     }
 
     pub fn save_history(&self) -> Result<()> {
-        let content = self.state.history
+        let content = self
+            .state
+            .history
             .iter()
             .map(|path| path.to_string_lossy().to_string())
             .collect::<Vec<_>>()
             .join("\n");
-        
+
         fs::write(&self.state.history_file_path, content)?;
         Ok(())
     }
@@ -153,15 +152,15 @@ impl App {
     pub fn add_to_history(&mut self, path: PathBuf) -> Result<()> {
         // Remove existing entry if present
         self.state.history.retain(|p| p != &path);
-        
+
         // Add to front
         self.state.history.insert(0, path);
-        
+
         // Limit history size to 100 entries
         if self.state.history.len() > 100 {
             self.state.history.truncate(100);
         }
-        
+
         self.save_history()?;
         Ok(())
     }
