@@ -16,7 +16,7 @@ use ratatui::{
 };
 use std::{fs::OpenOptions, io};
 
-use crate::{app::App, events, utils, models::AppMode};
+use crate::{events, utils, models::AppMode, modes::AppController};
 
 pub async fn run_interactive_mode() -> Result<()> {
     let terminal_result = if !utils::is_tty() {
@@ -27,8 +27,8 @@ pub async fn run_interactive_mode() -> Result<()> {
                 let backend = CrosstermBackend::new(tty_file);
                 let mut terminal = Terminal::new(backend)?;
 
-                let mut app = App::new()?;
-                let result = run_app_loop(&mut terminal, &mut app).await;
+                let mut controller = AppController::new(crate::models::AppMode::Normal)?;
+                let result = run_app_loop(&mut terminal, &mut controller).await;
 
                 disable_raw_mode()?;
                 terminal.show_cursor()?;
@@ -40,8 +40,8 @@ pub async fn run_interactive_mode() -> Result<()> {
         }
     } else {
         let mut terminal = setup_terminal()?;
-        let mut app = App::new()?;
-        let result = run_app_loop(&mut terminal, &mut app).await;
+        let mut controller = AppController::new(crate::models::AppMode::Normal)?;
+        let result = run_app_loop(&mut terminal, &mut controller).await;
         cleanup_terminal(&mut terminal)?;
         Ok(result?)
     };
@@ -67,18 +67,18 @@ pub fn cleanup_terminal(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -
 
 pub async fn run_app_loop<W>(
     terminal: &mut Terminal<CrosstermBackend<W>>,
-    app: &mut App,
+    controller: &mut AppController,
 ) -> Result<()>
 where
     W: std::io::Write,
 {
     loop {
-        terminal.draw(|f| render_ui(f, app))?;
+        terminal.draw(|f| render_ui(f, controller))?;
 
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
-                    if !events::handle_key_event(app, key.code)? {
+                    if !events::handle_key_event(controller, key.code)? {
                         break;
                     }
                 }
@@ -89,20 +89,18 @@ where
 }
 
 /// Simple UI rendering function that delegates to mode manager
-fn render_ui(f: &mut Frame, app: &App) {
+fn render_ui(f: &mut Frame, controller: &AppController) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(3), Constraint::Min(0)])
         .split(f.area());
 
     // Render search box
-    if let Some(ref mode_manager) = app.mode_manager {
-        let (title, content, style) = mode_manager.get_search_box_config(app);
-        let search_box = Paragraph::new(content)
-            .block(Block::default().borders(Borders::ALL).title(title))
-            .style(style);
-        f.render_widget(search_box, chunks[0]);
-    }
+    let (title, content, style) = controller.get_search_box_config();
+    let search_box = Paragraph::new(content)
+        .block(Block::default().borders(Borders::ALL).title(title))
+        .style(style);
+    f.render_widget(search_box, chunks[0]);
 
     // Split main area for left and right panels
     let main_chunks = Layout::default()
@@ -110,16 +108,14 @@ fn render_ui(f: &mut Frame, app: &App) {
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(chunks[1]);
 
-    // Delegate rendering to mode manager
-    if let Some(ref mode_manager) = app.mode_manager {
-        mode_manager.render_left_panel(f, main_chunks[0], app);
-        mode_manager.render_right_panel(f, main_chunks[1], app);
-    }
+    // Delegate rendering to controller
+    controller.render_left_panel(f, main_chunks[0]);
+    controller.render_right_panel(f, main_chunks[1]);
 
     // Set cursor position for search mode
-    if app.state.mode == AppMode::Search {
+    if controller.is_mode(&AppMode::Search) {
         f.set_cursor_position((
-            chunks[0].x + app.state.search_input.len() as u16 + 1,
+            chunks[0].x + controller.get_app().state.search_input.len() as u16 + 1,
             chunks[0].y + 1,
         ));
     }

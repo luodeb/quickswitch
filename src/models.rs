@@ -8,7 +8,7 @@ pub enum AppMode {
     History,   // History selection mode
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct FileItem {
     pub name: String,
     pub path: PathBuf,
@@ -16,7 +16,6 @@ pub struct FileItem {
 }
 
 pub struct AppState {
-    pub mode: AppMode,
     pub search_input: String,
     pub current_dir: PathBuf,
     pub files: Vec<FileItem>,
@@ -35,7 +34,6 @@ impl AppState {
         let current_dir = std::env::current_dir()?;
         let history_file_path = PathBuf::from("/tmp/quickswitch.history");
         Ok(Self {
-            mode: AppMode::Normal,
             search_input: String::new(),
             current_dir,
             files: Vec::new(),

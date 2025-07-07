@@ -8,8 +8,7 @@ use ratatui::{
 
 use crate::{
     app::App,
-    models::FileItem,
-    modes::{ModeHandler, common::CommonModeLogic},
+    modes::{ModeHandler, ModeAction, common::CommonModeLogic},
     renderers::{Renderer, RendererType, create_renderer},
     services::state::StateService,
 };
@@ -30,11 +29,10 @@ impl HistoryModeHandler {
 }
 
 impl ModeHandler for HistoryModeHandler {
-    fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<bool> {
+    fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<ModeAction> {
         match key {
             KeyCode::Esc => {
-                app.enter_normal_mode();
-                Ok(true)
+                Ok(ModeAction::Switch(crate::models::AppMode::Normal))
             }
             KeyCode::Enter => {
                 // Check if it's Ctrl+Enter for special behavior
@@ -46,37 +44,35 @@ impl ModeHandler for HistoryModeHandler {
                         {
                             app.save_history().unwrap_or(());
                             app.change_directory(selected_path)?;
-                            app.enter_normal_mode();
+                            return Ok(ModeAction::Switch(crate::models::AppMode::Normal));
                         }
                     }
                 } else {
                     // Regular Enter: Exit with selected directory
                     if let Some(selected) = app.state.history_state.selected() {
                         if let Some(path) = app.state.history.get(selected) {
-                            crate::events::handle_exit(
-                                app,
-                                Some(&FileItem {
-                                    name: path
-                                        .file_name()
-                                        .unwrap_or_default()
-                                        .to_string_lossy()
-                                        .into_owned(),
-                                    path: path.to_path_buf(),
-                                    is_dir: path.is_dir(),
-                                }),
-                            )?;
+                            let file_item = crate::models::FileItem {
+                                name: path
+                                    .file_name()
+                                    .unwrap_or_default()
+                                    .to_string_lossy()
+                                    .into_owned(),
+                                path: path.to_path_buf(),
+                                is_dir: path.is_dir(),
+                            };
+                            return Ok(ModeAction::Exit(Some(file_item)));
                         }
                     }
                 }
-                Ok(true)
+                Ok(ModeAction::Stay)
             }
             _ => {
                 // Handle history navigation
                 if CommonModeLogic::handle_history_navigation(app, key)? {
-                    return Ok(true);
+                    return Ok(ModeAction::Stay);
                 }
                 // Disable other navigation in history mode
-                Ok(true)
+                Ok(ModeAction::Stay)
             }
         }
     }

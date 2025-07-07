@@ -1,29 +1,27 @@
 use anyhow::Result;
 use crossterm::event::KeyCode;
 
-use crate::{app::App, handlers::navigation::NavigationHelper};
+use crate::{app::App, handlers::navigation::NavigationHelper, modes::ModeAction};
 
 /// Common functionality shared across different modes
 pub struct CommonModeLogic;
 
 impl CommonModeLogic {
     /// Handle common exit functionality (Esc key in normal mode, Enter for selection)
-    pub fn handle_exit_keys(app: &mut App, key: KeyCode) -> Result<Option<bool>> {
+    pub fn handle_exit_keys(app: &mut App, key: KeyCode, current_mode: &crate::models::AppMode) -> Result<Option<ModeAction>> {
         match key {
             KeyCode::Esc => {
                 // In normal mode, Esc exits the application
-                if matches!(app.state.mode, crate::models::AppMode::Normal) {
-                    return Ok(Some(false));
+                if current_mode == &crate::models::AppMode::Normal {
+                    return Ok(Some(ModeAction::Exit(None)));
                 }
                 // In other modes, Esc returns to normal mode
-                app.enter_normal_mode();
-                Ok(Some(true))
+                Ok(Some(ModeAction::Switch(crate::models::AppMode::Normal)))
             }
             KeyCode::Enter => {
                 // Handle selection and exit
                 let selected_file = app.get_selected_file().cloned();
-                crate::events::handle_exit(app, selected_file.as_ref())?;
-                Ok(Some(true))
+                Ok(Some(ModeAction::Exit(selected_file)))
             }
             _ => Ok(None),
         }
@@ -62,17 +60,15 @@ impl CommonModeLogic {
     }
     
     /// Handle mode switching keys
-    pub fn handle_mode_switches(app: &mut App, key: KeyCode) -> Result<bool> {
+    pub fn handle_mode_switches(_app: &mut App, key: KeyCode) -> Result<Option<ModeAction>> {
         match key {
             KeyCode::Char('/') => {
-                app.enter_search_mode();
-                Ok(true)
+                Ok(Some(ModeAction::Switch(crate::models::AppMode::Search)))
             }
             KeyCode::Char('v') => {
-                app.enter_history_mode();
-                Ok(true)
+                Ok(Some(ModeAction::Switch(crate::models::AppMode::History)))
             }
-            _ => Ok(false),
+            _ => Ok(None),
         }
     }
 }

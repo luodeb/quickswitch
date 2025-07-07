@@ -10,12 +10,10 @@ use ratatui::{
 use crate::{
     services::FilesystemService,
     models::{AppState, FileItem},
-    modes::ModeManager,
 };
 
 pub struct App {
     pub state: AppState,
-    pub mode_manager: Option<ModeManager>,
 }
 
 impl App {
@@ -26,7 +24,6 @@ impl App {
 
         let mut app = Self { 
             state,
-            mode_manager: Some(ModeManager::new(&crate::models::AppMode::Normal)),
         };
         app.load_history().unwrap_or(()); // Ignore errors when loading history
         app.update_filter();
@@ -167,20 +164,5 @@ impl App {
         
         self.save_history()?;
         Ok(())
-    }
-
-    pub fn enter_search_mode(&mut self) {
-        self.state.mode = crate::models::AppMode::Search;
-    }
-
-    pub fn enter_history_mode(&mut self) {
-        self.state.mode = crate::models::AppMode::History;
-        if !self.state.history.is_empty() {
-            self.state.history_state.select(Some(0));
-        }
-    }
-
-    pub fn enter_normal_mode(&mut self) {
-        self.state.mode = crate::models::AppMode::Normal;
     }
 }

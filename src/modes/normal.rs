@@ -8,7 +8,7 @@ use ratatui::{
 
 use crate::{
     app::App,
-    modes::{ModeHandler, common::CommonModeLogic},
+    modes::{ModeHandler, ModeAction, common::CommonModeLogic},
     renderers::{Renderer, RendererType, create_renderer, should_show_help},
     services::state::StateService,
 };
@@ -31,24 +31,24 @@ impl NormalModeHandler {
 }
 
 impl ModeHandler for NormalModeHandler {
-    fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<bool> {
+    fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<ModeAction> {
         // Handle common exit keys first
-        if let Some(result) = CommonModeLogic::handle_exit_keys(app, key)? {
-            return Ok(result);
+        if let Some(action) = CommonModeLogic::handle_exit_keys(app, key, &crate::models::AppMode::Normal)? {
+            return Ok(action);
         }
 
         // Handle mode switching
-        if CommonModeLogic::handle_mode_switches(app, key)? {
-            return Ok(true);
+        if let Some(action) = CommonModeLogic::handle_mode_switches(app, key)? {
+            return Ok(action);
         }
 
         // Handle file navigation
         if CommonModeLogic::handle_file_navigation(app, key)? {
-            return Ok(true);
+            return Ok(ModeAction::Stay);
         }
 
         // If no key was handled, continue running
-        Ok(true)
+        Ok(ModeAction::Stay)
     }
 
     fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App) {

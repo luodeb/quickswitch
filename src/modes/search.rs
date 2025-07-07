@@ -8,7 +8,7 @@ use ratatui::{
 
 use crate::{
     app::App,
-    modes::ModeHandler,
+    modes::{ModeHandler, ModeAction},
     renderers::{Renderer, RendererType, create_renderer, should_show_help},
     services::state::StateService,
 };
@@ -31,45 +31,43 @@ impl SearchModeHandler {
 }
 
 impl ModeHandler for SearchModeHandler {
-    fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<bool> {
+    fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<ModeAction> {
         match key {
             KeyCode::Esc => {
-                app.enter_normal_mode();
-                Ok(true)
+                Ok(ModeAction::Switch(crate::models::AppMode::Normal))
             }
             KeyCode::Enter => {
                 let selected_file = app.get_selected_file().cloned();
-                crate::events::handle_exit(app, selected_file.as_ref())?;
-                Ok(true)
+                Ok(ModeAction::Exit(selected_file))
             }
             // Only allow arrow keys for navigation in search mode (disable hjkl)
             KeyCode::Up => {
                 crate::handlers::navigation::NavigationHelper::navigate_file_list_up(app);
-                Ok(true)
+                Ok(ModeAction::Stay)
             }
             KeyCode::Down => {
                 crate::handlers::navigation::NavigationHelper::navigate_file_list_down(app);
-                Ok(true)
+                Ok(ModeAction::Stay)
             }
             KeyCode::Right => {
                 crate::handlers::navigation::NavigationHelper::navigate_into_directory(app)?;
-                Ok(true)
+                Ok(ModeAction::Stay)
             }
             KeyCode::Left => {
                 crate::handlers::navigation::NavigationHelper::navigate_to_parent(app)?;
-                Ok(true)
+                Ok(ModeAction::Stay)
             }
             KeyCode::Backspace => {
                 StateService::remove_search_char(app);
                 app.update_preview();
-                Ok(true)
+                Ok(ModeAction::Stay)
             }
             KeyCode::Char(c) => {
                 StateService::add_search_char(app, c);
                 app.update_preview();
-                Ok(true)
+                Ok(ModeAction::Stay)
             }
-            _ => Ok(true),
+            _ => Ok(ModeAction::Stay),
         }
     }
 
