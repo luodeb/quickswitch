@@ -19,6 +19,8 @@ on:
 env:
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short
+  PACKAGE_NAME: quickswitch
+  PACKAGE_VERSION: 0.1.0
 
 jobs:
   create-release:
