@@ -1,6 +1,13 @@
 use ratatui::{text::Line, widgets::ListState};
 use std::{collections::HashMap, path::PathBuf};
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum AppMode {
+    Normal,    // Default navigation mode (command mode)
+    Search,    // Search input mode
+    History,   // History selection mode
+}
+
 #[derive(Clone)]
 pub struct FileItem {
     pub name: String,
@@ -9,6 +16,7 @@ pub struct FileItem {
 }
 
 pub struct AppState {
+    pub mode: AppMode,
     pub search_input: String,
     pub current_dir: PathBuf,
     pub files: Vec<FileItem>,
@@ -17,12 +25,17 @@ pub struct AppState {
     pub preview_content: Vec<Line<'static>>,
     pub preview_title: String,
     pub dir_positions: HashMap<PathBuf, usize>,
+    pub history: Vec<PathBuf>,
+    pub history_state: ListState,
+    pub history_file_path: PathBuf,
 }
 
 impl AppState {
     pub fn new() -> anyhow::Result<Self> {
         let current_dir = std::env::current_dir()?;
+        let history_file_path = PathBuf::from("/tmp/quickswitch.history");
         Ok(Self {
+            mode: AppMode::Normal,
             search_input: String::new(),
             current_dir,
             files: Vec::new(),
@@ -31,6 +44,9 @@ impl AppState {
             preview_content: Vec::new(),
             preview_title: String::new(),
             dir_positions: HashMap::new(),
+            history: Vec::new(),
+            history_state: ListState::default(),
+            history_file_path,
         })
     }
 }

@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::fs;
 
 use anyhow::Result;
 use ratatui::{
@@ -22,8 +23,9 @@ impl App {
         state.files = files;
 
         let mut app = Self { state };
+        app.load_history().unwrap_or(()); // Ignore errors when loading history
         app.update_filter();
-        app.state.file_list_state.select(Some(0));
+        app.state.file_list_state.select(None);
         app.update_preview();
         Ok(app)
     }
@@ -43,11 +45,8 @@ impl App {
                 .collect();
         }
 
-        if !self.state.filtered_files.is_empty() {
-            self.state.file_list_state.select(Some(0));
-        } else {
-            self.state.file_list_state.select(None);
-        }
+        self.state.file_list_state.select(None);
+        
     }
 
     pub fn get_selected_file(&self) -> Option<&FileItem> {
@@ -99,7 +98,7 @@ impl App {
         } else {
             // 如果没有保存的位置，默认选择第一个
             if !self.state.filtered_files.is_empty() {
-                self.state.file_list_state.select(Some(1));
+                self.state.file_list_state.select(None);
             } else {
                 self.state.file_list_state.select(None);
             }
@@ -124,5 +123,59 @@ impl App {
         let files = filesystem::load_directory(&self.state.current_dir)?;
         self.state.files = files;
         Ok(())
+    }
+
+    pub fn load_history(&mut self) -> Result<()> {
+        if let Ok(content) = fs::read_to_string(&self.state.history_file_path) {
+            self.state.history = content
+                .lines()
+                .filter(|line| !line.trim().is_empty())
+                .map(|line| PathBuf::from(line.trim()))
+                .filter(|path| path.exists())
+                .collect();
+        }
+        Ok(())
+    }
+
+    pub fn save_history(&self) -> Result<()> {
+        let content = self.state.history
+            .iter()
+            .map(|path| path.to_string_lossy().to_string())
+            .collect::<Vec<_>>()
+            .join("\n");
+        
+        fs::write(&self.state.history_file_path, content)?;
+        Ok(())
+    }
+
+    pub fn add_to_history(&mut self, path: PathBuf) -> Result<()> {
+        // Remove existing entry if present
+        self.state.history.retain(|p| p != &path);
+        
+        // Add to front
+        self.state.history.insert(0, path);
+        
+        // Limit history size to 100 entries
+        if self.state.history.len() > 100 {
+            self.state.history.truncate(100);
+        }
+        
+        self.save_history()?;
+        Ok(())
+    }
+
+    pub fn enter_search_mode(&mut self) {
+        self.state.mode = crate::models::AppMode::Search;
+    }
+
+    pub fn enter_history_mode(&mut self) {
+        self.state.mode = crate::models::AppMode::History;
+        if !self.state.history.is_empty() {
+            self.state.history_state.select(Some(0));
+        }
+    }
+
+    pub fn enter_normal_mode(&mut self) {
+        self.state.mode = crate::models::AppMode::Normal;
     }
 }
