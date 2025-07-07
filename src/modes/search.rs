@@ -1,0 +1,116 @@
+use anyhow::Result;
+use crossterm::event::KeyCode;
+use ratatui::{
+    Frame,
+    layout::Rect,
+    style::{Color, Style},
+};
+
+use crate::{
+    app::App,
+    modes::ModeHandler,
+    renderers::{Renderer, RendererType, create_renderer, should_show_help},
+    services::state::StateService,
+};
+
+/// Handler for Search mode (interactive search)
+pub struct SearchModeHandler {
+    file_list_renderer: Box<dyn Renderer>,
+    preview_renderer: Box<dyn Renderer>,
+    help_renderer: Box<dyn Renderer>,
+}
+
+impl SearchModeHandler {
+    pub fn new() -> Self {
+        Self {
+            file_list_renderer: create_renderer(RendererType::FileList),
+            preview_renderer: create_renderer(RendererType::Preview),
+            help_renderer: create_renderer(RendererType::SearchHelp),
+        }
+    }
+}
+
+impl ModeHandler for SearchModeHandler {
+    fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<bool> {
+        match key {
+            KeyCode::Esc => {
+                app.enter_normal_mode();
+                Ok(true)
+            }
+            KeyCode::Enter => {
+                let selected_file = app.get_selected_file().cloned();
+                crate::events::handle_exit(app, selected_file.as_ref())?;
+                Ok(true)
+            }
+            // Only allow arrow keys for navigation in search mode (disable hjkl)
+            KeyCode::Up => {
+                crate::handlers::navigation::NavigationHelper::navigate_file_list_up(app);
+                Ok(true)
+            }
+            KeyCode::Down => {
+                crate::handlers::navigation::NavigationHelper::navigate_file_list_down(app);
+                Ok(true)
+            }
+            KeyCode::Right => {
+                crate::handlers::navigation::NavigationHelper::navigate_into_directory(app)?;
+                Ok(true)
+            }
+            KeyCode::Left => {
+                crate::handlers::navigation::NavigationHelper::navigate_to_parent(app)?;
+                Ok(true)
+            }
+            KeyCode::Backspace => {
+                StateService::remove_search_char(app);
+                app.update_preview();
+                Ok(true)
+            }
+            KeyCode::Char(c) => {
+                StateService::add_search_char(app, c);
+                app.update_preview();
+                Ok(true)
+            }
+            _ => Ok(true),
+        }
+    }
+
+    fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App) {
+        self.file_list_renderer.render(f, area, app);
+    }
+
+    fn render_right_panel(&self, f: &mut Frame, area: Rect, app: &App) {
+        if should_show_help(app, &crate::models::AppMode::Search) {
+            self.help_renderer.render(f, area, app);
+        } else {
+            self.preview_renderer.render(f, area, app);
+        }
+    }
+
+    fn get_search_box_config(&self, app: &App) -> (String, String, Style) {
+        let info = if app.state.search_input.is_empty() {
+            "SEARCH - Type to search, ESC to normal mode".to_string()
+        } else {
+            format!(
+                "SEARCH - '{}' - {} matches (ESC to normal)",
+                app.state.search_input,
+                app.state.filtered_files.len()
+            )
+        };
+        (
+            info,
+            app.state.search_input.clone(),
+            Style::default().fg(Color::Black).bg(Color::Yellow),
+        )
+    }
+
+    fn on_enter(&mut self, _app: &mut App) -> Result<()> {
+        // Search mode starts fresh, no special initialization needed
+        Ok(())
+    }
+
+    fn on_exit(&mut self, app: &mut App) -> Result<()> {
+        // Clear search when exiting search mode
+        StateService::clear_search(app);
+        app.update_preview();
+        Ok(())
+    }
+}

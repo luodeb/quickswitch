@@ -7,48 +7,54 @@ use std::{fs, path::PathBuf};
 
 use crate::models::FileItem;
 
-pub fn load_directory(current_dir: &PathBuf) -> Result<Vec<FileItem>> {
-    let mut files = Vec::new();
+/// Service for filesystem operations
+pub struct FilesystemService;
 
-    // 添加当前目录
-    files.push(FileItem {
-        name: ".".to_string(),
-        path: current_dir.clone(),
-        is_dir: true,
-    });
+impl FilesystemService {
+    /// Load directory contents and return sorted file list
+    pub fn load_directory(current_dir: &PathBuf) -> Result<Vec<FileItem>> {
+        let mut files = Vec::new();
 
-    // if let Some(parent) = current_dir.parent() {
-    //     files.push(FileItem {
-    //         name: "..".to_string(),
-    //         path: parent.to_path_buf(),
-    //         is_dir: true,
-    //     });
-    // }
+        // 添加当前目录
+        files.push(FileItem {
+            name: ".".to_string(),
+            path: current_dir.clone(),
+            is_dir: true,
+        });
 
-    let entries = fs::read_dir(current_dir)?;
-    let mut items: Vec<FileItem> = entries
-        .filter_map(|entry| {
-            let entry = entry.ok()?;
-            let path = entry.path();
-            let name = entry.file_name().to_string_lossy().to_string();
-            let is_dir = path.is_dir();
+        let entries = fs::read_dir(current_dir)?;
+        let mut items: Vec<FileItem> = entries
+            .filter_map(|entry| {
+                let entry = entry.ok()?;
+                let path = entry.path();
+                let name = entry.file_name().to_string_lossy().to_string();
+                let is_dir = path.is_dir();
 
-            Some(FileItem { name, path, is_dir })
-        })
-        .collect();
+                Some(FileItem { name, path, is_dir })
+            })
+            .collect();
 
-    items.sort_by(|a, b| match (a.is_dir, b.is_dir) {
-        (true, false) => std::cmp::Ordering::Less,
-        (false, true) => std::cmp::Ordering::Greater,
-        _ => a.name.cmp(&b.name),
-    });
+        items.sort_by(|a, b| match (a.is_dir, b.is_dir) {
+            (true, false) => std::cmp::Ordering::Less,
+            (false, true) => std::cmp::Ordering::Greater,
+            _ => a.name.cmp(&b.name),
+        });
 
-    files.extend(items);
-    Ok(files)
-}
+        files.extend(items);
+        Ok(files)
+    }
 
-pub fn generate_preview_content(file: &FileItem) -> (String, Vec<Line<'static>>) {
-    if file.is_dir {
+    /// Generate preview content for a file or directory
+    pub fn generate_preview_content(file: &FileItem) -> (String, Vec<Line<'static>>) {
+        if file.is_dir {
+            Self::generate_directory_preview(file)
+        } else {
+            Self::generate_file_preview(file)
+        }
+    }
+
+    /// Generate preview content for a directory
+    fn generate_directory_preview(file: &FileItem) -> (String, Vec<Line<'static>>) {
         let title = format!("📁 {}", file.name);
         let content = match fs::read_dir(&file.path) {
             Ok(entries) => {
@@ -108,7 +114,10 @@ pub fn generate_preview_content(file: &FileItem) -> (String, Vec<Line<'static>>)
             }
         };
         (title, content)
-    } else {
+    }
+
+    /// Generate preview content for a file
+    fn generate_file_preview(file: &FileItem) -> (String, Vec<Line<'static>>) {
         let title = format!("📄 {}", file.name);
         let content = match fs::read_to_string(&file.path) {
             Ok(content) => {
@@ -182,4 +191,13 @@ pub fn generate_preview_content(file: &FileItem) -> (String, Vec<Line<'static>>)
         };
         (title, content)
     }
+}
+
+// Re-export the old function names for backward compatibility during transition
+pub fn load_directory(current_dir: &PathBuf) -> Result<Vec<FileItem>> {
+    FilesystemService::load_directory(current_dir)
+}
+
+pub fn generate_preview_content(file: &FileItem) -> (String, Vec<Line<'static>>) {
+    FilesystemService::generate_preview_content(file)
 }

@@ -7,10 +7,16 @@ use crossterm::{
         enable_raw_mode,
     },
 };
-use ratatui::{Terminal, backend::CrosstermBackend};
+use ratatui::{
+    Terminal, 
+    backend::CrosstermBackend,
+    Frame,
+    layout::{Constraint, Direction, Layout},
+    widgets::{Block, Borders, Paragraph},
+};
 use std::{fs::OpenOptions, io};
 
-use crate::{app::App, events, ui, utils};
+use crate::{app::App, events, utils, models::AppMode};
 
 pub async fn run_interactive_mode() -> Result<()> {
     let terminal_result = if !utils::is_tty() {
@@ -67,7 +73,7 @@ where
     W: std::io::Write,
 {
     loop {
-        terminal.draw(|f| ui::render_ui(f, app))?;
+        terminal.draw(|f| render_ui(f, app))?;
 
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
@@ -80,4 +86,41 @@ where
         }
     }
     Ok(())
+}
+
+/// Simple UI rendering function that delegates to mode manager
+fn render_ui(f: &mut Frame, app: &App) {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(3), Constraint::Min(0)])
+        .split(f.area());
+
+    // Render search box
+    if let Some(ref mode_manager) = app.mode_manager {
+        let (title, content, style) = mode_manager.get_search_box_config(app);
+        let search_box = Paragraph::new(content)
+            .block(Block::default().borders(Borders::ALL).title(title))
+            .style(style);
+        f.render_widget(search_box, chunks[0]);
+    }
+
+    // Split main area for left and right panels
+    let main_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(chunks[1]);
+
+    // Delegate rendering to mode manager
+    if let Some(ref mode_manager) = app.mode_manager {
+        mode_manager.render_left_panel(f, main_chunks[0], app);
+        mode_manager.render_right_panel(f, main_chunks[1], app);
+    }
+
+    // Set cursor position for search mode
+    if app.state.mode == AppMode::Search {
+        f.set_cursor_position((
+            chunks[0].x + app.state.search_input.len() as u16 + 1,
+            chunks[0].y + 1,
+        ));
+    }
 }

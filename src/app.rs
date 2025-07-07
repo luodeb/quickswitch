@@ -8,21 +8,26 @@ use ratatui::{
 };
 
 use crate::{
-    filesystem,
+    services::FilesystemService,
     models::{AppState, FileItem},
+    modes::ModeManager,
 };
 
 pub struct App {
     pub state: AppState,
+    pub mode_manager: Option<ModeManager>,
 }
 
 impl App {
     pub fn new() -> Result<Self> {
         let mut state = AppState::new()?;
-        let files = filesystem::load_directory(&state.current_dir)?;
+        let files = FilesystemService::load_directory(&state.current_dir)?;
         state.files = files;
 
-        let mut app = Self { state };
+        let mut app = Self { 
+            state,
+            mode_manager: Some(ModeManager::new(&crate::models::AppMode::Normal)),
+        };
         app.load_history().unwrap_or(()); // Ignore errors when loading history
         app.update_filter();
         app.state.file_list_state.select(None);
@@ -60,7 +65,7 @@ impl App {
 
     pub fn update_preview(&mut self) {
         if let Some(file) = self.get_selected_file() {
-            let (title, content) = filesystem::generate_preview_content(file);
+            let (title, content) = FilesystemService::generate_preview_content(file);
             self.state.preview_title = title;
             self.state.preview_content = content;
         } else {
@@ -120,7 +125,7 @@ impl App {
     }
 
     pub fn reload_directory(&mut self) -> Result<()> {
-        let files = filesystem::load_directory(&self.state.current_dir)?;
+        let files = FilesystemService::load_directory(&self.state.current_dir)?;
         self.state.files = files;
         Ok(())
     }
