@@ -66,7 +66,7 @@ sudo cp target/release/quickswitch /usr/local/bin/
 1. 将以下函数添加到你的 `~/.bashrc` 或 `~/.zshrc` 文件中：
 
 ```bash
-eval "$(quickswitch --init)"
+eval "$(quickswitch --init bash)"
 
 # 绑定到 Ctrl+Alt+E
 bind -x '"\C-\M-E": qs'
@@ -83,20 +83,7 @@ source ~/.bashrc  # 或 source ~/.zshrc
 1. 将以下函数添加到你的 `~/.config/fish/config.fish` 文件中：
 
 ```fish
-function qs
-    set tmp_file (mktemp)
-
-    # 修改为你的 quickswitch 可执行文件路径
-    /path/to/quickswitch/target/release/quickswitch --output-file $tmp_file
-
-    set dest_path (cat $tmp_file)
-
-    rm $tmp_file
-
-    if test -n "$dest_path" -a -d "$dest_path"
-        cd -- $dest_path
-    end
-end
+quickswitch --init fish | source
 
 # 绑定按键（可选/推荐）Ctrl + E
 bind \ce qs

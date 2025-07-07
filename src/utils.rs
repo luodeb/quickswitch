@@ -71,7 +71,7 @@ qs() {
     fi
 }
     "#;
-    println!("{}", bash_init);
+    println!("{bash_init}");
 
     Ok(())
 }
@@ -92,7 +92,7 @@ function qs
     commandline -f repaint
 end
     "#;
-    println!("{}", fish_init);
+    println!("{fish_init}");
 
     Ok(())
 }

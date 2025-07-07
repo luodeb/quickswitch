@@ -108,7 +108,7 @@ impl FilesystemService {
             }
             Err(e) => {
                 vec![Line::from(vec![Span::styled(
-                    format!("Error reading directory: {}", e),
+                    format!("Error reading directory: {e}"),
                     Style::default().fg(Color::Red),
                 )])]
             }
@@ -183,7 +183,7 @@ impl FilesystemService {
                 }
                 Err(e) => {
                     vec![Line::from(vec![Span::styled(
-                        format!("Error reading file: {}", e),
+                        format!("Error reading file: {e}"),
                         Style::default().fg(Color::Red),
                     )])]
                 }
