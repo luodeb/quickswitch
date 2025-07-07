@@ -16,8 +16,8 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(output_file: Option<String>) -> Result<Self> {
-        let mut state = AppState::new(output_file)?;
+    pub fn new() -> Result<Self> {
+        let mut state = AppState::new()?;
         let files = filesystem::load_directory(&state.current_dir)?;
         state.files = files;
 

@@ -16,12 +16,11 @@ pub struct AppState {
     pub file_list_state: ListState,
     pub preview_content: Vec<Line<'static>>,
     pub preview_title: String,
-    pub output_file: Option<String>,
     pub dir_positions: HashMap<PathBuf, usize>,
 }
 
 impl AppState {
-    pub fn new(output_file: Option<String>) -> anyhow::Result<Self> {
+    pub fn new() -> anyhow::Result<Self> {
         let current_dir = std::env::current_dir()?;
         Ok(Self {
             search_input: String::new(),
@@ -31,7 +30,6 @@ impl AppState {
             file_list_state: ListState::default(),
             preview_content: Vec::new(),
             preview_title: String::new(),
-            output_file,
             dir_positions: HashMap::new(),
         })
     }

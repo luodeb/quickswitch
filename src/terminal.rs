@@ -12,7 +12,7 @@ use std::{fs::OpenOptions, io};
 
 use crate::{app::App, events, ui, utils};
 
-pub async fn run_interactive_mode(output_file: Option<String>) -> Result<()> {
+pub async fn run_interactive_mode() -> Result<()> {
     let terminal_result = if !utils::is_tty() {
         match OpenOptions::new().read(true).write(true).open("/dev/tty") {
             Ok(mut tty_file) => {
@@ -21,7 +21,7 @@ pub async fn run_interactive_mode(output_file: Option<String>) -> Result<()> {
                 let backend = CrosstermBackend::new(tty_file);
                 let mut terminal = Terminal::new(backend)?;
 
-                let mut app = App::new(output_file)?;
+                let mut app = App::new()?;
                 let result = run_app_loop(&mut terminal, &mut app).await;
 
                 disable_raw_mode()?;
@@ -34,7 +34,7 @@ pub async fn run_interactive_mode(output_file: Option<String>) -> Result<()> {
         }
     } else {
         let mut terminal = setup_terminal()?;
-        let mut app = App::new(output_file)?;
+        let mut app = App::new()?;
         let result = run_app_loop(&mut terminal, &mut app).await;
         cleanup_terminal(&mut terminal)?;
         Ok(result?)

@@ -9,6 +9,6 @@ pub mod utils;
 pub use app::App;
 pub use models::{AppState, FileItem};
 pub use terminal::run_interactive_mode;
-pub use utils::{is_tty, run_non_interactive, qs_init};
+pub use utils::{is_tty, run_non_interactive, qs_init, ShellType};
 
 pub type Result<T> = anyhow::Result<T>;

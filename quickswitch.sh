@@ -1,3 +1,5 @@
 #!/bin/bash
 
-eval "$(quickswitch --init)"
+eval "$(/path/to/quickswitch --init bash)"
+
+bind '"\C-x": "qs\n"'

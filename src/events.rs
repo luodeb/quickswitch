@@ -15,7 +15,7 @@ pub fn handle_key_event(app: &mut App, key: KeyCode) -> Result<bool> {
         handle_exit(app, app.get_selected_file())?;
     }
     // k → 上
-    KeyCode::Char('k') => {
+    KeyCode::Char('k') | KeyCode::Up => {
         if let Some(selected) = app.state.file_list_state.selected() {
             if selected > 0 {
                 app.state.file_list_state.select(Some(selected - 1));
@@ -24,7 +24,7 @@ pub fn handle_key_event(app: &mut App, key: KeyCode) -> Result<bool> {
         }
     }
     // j → 下
-    KeyCode::Char('j') => {
+    KeyCode::Char('j') | KeyCode::Down => {
         if let Some(selected) = app.state.file_list_state.selected() {
             if selected < app.state.filtered_files.len() - 1 {
                 app.state.file_list_state.select(Some(selected + 1));
@@ -36,7 +36,7 @@ pub fn handle_key_event(app: &mut App, key: KeyCode) -> Result<bool> {
         }
     }
     // l → 进入文件夹
-    KeyCode::Char('l') => {
+    KeyCode::Char('l') | KeyCode::Right => {
         if let Some(file) = app.get_selected_file() {
             if file.is_dir {
                 app.change_directory(file.path.clone())?;
@@ -44,7 +44,7 @@ pub fn handle_key_event(app: &mut App, key: KeyCode) -> Result<bool> {
         }
     }
     // h → 返回上级目录
-    KeyCode::Char('h') => {
+    KeyCode::Char('h') | KeyCode::Left => {
         if let Some(parent) = app.state.current_dir.parent() {
             app.change_directory(parent.to_path_buf())?;
         }
@@ -82,16 +82,7 @@ pub fn handle_exit(app: &App, file: Option<&crate::models::FileItem>) -> Result<
     };
 
     unsafe { env::set_var("QS_SELECT_PATH", &select_path) };
-
-    if let Some(ref output_file) = app.state.output_file {
-        if let Ok(mut file) = std::fs::File::create(output_file) {
-            use std::io::Write;
-            let _ = writeln!(file, "{}", select_path);
-        }
-    } else {
-        // use stderr to convert message
-        eprintln!("{}", select_path);
-    }
+    eprintln!("{}", select_path);
 
     std::process::exit(0);
 }
