@@ -66,16 +66,19 @@ jobs:
             arch: 'universal'
             lib_suffix: ''
             file_extension: ''
+            platform_name: 'macos'
           - platform: 'ubuntu-22.04'
             target: 'x86_64-unknown-linux-gnu'
             arch: 'x86_64'
             lib_suffix: ''
             file_extension: ''
+            platform_name: 'linux'
           - platform: 'windows-latest'
             target: 'x86_64-pc-windows-msvc'
             arch: 'x86_64'
             lib_suffix: '.exe'
             file_extension: 'exe'
+            platform_name: 'windows'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -162,7 +165,7 @@ jobs:
             }
 
             // Generate asset name using package name and architecture
-            const assetName = `${packageName}-${{ matrix.arch }}.${{ matrix.file_extension }}`;
+            const assetName = `${{ matrix.platform_name }}-${packageName}-${{ matrix.arch }}.${{ matrix.file_extension }}`;
 
             console.log(`Uploading ${assetPath} as ${assetName}`);
 
