@@ -2,7 +2,10 @@ use anyhow::Result;
 use crossterm::{
     event::{self, Event, KeyEventKind},
     execute,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+    terminal::{
+        Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode,
+        enable_raw_mode,
+    },
 };
 use ratatui::{Terminal, backend::CrosstermBackend};
 use std::{fs::OpenOptions, io};
@@ -12,8 +15,9 @@ use crate::{app::App, events, ui, utils};
 pub async fn run_interactive_mode(output_file: Option<String>) -> Result<()> {
     let terminal_result = if !utils::is_tty() {
         match OpenOptions::new().read(true).write(true).open("/dev/tty") {
-            Ok(tty_file) => {
+            Ok(mut tty_file) => {
                 enable_raw_mode()?;
+                execute!(tty_file, EnterAlternateScreen, Clear(ClearType::All))?;
                 let backend = CrosstermBackend::new(tty_file);
                 let mut terminal = Terminal::new(backend)?;
 
@@ -22,6 +26,7 @@ pub async fn run_interactive_mode(output_file: Option<String>) -> Result<()> {
 
                 disable_raw_mode()?;
                 terminal.show_cursor()?;
+                execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
 
                 Ok(result?)
             }

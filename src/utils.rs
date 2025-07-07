@@ -48,3 +48,16 @@ pub fn run_non_interactive() -> Result<()> {
     println!("{}", std::env::current_dir()?.display());
     Ok(())
 }
+
+pub fn qs_init() -> Result<()> {
+    println!("qs() {{");
+    println!("    local dir");
+    println!("    dir=$(quickswitch \"$PWD\" 2>&1 >/dev/tty | tail -n 1)");
+    println!("    if [ -d \"$dir\" ]; then");
+    println!("        cd \"$dir\"");
+    println!("    else");
+    println!("        echo \"[quick cd:] no such dir: '$dir'\"");
+    println!("    fi");
+    println!("}}");
+    Ok(())
+}

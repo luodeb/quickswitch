@@ -1,4 +1,4 @@
-use quickswitch::{Result, run_interactive_mode, run_non_interactive};
+use quickswitch::{Result, run_interactive_mode, run_non_interactive, qs_init};
 use std::env;
 
 #[tokio::main]
@@ -20,6 +20,9 @@ async fn main() -> Result<()> {
             }
             "--non-interactive" => {
                 return run_non_interactive();
+            }
+            "--init" => {
+                return qs_init();
             }
             _ => {
                 i += 1;
