@@ -63,7 +63,7 @@ fn qs_init_bash_zsh() -> Result<()> {
     let bash_init = r#"
 qs() {
     local dir
-    dir=$(/home/debin/Codes/tools/quickswitch/quickswitch/target/release/quickswitch "$PWD" 2>&1 >/dev/tty | tail -n 1)
+    dir=$(quickswitch "$PWD" 2>&1 >/dev/tty | tail -n 1)
     if [ -d "$dir" ]; then
         cd "$dir"
     else
@@ -79,7 +79,7 @@ qs() {
 fn qs_init_fish() -> Result<()> {
     let fish_init = r#"
 function qs
-    set -l result (/home/debin/Codes/tools/quickswitch/quickswitch/target/release/quickswitch "$PWD" 2>&1 >/dev/tty)
+    set -l result (quickswitch "$PWD" 2>&1 >/dev/tty)
 
     if [ -n "$result" ]
         cd -- $result
