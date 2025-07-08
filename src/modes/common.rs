@@ -1,5 +1,6 @@
 use anyhow::Result;
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, MouseEvent, MouseEventKind};
+use ratatui::layout::Rect;
 
 use crate::{app::App, handlers::navigation::NavigationHelper, modes::ModeAction};
 
@@ -59,6 +60,38 @@ impl CommonModeLogic {
             KeyCode::Char('/') => Ok(Some(ModeAction::Switch(crate::models::AppMode::Search))),
             KeyCode::Char('v') => Ok(Some(ModeAction::Switch(crate::models::AppMode::History))),
             _ => Ok(None),
+        }
+    }
+
+    /// Handle mouse scroll navigation
+    pub fn handle_scroll_navigation(app: &mut App, mouse: MouseEvent) -> Result<bool> {
+        match mouse.kind {
+            MouseEventKind::ScrollUp => Ok(NavigationHelper::navigate_file_list_up(app)),
+            MouseEventKind::ScrollDown => Ok(NavigationHelper::navigate_file_list_down(app)),
+            _ => Ok(false),
+        }
+    }
+
+    /// Handle file list mouse click navigation
+    pub fn handle_file_list_mouse_click(app: &mut App, mouse: MouseEvent, area: Rect) -> Result<bool> {
+        match mouse.kind {
+            MouseEventKind::Down(crossterm::event::MouseButton::Left) => {
+                // Calculate which file was clicked based on mouse position
+                if mouse.row >= area.y && mouse.row < area.y + area.height {
+                    let clicked_index = (mouse.row - area.y) as usize;
+                    if clicked_index < app.state.filtered_files.len() {
+                        app.state.file_list_state.select(Some(clicked_index));
+                        // If it's a directory, navigate into it
+                        if let Some(file) = app.get_selected_file() {
+                            if file.is_dir {
+                                return NavigationHelper::navigate_into_directory(app);
+                            }
+                        }
+                    }
+                }
+                Ok(true)
+            }
+            _ => Ok(false),
         }
     }
 }

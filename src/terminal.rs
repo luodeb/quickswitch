@@ -1,6 +1,6 @@
 use anyhow::Result;
 use crossterm::{
-    event::{self, Event, KeyEventKind},
+    event::{self, Event, KeyEventKind, EnableMouseCapture, DisableMouseCapture},
     execute,
     terminal::{
         Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode,
@@ -22,7 +22,7 @@ pub async fn run_interactive_mode() -> Result<()> {
         match OpenOptions::new().read(true).write(true).open("/dev/tty") {
             Ok(mut tty_file) => {
                 enable_raw_mode()?;
-                execute!(tty_file, EnterAlternateScreen, Clear(ClearType::All))?;
+                execute!(tty_file, EnterAlternateScreen, Clear(ClearType::All), EnableMouseCapture)?;
                 let backend = CrosstermBackend::new(tty_file);
                 let mut terminal = Terminal::new(backend)?;
 
@@ -31,7 +31,7 @@ pub async fn run_interactive_mode() -> Result<()> {
 
                 disable_raw_mode()?;
                 terminal.show_cursor()?;
-                execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+                execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
 
                 Ok(result?)
             }
@@ -49,7 +49,7 @@ pub async fn run_interactive_mode() -> Result<()> {
 pub fn setup_terminal() -> Result<Terminal<CrosstermBackend<io::Stdout>>> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen)?;
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let terminal = Terminal::new(backend)?;
     Ok(terminal)
@@ -57,7 +57,7 @@ pub fn setup_terminal() -> Result<Terminal<CrosstermBackend<io::Stdout>>> {
 
 pub fn cleanup_terminal(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<()> {
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
     terminal.show_cursor()?;
     Ok(())
 }
@@ -73,12 +73,20 @@ where
         terminal.draw(|f| render_ui(f, controller))?;
 
         if event::poll(std::time::Duration::from_millis(100))? {
-            if let Event::Key(key) = event::read()? {
-                if key.kind == KeyEventKind::Press
-                    && !events::handle_key_event(controller, key.code)?
-                {
-                    break;
+            match event::read()? {
+                Event::Key(key) => {
+                    if key.kind == KeyEventKind::Press
+                        && !events::handle_key_event(controller, key.code)?
+                    {
+                        break;
+                    }
                 }
+                Event::Mouse(mouse) => {
+                    if !events::handle_mouse_event(controller, mouse)? {
+                        break;
+                    }
+                }
+                _ => {}
             }
         }
     }

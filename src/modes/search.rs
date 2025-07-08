@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, MouseEvent};
 use ratatui::{
     Frame,
     layout::Rect,
@@ -73,6 +73,21 @@ impl ModeHandler for SearchModeHandler {
             }
             _ => Ok(ModeAction::Stay),
         }
+    }
+
+    fn handle_mouse(&mut self, app: &mut App, mouse: MouseEvent) -> Result<ModeAction> {
+        // Import CommonModeLogic for mouse handling
+        use crate::modes::common::CommonModeLogic;
+        
+        // Handle mouse scroll for file navigation
+        if CommonModeLogic::handle_scroll_navigation(app, mouse)? {
+            return Ok(ModeAction::Stay);
+        }
+
+        // Handle mouse click for file selection and navigation
+        // Note: We need the area information to properly handle clicks
+        // For now, we'll just handle scroll events
+        Ok(ModeAction::Stay)
     }
 
     fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App) {

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, MouseEvent};
 use ratatui::{
     Frame,
     layout::Rect,
@@ -56,6 +56,18 @@ impl ModeHandler for NormalModeHandler {
         }
 
         // If no key was handled, continue running
+        Ok(ModeAction::Stay)
+    }
+
+    fn handle_mouse(&mut self, app: &mut App, mouse: MouseEvent) -> Result<ModeAction> {
+        // Handle mouse scroll for file navigation
+        if CommonModeLogic::handle_scroll_navigation(app, mouse)? {
+            return Ok(ModeAction::Stay);
+        }
+
+        // Handle mouse click for file selection and navigation
+        // Note: We need the area information to properly handle clicks
+        // For now, we'll just handle scroll events
         Ok(ModeAction::Stay)
     }
 

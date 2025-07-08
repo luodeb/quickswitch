@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, MouseEvent};
 use ratatui::{Frame, layout::Rect, style::Style};
 
 use crate::app::App;
@@ -21,6 +21,9 @@ pub enum ModeAction {
 pub trait ModeHandler {
     /// Handle keyboard input for this mode
     fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<ModeAction>;
+
+    /// Handle mouse input for this mode
+    fn handle_mouse(&mut self, app: &mut App, mouse: MouseEvent) -> Result<ModeAction>;
 
     /// Render the left panel (file list or history list)
     fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App);
@@ -79,6 +82,10 @@ impl ModeManager {
         self.current_handler.handle_key(app, key)
     }
 
+    pub fn handle_mouse(&mut self, app: &mut App, mouse: MouseEvent) -> Result<ModeAction> {
+        self.current_handler.handle_mouse(app, mouse)
+    }
+
     pub fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App) {
         self.current_handler.render_left_panel(f, area, app);
     }
@@ -113,6 +120,21 @@ impl AppController {
 
     pub fn handle_key(&mut self, key: KeyCode) -> Result<bool> {
         let action = self.mode_manager.handle_key(&mut self.app, key)?;
+        match action {
+            ModeAction::Stay => Ok(true),
+            ModeAction::Switch(new_mode) => {
+                self.switch_mode(new_mode)?;
+                Ok(true)
+            }
+            ModeAction::Exit(file_item) => {
+                crate::events::handle_exit(self, file_item.as_ref())?;
+                Ok(false) // This should never be reached due to process::exit in handle_exit
+            }
+        }
+    }
+
+    pub fn handle_mouse(&mut self, mouse: MouseEvent) -> Result<bool> {
+        let action = self.mode_manager.handle_mouse(&mut self.app, mouse)?;
         match action {
             ModeAction::Stay => Ok(true),
             ModeAction::Switch(new_mode) => {

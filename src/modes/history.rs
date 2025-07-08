@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crossterm::event::{KeyCode, ModifierKeyCode};
+use crossterm::event::{KeyCode, ModifierKeyCode, MouseEvent};
 use ratatui::{
     Frame,
     layout::Rect,
@@ -78,6 +78,24 @@ impl ModeHandler for HistoryModeHandler {
                 // Disable other navigation in history mode
                 Ok(ModeAction::Stay)
             }
+        }
+    }
+
+    fn handle_mouse(&mut self, app: &mut App, mouse: MouseEvent) -> Result<ModeAction> {
+        // Handle mouse scroll for history navigation
+        use crossterm::event::MouseEventKind;
+        use crate::handlers::navigation::NavigationHelper;
+        
+        match mouse.kind {
+            MouseEventKind::ScrollUp => {
+                NavigationHelper::navigate_history_up(app);
+                Ok(ModeAction::Stay)
+            }
+            MouseEventKind::ScrollDown => {
+                NavigationHelper::navigate_history_down(app);
+                Ok(ModeAction::Stay)
+            }
+            _ => Ok(ModeAction::Stay),
         }
     }
 

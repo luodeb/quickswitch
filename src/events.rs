@@ -1,6 +1,6 @@
 use anyhow::Result;
 use crossterm::{
-    event::KeyCode,
+    event::{KeyCode, MouseEvent},
     execute,
     terminal::{LeaveAlternateScreen, disable_raw_mode},
 };
@@ -41,4 +41,9 @@ pub fn handle_exit(
     }
 
     std::process::exit(0);
+}
+
+/// Handle mouse events
+pub fn handle_mouse_event(controller: &mut AppController, mouse: MouseEvent) -> Result<bool> {
+    controller.handle_mouse(mouse)
 }
