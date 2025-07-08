@@ -1,9 +1,9 @@
 use anyhow::Result;
 use crossterm::{
-    event::{KeyCode, MouseEvent, DisableMouseCapture},
+    cursor::Show,
+    event::{DisableMouseCapture, KeyCode, MouseEvent},
     execute,
     terminal::{LeaveAlternateScreen, disable_raw_mode},
-    cursor::Show,
 };
 use ratatui::layout::Rect;
 use std::{env, io};
