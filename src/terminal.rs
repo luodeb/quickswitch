@@ -2,10 +2,7 @@ use anyhow::Result;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEventKind},
     execute,
-    terminal::{
-        EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode,
-        enable_raw_mode,
-    },
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{
     Frame, Terminal,
@@ -22,7 +19,7 @@ pub async fn run_interactive_mode() -> Result<()> {
     let mut controller = AppController::new(crate::models::AppMode::Normal)?;
     let result = run_app_loop(&mut terminal, &mut controller).await;
     cleanup_terminal(&mut terminal)?;
-    Ok(result?)
+    result
 }
 
 pub fn setup_terminal() -> Result<Terminal<CrosstermBackend<io::Stdout>>> {
