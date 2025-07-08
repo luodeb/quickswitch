@@ -66,8 +66,6 @@ qs() {
     dir=$(quickswitch "$PWD" 2>&1 >/dev/tty | tail -n 1)
     if [ -d "$dir" ]; then
         cd "$dir"
-    else
-        echo "[quick cd:] no such dir: '$dir'"
     fi
 }
     "#;
