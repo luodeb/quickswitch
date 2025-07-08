@@ -2,6 +2,11 @@
 name = "quickswitch"
 version = "0.1.2"
 edition = "2024"
+description = "A terminal-based tool for quickly switching between directories and files."
+authors = ["Debin <luodeb@outlook.com>"]
+license = "Apache-2.0"
+repository = "https://github.com/luodeb/quickswitch.git"
+documentation = "https://docs.rs/quickswitch"
 
 [dependencies]
 ratatui = { version = "0.29.0", features = ["crossterm"] }
