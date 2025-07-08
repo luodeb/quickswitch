@@ -73,9 +73,10 @@ impl ModeHandler for NormalModeHandler {
             return Ok(ModeAction::Stay);
         }
 
-        // Handle mouse click for file selection and navigation
-        // Note: We need the area information to properly handle clicks
-        // For now, we'll just handle scroll events
+        if CommonModeLogic::handle_file_list_mouse_click(app, mouse, left_area)? {
+            return Ok(ModeAction::Stay);
+        }
+        // If no mouse action was handled, continue running
         Ok(ModeAction::Stay)
     }
 

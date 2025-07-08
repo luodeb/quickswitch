@@ -83,15 +83,10 @@ impl CommonModeLogic {
             MouseEventKind::Down(crossterm::event::MouseButton::Left) => {
                 // Calculate which file was clicked based on mouse position
                 if mouse.row >= area.y && mouse.row < area.y + area.height {
-                    let clicked_index = (mouse.row - area.y) as usize;
+                    let clicked_index = (mouse.row - area.y - 1) as usize;
                     if clicked_index < app.state.filtered_files.len() {
                         app.state.file_list_state.select(Some(clicked_index));
-                        // If it's a directory, navigate into it
-                        if let Some(file) = app.get_selected_file() {
-                            if file.is_dir {
-                                return NavigationHelper::navigate_into_directory(app);
-                            }
-                        }
+                        app.update_preview();
                     }
                 }
                 Ok(true)

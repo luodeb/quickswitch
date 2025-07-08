@@ -107,6 +107,19 @@ impl ModeHandler for HistoryModeHandler {
                 }
                 Ok(ModeAction::Stay)
             }
+            MouseEventKind::Down(crossterm::event::MouseButton::Left) => {
+                if mouse.row >= left_area.y && mouse.row < left_area.y + left_area.height {
+                    let clicked_index = (mouse.row - left_area.y - 1) as usize;
+                    let state = &mut app.state.history_state;
+                    if let Some(selected) = state.selected() {
+                        if selected <= app.state.history.len().saturating_sub(1) {
+                            state.select(Some(clicked_index));
+                            app.update_preview();
+                        }
+                    }
+                }
+                Ok(ModeAction::Stay)
+            }
             _ => Ok(ModeAction::Stay),
         }
     }
