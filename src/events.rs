@@ -1,8 +1,9 @@
 use anyhow::Result;
 use crossterm::{
-    event::{KeyCode, MouseEvent},
+    event::{KeyCode, MouseEvent, DisableMouseCapture},
     execute,
     terminal::{LeaveAlternateScreen, disable_raw_mode},
+    cursor::Show,
 };
 use ratatui::layout::Rect;
 use std::{env, io};
@@ -30,21 +31,37 @@ pub fn handle_exit(
         // Save to history
         app.add_to_history(select_path.clone()).unwrap_or(());
 
+        // Properly cleanup terminal state before exit
         disable_raw_mode()?;
-        execute!(io::stdout(), LeaveAlternateScreen)?;
+        execute!(
+            io::stdout(),
+            LeaveAlternateScreen,
+            DisableMouseCapture,
+            Show
+        )?;
 
         unsafe { env::set_var("QS_SELECT_PATH", select_path.to_string_lossy().as_ref()) };
         eprintln!("{}", select_path.display());
     } else {
-        // If no file is selected, just exit
+        // If no file is selected, just exit with proper cleanup
         disable_raw_mode()?;
-        execute!(io::stdout(), LeaveAlternateScreen)?;
+        execute!(
+            io::stdout(),
+            LeaveAlternateScreen,
+            DisableMouseCapture,
+            Show
+        )?;
     }
 
     std::process::exit(0);
 }
 
 /// Handle mouse events
-pub fn handle_mouse_event(controller: &mut AppController, mouse: MouseEvent, left_area: Rect, right_area: Rect) -> Result<bool> {
+pub fn handle_mouse_event(
+    controller: &mut AppController,
+    mouse: MouseEvent,
+    left_area: Rect,
+    right_area: Rect,
+) -> Result<bool> {
     controller.handle_mouse(mouse, left_area, right_area)
 }

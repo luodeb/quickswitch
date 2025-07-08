@@ -41,6 +41,7 @@ impl CommonModeLogic {
             }
             KeyCode::Char('l') | KeyCode::Right => NavigationHelper::navigate_into_directory(app),
             KeyCode::Char('h') | KeyCode::Left => NavigationHelper::navigate_to_parent(app),
+            KeyCode::PageUp | KeyCode::PageDown => Self::handle_preview_navigation(app, key),
             _ => Ok(false),
         }
     }
@@ -73,7 +74,11 @@ impl CommonModeLogic {
     }
 
     /// Handle file list mouse click navigation
-    pub fn handle_file_list_mouse_click(app: &mut App, mouse: MouseEvent, area: Rect) -> Result<bool> {
+    pub fn handle_file_list_mouse_click(
+        app: &mut App,
+        mouse: MouseEvent,
+        area: Rect,
+    ) -> Result<bool> {
         match mouse.kind {
             MouseEventKind::Down(crossterm::event::MouseButton::Left) => {
                 // Calculate which file was clicked based on mouse position
@@ -97,10 +102,10 @@ impl CommonModeLogic {
 
     /// Handle position-aware mouse scroll navigation
     pub fn handle_position_aware_scroll_navigation(
-        app: &mut App, 
-        mouse: MouseEvent, 
-        left_area: Rect, 
-        right_area: Rect
+        app: &mut App,
+        mouse: MouseEvent,
+        left_area: Rect,
+        right_area: Rect,
     ) -> Result<bool> {
         match mouse.kind {
             MouseEventKind::ScrollUp => {
@@ -108,7 +113,9 @@ impl CommonModeLogic {
                 if mouse.column >= left_area.x && mouse.column < left_area.x + left_area.width {
                     // Mouse is in left panel - scroll file list
                     Ok(NavigationHelper::navigate_file_list_up(app))
-                } else if mouse.column >= right_area.x && mouse.column < right_area.x + right_area.width {
+                } else if mouse.column >= right_area.x
+                    && mouse.column < right_area.x + right_area.width
+                {
                     // Mouse is in right panel - scroll preview content
                     Ok(app.scroll_preview_up())
                 } else {
@@ -120,13 +127,27 @@ impl CommonModeLogic {
                 if mouse.column >= left_area.x && mouse.column < left_area.x + left_area.width {
                     // Mouse is in left panel - scroll file list
                     Ok(NavigationHelper::navigate_file_list_down(app))
-                } else if mouse.column >= right_area.x && mouse.column < right_area.x + right_area.width {
+                } else if mouse.column >= right_area.x
+                    && mouse.column < right_area.x + right_area.width
+                {
                     // Mouse is in right panel - scroll preview content
                     Ok(app.scroll_preview_down())
                 } else {
                     Ok(false)
                 }
             }
+            _ => Ok(false),
+        }
+    }
+
+    /// Handle preview navigation keys (PageUp/PageDown)
+    pub fn handle_preview_navigation(app: &mut App, key: KeyCode) -> Result<bool> {
+        // Default visible height estimation (will be refined when rendering context is available)
+        let default_visible_height = 20; // Reasonable default for most terminal sizes
+
+        match key {
+            KeyCode::PageUp => Ok(app.scroll_preview_page_up(default_visible_height)),
+            KeyCode::PageDown => Ok(app.scroll_preview_page_down(default_visible_height)),
             _ => Ok(false),
         }
     }

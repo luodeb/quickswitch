@@ -186,4 +186,33 @@ impl App {
     pub fn reset_preview_scroll(&mut self) {
         self.state.preview_scroll_offset = 0;
     }
+
+    /// Scroll preview content up by half screen (page up)
+    pub fn scroll_preview_page_up(&mut self, visible_height: usize) -> bool {
+        let half_screen = (visible_height / 2).max(1); // At least scroll 1 line
+        let new_offset = self.state.preview_scroll_offset.saturating_sub(half_screen);
+        if new_offset != self.state.preview_scroll_offset {
+            self.state.preview_scroll_offset = new_offset;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Scroll preview content down by half screen (page down)
+    pub fn scroll_preview_page_down(&mut self, visible_height: usize) -> bool {
+        let half_screen = (visible_height / 2).max(1); // At least scroll 1 line
+        let max_offset = self
+            .state
+            .preview_content
+            .len()
+            .saturating_sub(visible_height);
+        let new_offset = (self.state.preview_scroll_offset + half_screen).min(max_offset);
+        if new_offset != self.state.preview_scroll_offset {
+            self.state.preview_scroll_offset = new_offset;
+            true
+        } else {
+            false
+        }
+    }
 }

@@ -23,7 +23,13 @@ pub trait ModeHandler {
     fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<ModeAction>;
 
     /// Handle mouse input for this mode
-    fn handle_mouse(&mut self, app: &mut App, mouse: MouseEvent, left_area: Rect, right_area: Rect) -> Result<ModeAction>;
+    fn handle_mouse(
+        &mut self,
+        app: &mut App,
+        mouse: MouseEvent,
+        left_area: Rect,
+        right_area: Rect,
+    ) -> Result<ModeAction>;
 
     /// Render the left panel (file list or history list)
     fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App);
@@ -82,8 +88,15 @@ impl ModeManager {
         self.current_handler.handle_key(app, key)
     }
 
-    pub fn handle_mouse(&mut self, app: &mut App, mouse: MouseEvent, left_area: Rect, right_area: Rect) -> Result<ModeAction> {
-        self.current_handler.handle_mouse(app, mouse, left_area, right_area)
+    pub fn handle_mouse(
+        &mut self,
+        app: &mut App,
+        mouse: MouseEvent,
+        left_area: Rect,
+        right_area: Rect,
+    ) -> Result<ModeAction> {
+        self.current_handler
+            .handle_mouse(app, mouse, left_area, right_area)
     }
 
     pub fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App) {
@@ -133,8 +146,15 @@ impl AppController {
         }
     }
 
-    pub fn handle_mouse(&mut self, mouse: MouseEvent, left_area: Rect, right_area: Rect) -> Result<bool> {
-        let action = self.mode_manager.handle_mouse(&mut self.app, mouse, left_area, right_area)?;
+    pub fn handle_mouse(
+        &mut self,
+        mouse: MouseEvent,
+        left_area: Rect,
+        right_area: Rect,
+    ) -> Result<bool> {
+        let action = self
+            .mode_manager
+            .handle_mouse(&mut self.app, mouse, left_area, right_area)?;
         match action {
             ModeAction::Stay => Ok(true),
             ModeAction::Switch(new_mode) => {

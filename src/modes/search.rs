@@ -75,12 +75,20 @@ impl ModeHandler for SearchModeHandler {
         }
     }
 
-    fn handle_mouse(&mut self, app: &mut App, mouse: MouseEvent, left_area: Rect, right_area: Rect) -> Result<ModeAction> {
+    fn handle_mouse(
+        &mut self,
+        app: &mut App,
+        mouse: MouseEvent,
+        left_area: Rect,
+        right_area: Rect,
+    ) -> Result<ModeAction> {
         // Import CommonModeLogic for mouse handling
         use crate::modes::common::CommonModeLogic;
-        
+
         // Handle position-aware mouse scroll navigation
-        if CommonModeLogic::handle_position_aware_scroll_navigation(app, mouse, left_area, right_area)? {
+        if CommonModeLogic::handle_position_aware_scroll_navigation(
+            app, mouse, left_area, right_area,
+        )? {
             return Ok(ModeAction::Stay);
         }
 

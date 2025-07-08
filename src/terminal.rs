@@ -1,6 +1,6 @@
 use anyhow::Result;
 use crossterm::{
-    event::{self, Event, KeyEventKind, EnableMouseCapture, DisableMouseCapture},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEventKind},
     execute,
     terminal::{
         Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode,
@@ -22,7 +22,12 @@ pub async fn run_interactive_mode() -> Result<()> {
         match OpenOptions::new().read(true).write(true).open("/dev/tty") {
             Ok(mut tty_file) => {
                 enable_raw_mode()?;
-                execute!(tty_file, EnterAlternateScreen, Clear(ClearType::All), EnableMouseCapture)?;
+                execute!(
+                    tty_file,
+                    EnterAlternateScreen,
+                    Clear(ClearType::All),
+                    EnableMouseCapture
+                )?;
                 let backend = CrosstermBackend::new(tty_file);
                 let mut terminal = Terminal::new(backend)?;
 
@@ -31,7 +36,11 @@ pub async fn run_interactive_mode() -> Result<()> {
 
                 disable_raw_mode()?;
                 terminal.show_cursor()?;
-                execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
+                execute!(
+                    terminal.backend_mut(),
+                    LeaveAlternateScreen,
+                    DisableMouseCapture
+                )?;
 
                 Ok(result?)
             }
@@ -57,7 +66,11 @@ pub fn setup_terminal() -> Result<Terminal<CrosstermBackend<io::Stdout>>> {
 
 pub fn cleanup_terminal(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<()> {
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
     terminal.show_cursor()?;
     Ok(())
 }

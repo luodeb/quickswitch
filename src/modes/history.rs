@@ -81,11 +81,17 @@ impl ModeHandler for HistoryModeHandler {
         }
     }
 
-    fn handle_mouse(&mut self, app: &mut App, mouse: MouseEvent, left_area: Rect, right_area: Rect) -> Result<ModeAction> {
+    fn handle_mouse(
+        &mut self,
+        app: &mut App,
+        mouse: MouseEvent,
+        left_area: Rect,
+        _right_area: Rect,
+    ) -> Result<ModeAction> {
         // Handle mouse scroll for history navigation
-        use crossterm::event::MouseEventKind;
         use crate::handlers::navigation::NavigationHelper;
-        
+        use crossterm::event::MouseEventKind;
+
         match mouse.kind {
             MouseEventKind::ScrollUp => {
                 // In history mode, only scroll the history list (left panel)
