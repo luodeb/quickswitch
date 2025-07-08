@@ -3,7 +3,7 @@ use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEventKind},
     execute,
     terminal::{
-        Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode,
+        EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode,
         enable_raw_mode,
     },
 };
@@ -13,80 +13,16 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     widgets::{Block, Borders, Paragraph},
 };
-use std::{fs::OpenOptions, io};
+use std::io;
 
-use crate::{events, models::AppMode, modes::AppController, utils};
+use crate::{events, models::AppMode, modes::AppController};
 
 pub async fn run_interactive_mode() -> Result<()> {
-    if !utils::is_tty() {
-        match OpenOptions::new().read(true).write(true).open("/dev/tty") {
-            Ok(mut tty_file) => {
-                enable_raw_mode()?;
-                execute!(
-                    tty_file,
-                    EnterAlternateScreen,
-                    Clear(ClearType::All),
-                    EnableMouseCapture
-                )?;
-                let backend = CrosstermBackend::new(tty_file);
-                let mut terminal = Terminal::new(backend)?;
-
-                let mut controller = AppController::new(crate::models::AppMode::Normal)?;
-                let result = run_app_loop(&mut terminal, &mut controller).await;
-
-                disable_raw_mode()?;
-                terminal.show_cursor()?;
-                execute!(
-                    terminal.backend_mut(),
-                    LeaveAlternateScreen,
-                    DisableMouseCapture
-                )?;
-
-                Ok(result?)
-            }
-            Err(_) => {
-                // Try Windows console devices as fallback
-                #[cfg(windows)]
-                {
-                    match OpenOptions::new().read(true).write(true).open("CONOUT$") {
-                        Ok(mut console_file) => {
-                            enable_raw_mode()?;
-                            execute!(
-                                console_file,
-                                EnterAlternateScreen,
-                                Clear(ClearType::All),
-                                EnableMouseCapture
-                            )?;
-                            let backend = CrosstermBackend::new(console_file);
-                            let mut terminal = Terminal::new(backend)?;
-
-                            let mut controller = AppController::new(crate::models::AppMode::Normal)?;
-                            let result = run_app_loop(&mut terminal, &mut controller).await;
-
-                            disable_raw_mode()?;
-                            terminal.show_cursor()?;
-                            execute!(
-                                terminal.backend_mut(),
-                                LeaveAlternateScreen,
-                                DisableMouseCapture
-                            )?;
-
-                            Ok(result?)
-                        }
-                        Err(_) => utils::run_non_interactive(),
-                    }
-                }
-                #[cfg(not(windows))]
-                utils::run_non_interactive()
-            }
-        }
-    } else {
-        let mut terminal = setup_terminal()?;
-        let mut controller = AppController::new(crate::models::AppMode::Normal)?;
-        let result = run_app_loop(&mut terminal, &mut controller).await;
-        cleanup_terminal(&mut terminal)?;
-        Ok(result?)
-    }
+    let mut terminal = setup_terminal()?;
+    let mut controller = AppController::new(crate::models::AppMode::Normal)?;
+    let result = run_app_loop(&mut terminal, &mut controller).await;
+    cleanup_terminal(&mut terminal)?;
+    Ok(result?)
 }
 
 pub fn setup_terminal() -> Result<Terminal<CrosstermBackend<io::Stdout>>> {

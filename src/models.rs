@@ -33,7 +33,7 @@ pub struct AppState {
 impl AppState {
     pub fn new() -> anyhow::Result<Self> {
         let current_dir = std::env::current_dir()?;
-        let history_file_path = PathBuf::from("/tmp/quickswitch.history");
+        let history_file_path = std::env::temp_dir().join("quickswitch.history");
         Ok(Self {
             search_input: String::new(),
             current_dir,

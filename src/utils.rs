@@ -63,7 +63,7 @@ fn qs_init_bash_zsh() -> Result<()> {
     let bash_init = r#"
 qs() {
     local dir
-    dir=$(quickswitch "$PWD" 2>&1 >/dev/tty | tail -n 1)
+    dir=$(quickswitch 2>&1 >/dev/tty | tail -n 1)
     if [ -d "$dir" ]; then
         cd "$dir"
     fi
@@ -77,7 +77,7 @@ qs() {
 fn qs_init_fish() -> Result<()> {
     let fish_init = r#"
 function qs
-    set -l result (quickswitch "$PWD" 2>&1 >/dev/tty)
+    set -l result (quickswitch 2>&1 >/dev/tty)
 
     if [ -n "$result" ]
         cd -- $result
@@ -96,7 +96,22 @@ end
 }
 
 fn qs_init_powershell() -> Result<()> {
-    todo!("PowerShell initialization is not implemented yet");
+    let powershell_init = r#"
+function qs {
+    $errorFile = [System.IO.Path]::GetTempFileName()
+    quickswitch.exe 2>$errorFile
+    $errors = Get-Content $errorFile
+    Remove-Item $errorFile
+    $firstLine = ($errors -split "`n")[0]
+    if ($firstLine -match ":") {
+        $userSelectPath = ($firstLine -split ":", 2)[1].Trim()
+        cd $userSelectPath
+    }
+}
+    "#;
+    println!("{powershell_init}");
+
+    Ok(())
 }
 
 fn qs_init_cmd() -> Result<()> {

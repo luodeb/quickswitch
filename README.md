@@ -29,7 +29,7 @@ cargo install quickswitch
 ### 1. 克隆项目
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/luodeb/quickswitch.git
 cd quickswitch
 ```
 
@@ -68,52 +68,69 @@ sudo cp target/release/quickswitch /usr/local/bin/
 
 为了实现快速目录切换功能，项目提供了 shell 函数包装器。
 
-#### Bash/Zsh 用户
+<details>
+<summary>Bash/Zsh</summary>
 
-1. 将以下函数添加到你的 `~/.bashrc` 或 `~/.zshrc` 文件中：
+> 将以下函数添加到你的 `~/.bashrc` 或 `~/.zshrc` 文件中末尾：
+>```sh
+> eval "$(quickswitch --init bash)"
+>```
+> 绑定按键（可选/推荐）Ctrl + E：
+> ```sh
+> bind '"\C-e": "qs\n"'
+> ```
+> 重新加载配置：
+> ```sh
+> source ~/.bashrc  # 或 source ~/.zshrc
+> ```
+</details>
 
-```bash
-eval "$(quickswitch --init bash)"
+<details>
+<summary>Fish</summary>
 
-# 绑定到 Ctrl+E
-bind -x '"\C-E": qs'
-```
+> 将以下函数添加到你的 `~/.config/fish/config.fish` 文件中末尾：
+>
+> ```sh
+> quickswitch --init fish | source
+> ```
+>
+> 绑定按键（可选/推荐）Ctrl + E：
+> ```sh
+> bind \ce qs
+> ```
+>
+> 重新加载配置：
+> ```sh
+> source ~/.config/fish/config.fish
+> ```
 
-2. 重新加载配置：
+</details>
 
-```bash
-source ~/.bashrc  # 或 source ~/.zshrc
-```
+<details>
+<summary>PowerShell</summary>
 
-#### Fish 用户
-
-1. 将以下函数添加到你的 `~/.config/fish/config.fish` 文件中：
-
-```fish
-quickswitch --init fish | source
-
-# 绑定按键（可选/推荐）Ctrl + E
-bind \ce qs
-```
-
-2. 重新加载配置：
-
-```fish
-source ~/.config/fish/config.fish
-```
-
-### 使用预制脚本
-
-项目已经提供了预制的 shell 脚本，你只需要修改其中的路径并自行增加按键绑定：
-
-```bash
-# 复制并编辑 bash 脚本
-cp quickswitch.sh ~/.local/bin/qs_setup.sh
-# 然后在 .bashrc 中添加: source ~/.local/bin/qs_setup.sh
-
-# 或者复制并编辑 fish 脚本
-cp quickswitch.fish ~/.config/fish/functions/qs.fish
-```
+> 将以下函数添加到你的 PowerShell 配置文件（`code $profile`）中：
+> ```powershell
+> Invoke-Expression (& { (quickswitch.exe --init powershell | Out-String) })
+> ```
+> 绑定按键（可选/推荐）Ctrl + E：
+> ```powershell
+> Import-Module PSReadLine
+>
+> # 绑定 Ctrl+E 快捷键
+> Set-PSReadLineKeyHandler -Key 'Ctrl+e' `
+>     -BriefDescription 'RunMyFunction' `
+>     -ScriptBlock {
+>        [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
+>        [Microsoft.PowerShell.PSConsoleReadLine]::Insert("qs")
+>        [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+>    }
+> ```
+> 重新加载配置：
+> ```powershell
+> . $profile
+> ```
+</details>
 
 ## 快捷键操作
 
@@ -146,20 +163,6 @@ cp quickswitch.fish ~/.config/fish/functions/qs.fish
   - 对于文件夹：显示其内容列表
   - 对于文本文件：显示文件内容（带行号）
   - 对于二进制文件：显示文件大小信息
-
-## 项目结构
-
-```
-quickswitch/
-├── Cargo.toml          # 项目配置和依赖
-├── Cargo.lock          # 依赖锁定文件
-├── src/
-│   ├── main.rs         # 主程序文件
-│   └── tui.rs          # TUI 相关代码（如果存在）
-├── quickswitch.sh      # Bash/Zsh 集成脚本
-├── quickswitch.fish    # Fish shell 集成脚本
-└── target/             # 编译输出目录
-```
 
 ## 依赖说明
 
@@ -213,7 +216,7 @@ quickswitch/
 
 ```bash
 # 克隆项目
-git clone <repository-url>
+git clone https://github.com/luodeb/quickswitch.git
 cd quickswitch
 
 # 安装开发依赖
@@ -223,7 +226,7 @@ cargo build
 cargo test
 
 # 代码格式化
-cargo fmt
+cargo fmt --all --
 
 # 代码检查
 cargo clippy
@@ -235,7 +238,7 @@ cargo clippy
 
 ## 更新日志
 
-### v0.1.2
+### v0.1.3
 
 - 初始版本
 - 基本的文件浏览功能
