@@ -2,4 +2,4 @@
 
 eval "$(quickswitch --init bash)"
 
-bind '"\C-x": "qs\n"'
+bind '"\C-w": "qs\n"'

@@ -17,6 +17,13 @@
 - Rust 1.70+ (使用 2024 edition)
 - 支持的操作系统: Linux, macOS, Windows
 
+## Cargo 安装
+
+直接使用 Cargo 安装 quickswitch
+``` bash
+cargo install quickswitch
+```
+
 ## 编译安装
 
 ### 1. 克隆项目
@@ -68,8 +75,8 @@ sudo cp target/release/quickswitch /usr/local/bin/
 ```bash
 eval "$(quickswitch --init bash)"
 
-# 绑定到 Ctrl+Alt+E
-bind -x '"\C-\M-E": qs'
+# 绑定到 Ctrl+E
+bind -x '"\C-E": qs'
 ```
 
 2. 重新加载配置：
@@ -102,23 +109,22 @@ source ~/.config/fish/config.fish
 ```bash
 # 复制并编辑 bash 脚本
 cp quickswitch.sh ~/.local/bin/qs_setup.sh
-# 编辑文件，修改 quickswitch 的路径
 # 然后在 .bashrc 中添加: source ~/.local/bin/qs_setup.sh
 
 # 或者复制并编辑 fish 脚本
 cp quickswitch.fish ~/.config/fish/functions/qs.fish
-# 编辑文件，修改 quickswitch 的路径
 ```
 
 ## 快捷键操作
 
 | 快捷键      | 功能                      |
 | ----------- | ------------------------- |
-| `↑/↓`       | 上下选择文件/文件夹       |
-| `←/→`       | 进入父目录/进入选中的目录 |
+| `↑/↓ j/k`       | 上下选择文件/文件夹       |
+| `←/→ h/l`       | 进入父目录/进入选中的目录 |
 | `Enter`     | 选择当前目录并退出程序    |
 | `Esc`       | 退出程序                  |
-| `字符输入`  | 实时搜索过滤              |
+| `/`  | 实时搜索过滤              |
+| `v` | 切换到历史记录模式              |
 | `Backspace` | 删除搜索字符              |
 
 ## 界面说明
@@ -229,7 +235,7 @@ cargo clippy
 
 ## 更新日志
 
-### v0.1.0
+### v0.1.2
 
 - 初始版本
 - 基本的文件浏览功能
