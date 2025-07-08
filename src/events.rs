@@ -4,6 +4,7 @@ use crossterm::{
     execute,
     terminal::{LeaveAlternateScreen, disable_raw_mode},
 };
+use ratatui::layout::Rect;
 use std::{env, io};
 
 use crate::modes::AppController;
@@ -44,6 +45,6 @@ pub fn handle_exit(
 }
 
 /// Handle mouse events
-pub fn handle_mouse_event(controller: &mut AppController, mouse: MouseEvent) -> Result<bool> {
-    controller.handle_mouse(mouse)
+pub fn handle_mouse_event(controller: &mut AppController, mouse: MouseEvent, left_area: Rect, right_area: Rect) -> Result<bool> {
+    controller.handle_mouse(mouse, left_area, right_area)
 }

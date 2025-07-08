@@ -71,7 +71,6 @@ impl FilesystemService {
 
                 let mut preview_content: Vec<Line<'static>> = items
                     .iter()
-                    .take(100)
                     .map(|entry| {
                         let name = entry.file_name().to_string_lossy().into_owned();
                         let is_dir = entry.path().is_dir();
@@ -89,13 +88,6 @@ impl FilesystemService {
                         ])
                     })
                     .collect();
-
-                if items.len() > 100 {
-                    preview_content.push(Line::from(vec![Span::styled(
-                        format!("... and {} more items", items.len() - 100),
-                        Style::default().fg(Color::Gray),
-                    )]));
-                }
 
                 if preview_content.is_empty() {
                     preview_content.push(Line::from(vec![Span::styled(
@@ -139,7 +131,6 @@ impl FilesystemService {
 
                 let content_lines: Vec<Line<'static>> = content
                     .lines()
-                    .take(100)
                     .enumerate()
                     .map(|(i, line)| {
                         Line::from(vec![
@@ -153,13 +144,6 @@ impl FilesystemService {
                     .collect();
 
                 lines.extend(content_lines);
-
-                if content.lines().count() > 100 {
-                    lines.push(Line::from(vec![Span::styled(
-                        format!("... ({} more lines)", content.lines().count() - 100),
-                        Style::default().fg(Color::Gray),
-                    )]));
-                }
 
                 lines
             }

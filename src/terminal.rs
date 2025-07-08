@@ -10,7 +10,7 @@ use crossterm::{
 use ratatui::{
     Frame, Terminal,
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Rect},
     widgets::{Block, Borders, Paragraph},
 };
 use std::{fs::OpenOptions, io};
@@ -70,6 +70,20 @@ where
     W: std::io::Write,
 {
     loop {
+        // Calculate layout areas for mouse event handling
+        let terminal_size = terminal.size()?;
+        let terminal_area = Rect::new(0, 0, terminal_size.width, terminal_size.height);
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(3), Constraint::Min(0)])
+            .split(terminal_area);
+        let main_chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .split(chunks[1]);
+        let left_area = main_chunks[0];
+        let right_area = main_chunks[1];
+
         terminal.draw(|f| render_ui(f, controller))?;
 
         if event::poll(std::time::Duration::from_millis(100))? {
@@ -82,7 +96,7 @@ where
                     }
                 }
                 Event::Mouse(mouse) => {
-                    if !events::handle_mouse_event(controller, mouse)? {
+                    if !events::handle_mouse_event(controller, mouse, left_area, right_area)? {
                         break;
                     }
                 }

@@ -59,9 +59,9 @@ impl ModeHandler for NormalModeHandler {
         Ok(ModeAction::Stay)
     }
 
-    fn handle_mouse(&mut self, app: &mut App, mouse: MouseEvent) -> Result<ModeAction> {
-        // Handle mouse scroll for file navigation
-        if CommonModeLogic::handle_scroll_navigation(app, mouse)? {
+    fn handle_mouse(&mut self, app: &mut App, mouse: MouseEvent, left_area: Rect, right_area: Rect) -> Result<ModeAction> {
+        // Handle position-aware mouse scroll navigation
+        if CommonModeLogic::handle_position_aware_scroll_navigation(app, mouse, left_area, right_area)? {
             return Ok(ModeAction::Stay);
         }
 

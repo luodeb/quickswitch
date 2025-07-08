@@ -94,4 +94,40 @@ impl CommonModeLogic {
             _ => Ok(false),
         }
     }
+
+    /// Handle position-aware mouse scroll navigation
+    pub fn handle_position_aware_scroll_navigation(
+        app: &mut App, 
+        mouse: MouseEvent, 
+        left_area: Rect, 
+        right_area: Rect
+    ) -> Result<bool> {
+        match mouse.kind {
+            MouseEventKind::ScrollUp => {
+                // Check if mouse is in left area (file list) or right area (preview)
+                if mouse.column >= left_area.x && mouse.column < left_area.x + left_area.width {
+                    // Mouse is in left panel - scroll file list
+                    Ok(NavigationHelper::navigate_file_list_up(app))
+                } else if mouse.column >= right_area.x && mouse.column < right_area.x + right_area.width {
+                    // Mouse is in right panel - scroll preview content
+                    Ok(app.scroll_preview_up())
+                } else {
+                    Ok(false)
+                }
+            }
+            MouseEventKind::ScrollDown => {
+                // Check if mouse is in left area (file list) or right area (preview)
+                if mouse.column >= left_area.x && mouse.column < left_area.x + left_area.width {
+                    // Mouse is in left panel - scroll file list
+                    Ok(NavigationHelper::navigate_file_list_down(app))
+                } else if mouse.column >= right_area.x && mouse.column < right_area.x + right_area.width {
+                    // Mouse is in right panel - scroll preview content
+                    Ok(app.scroll_preview_down())
+                } else {
+                    Ok(false)
+                }
+            }
+            _ => Ok(false),
+        }
+    }
 }

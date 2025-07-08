@@ -69,6 +69,8 @@ impl App {
                 Style::default().fg(Color::Gray),
             )])];
         }
+        // Reset scroll position when content changes
+        self.reset_preview_scroll();
     }
 
     fn save_current_position(&mut self) {
@@ -158,5 +160,30 @@ impl App {
 
         self.save_history()?;
         Ok(())
+    }
+
+    /// Scroll preview content up by one line
+    pub fn scroll_preview_up(&mut self) -> bool {
+        if self.state.preview_scroll_offset > 0 {
+            self.state.preview_scroll_offset -= 1;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Scroll preview content down by one line
+    pub fn scroll_preview_down(&mut self) -> bool {
+        if self.state.preview_scroll_offset + 1 < self.state.preview_content.len() {
+            self.state.preview_scroll_offset += 1;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Reset preview scroll position to top
+    pub fn reset_preview_scroll(&mut self) {
+        self.state.preview_scroll_offset = 0;
     }
 }
