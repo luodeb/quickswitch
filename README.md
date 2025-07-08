@@ -11,37 +11,46 @@
 - 🔧 **Shell 集成**: 提供 bash 和 fish shell 函数，实现快速目录切换
 - 🎨 **美观界面**: 使用 ratatui 构建的现代化终端界面
 - ⚡ **高性能**: 异步处理，响应迅速
+- 🌐 **跨平台支持**: 兼容 Linux、macOS 和 Windows
 
-## 安装要求
+## 安装指南
 
-- Rust 1.70+ (使用 2024 edition)
-- 支持的操作系统: Linux, macOS, Windows
+### Release 安装
 
-## Cargo 安装
+可以从 [GitHub Releases](https://github.com/luodeb/quickswitch/releases/latest) 页面下载最新的二进制文件。
+下载后，解压并将可执行文件移动到系统路径中，例如 `/usr/local/bin`，或者别的 Path 路径中。
+测试安装是否成功：
+
+```bash
+quickswitch.exe --version
+```
+
+### Cargo 安装
 
 直接使用 Cargo 安装 quickswitch
-``` bash
+
+```bash
 cargo install quickswitch
 ```
 
-## 编译安装
+### 编译安装
 
-### 1. 克隆项目
+#### 1. 克隆项目
 
 ```bash
 git clone https://github.com/luodeb/quickswitch.git
 cd quickswitch
 ```
 
-### 2. 编译项目
+#### 2. 编译项目
 
-#### 开发版本
+##### 开发版本
 
 ```bash
 cargo build
 ```
 
-#### 发布版本（推荐）
+##### 发布版本（推荐）
 
 ```bash
 cargo build --release
@@ -52,7 +61,7 @@ cargo build --release
 - 开发版本：`target/debug/quickswitch`
 - 发布版本：`target/release/quickswitch`
 
-### 3. 安装到系统（可选）
+#### 3. 安装到系统（可选）
 
 ```bash
 # 安装到 ~/.cargo/bin
@@ -72,17 +81,23 @@ sudo cp target/release/quickswitch /usr/local/bin/
 <summary>Bash/Zsh</summary>
 
 > 将以下函数添加到你的 `~/.bashrc` 或 `~/.zshrc` 文件中末尾：
->```sh
+>
+> ```sh
 > eval "$(quickswitch --init bash)"
->```
+> ```
+>
 > 绑定按键（可选/推荐）Ctrl + E：
+>
 > ```sh
 > bind '"\C-e": "qs\n"'
 > ```
+>
 > 重新加载配置：
+>
 > ```sh
 > source ~/.bashrc  # 或 source ~/.zshrc
 > ```
+
 </details>
 
 <details>
@@ -95,11 +110,13 @@ sudo cp target/release/quickswitch /usr/local/bin/
 > ```
 >
 > 绑定按键（可选/推荐）Ctrl + E：
+>
 > ```sh
 > bind \ce qs
 > ```
 >
 > 重新加载配置：
+>
 > ```sh
 > source ~/.config/fish/config.fish
 > ```
@@ -110,10 +127,13 @@ sudo cp target/release/quickswitch /usr/local/bin/
 <summary>PowerShell</summary>
 
 > 将以下函数添加到你的 PowerShell 配置文件（`code $profile`）中：
+>
 > ```powershell
 > Invoke-Expression (& { (quickswitch.exe --init powershell | Out-String) })
 > ```
+>
 > 绑定按键（可选/推荐）Ctrl + E：
+>
 > ```powershell
 > Import-Module PSReadLine
 >
@@ -126,22 +146,25 @@ sudo cp target/release/quickswitch /usr/local/bin/
 >        [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 >    }
 > ```
+>
 > 重新加载配置：
+>
 > ```powershell
 > . $profile
 > ```
+
 </details>
 
 ## 快捷键操作
 
 | 快捷键      | 功能                      |
 | ----------- | ------------------------- |
-| `↑/↓ j/k`       | 上下选择文件/文件夹       |
-| `←/→ h/l`       | 进入父目录/进入选中的目录 |
+| `↑/↓ j/k`   | 上下选择文件/文件夹       |
+| `←/→ h/l`   | 进入父目录/进入选中的目录 |
 | `Enter`     | 选择当前目录并退出程序    |
 | `Esc`       | 退出程序                  |
-| `/`  | 实时搜索过滤              |
-| `v` | 切换到历史记录模式              |
+| `/`         | 实时搜索过滤              |
+| `v`         | 切换到历史记录模式        |
 | `Backspace` | 删除搜索字符              |
 
 ## 界面说明

@@ -32,6 +32,11 @@ async fn main() -> Result<()> {
                     std::process::exit(1);
                 }
             }
+            "--version" => {
+                let version = env!("CARGO_PKG_VERSION");
+                println!("quickswitch version {version}");
+                std::process::exit(0);
+            }
             _ => {
                 i += 1;
             }
