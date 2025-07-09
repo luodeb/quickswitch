@@ -1,5 +1,4 @@
 use anyhow::Result;
-use crossterm::event::{KeyCode, MouseEvent};
 use ratatui::{
     Frame,
     layout::Rect,
@@ -8,7 +7,7 @@ use ratatui::{
 
 use crate::{
     app::App,
-    modes::{ModeAction, ModeHandler, common::CommonModeLogic},
+    modes::ModeHandler,
     renderers::{Renderer, RendererType, create_renderer, should_show_help},
     services::state::StateService,
 };
@@ -37,49 +36,6 @@ impl NormalModeHandler {
 }
 
 impl ModeHandler for NormalModeHandler {
-    fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<ModeAction> {
-        // Handle common exit keys first
-        if let Some(action) =
-            CommonModeLogic::handle_exit_keys(app, key, &crate::models::AppMode::Normal)?
-        {
-            return Ok(action);
-        }
-
-        // Handle mode switching
-        if let Some(action) = CommonModeLogic::handle_mode_switches(app, key)? {
-            return Ok(action);
-        }
-
-        // Handle file navigation
-        if CommonModeLogic::handle_file_navigation(app, key)? {
-            return Ok(ModeAction::Stay);
-        }
-
-        // If no key was handled, continue running
-        Ok(ModeAction::Stay)
-    }
-
-    fn handle_mouse(
-        &mut self,
-        app: &mut App,
-        mouse: MouseEvent,
-        left_area: Rect,
-        right_area: Rect,
-    ) -> Result<ModeAction> {
-        // Handle position-aware mouse scroll navigation
-        if CommonModeLogic::handle_position_aware_scroll_navigation(
-            app, mouse, left_area, right_area,
-        )? {
-            return Ok(ModeAction::Stay);
-        }
-
-        if CommonModeLogic::handle_file_list_mouse_click(app, mouse, left_area)? {
-            return Ok(ModeAction::Stay);
-        }
-        // If no mouse action was handled, continue running
-        Ok(ModeAction::Stay)
-    }
-
     fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App) {
         self.file_list_renderer.render(f, area, app);
     }
@@ -119,4 +75,6 @@ impl ModeHandler for NormalModeHandler {
         StateService::save_current_position(app);
         Ok(())
     }
+
+
 }

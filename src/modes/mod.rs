@@ -2,9 +2,8 @@ use anyhow::Result;
 use crossterm::event::{KeyCode, MouseEvent};
 use ratatui::{Frame, layout::Rect, style::Style};
 
-use crate::app::App;
+use crate::{app::App, services::ActionDispatcher};
 
-pub mod common;
 pub mod history;
 pub mod normal;
 pub mod search;
@@ -17,20 +16,10 @@ pub enum ModeAction {
     Exit(Option<crate::models::FileItem>),
 }
 
-/// Core trait that defines the interface for all application modes
+/// Simplified trait that defines the interface for all application modes
+/// Each mode focuses on its core rendering and initialization logic
+/// All input handling is now unified through InputDispatcher
 pub trait ModeHandler {
-    /// Handle keyboard input for this mode
-    fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<ModeAction>;
-
-    /// Handle mouse input for this mode
-    fn handle_mouse(
-        &mut self,
-        app: &mut App,
-        mouse: MouseEvent,
-        left_area: Rect,
-        right_area: Rect,
-    ) -> Result<ModeAction>;
-
     /// Render the left panel (file list or history list)
     fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App);
 
@@ -85,7 +74,7 @@ impl ModeManager {
     }
 
     pub fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<ModeAction> {
-        self.current_handler.handle_key(app, key)
+        ActionDispatcher::handle_key_event(app, key, &self.current_mode)
     }
 
     pub fn handle_mouse(
@@ -95,8 +84,7 @@ impl ModeManager {
         left_area: Rect,
         right_area: Rect,
     ) -> Result<ModeAction> {
-        self.current_handler
-            .handle_mouse(app, mouse, left_area, right_area)
+        ActionDispatcher::handle_mouse_event(app, mouse, left_area, right_area, &self.current_mode)
     }
 
     pub fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App) {

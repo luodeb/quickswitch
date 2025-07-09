@@ -1,11 +1,45 @@
 use ratatui::{text::Line, widgets::ListState};
-use std::{collections::HashMap, path::PathBuf, time::Instant};
+use std::{collections::HashMap, path::{Path, PathBuf}, time::Instant};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AppMode {
     Normal,  // Default navigation mode (command mode)
     Search,  // Search input mode
     History, // History selection mode
+}
+
+#[derive(Clone, Debug)]
+pub enum DisplayItem {
+    File(FileItem),
+    HistoryPath(PathBuf),
+}
+
+impl DisplayItem {
+    pub fn get_display_name(&self) -> String {
+        match self {
+            DisplayItem::File(file) => file.name.clone(),
+            DisplayItem::HistoryPath(path) => {
+                path.file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or_default()
+                    .to_string()
+            }
+        }
+    }
+    
+    pub fn get_path(&self) -> &PathBuf {
+        match self {
+            DisplayItem::File(file) => &file.path,
+            DisplayItem::HistoryPath(path) => path,
+        }
+    }
+    
+    pub fn is_directory(&self) -> bool {
+        match self {
+            DisplayItem::File(file) => file.is_dir,
+            DisplayItem::HistoryPath(path) => path.is_dir(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -16,7 +50,7 @@ pub struct FileItem {
 }
 
 impl FileItem {
-    pub fn from_path(path: &PathBuf) -> Self {
+    pub fn from_path(path: &Path) -> Self {
         let name = path.file_name()
             .and_then(|n| n.to_str())
             .unwrap_or_default()

@@ -2,14 +2,10 @@ use std::fs;
 use std::path::PathBuf;
 
 use anyhow::Result;
-use ratatui::{
-    style::{Color, Style},
-    text::{Line, Span},
-};
 
 use crate::{
     models::{AppState, FileItem},
-    services::FilesystemService,
+    services::{FilesystemService, PreviewManager},
 };
 
 pub struct App {
@@ -26,7 +22,7 @@ impl App {
         app.load_history().unwrap_or(()); // Ignore errors when loading history
         app.update_filter();
         app.state.file_list_state.select(None);
-        app.update_preview();
+        PreviewManager::update_preview_from_selection(&mut app);
         Ok(app)
     }
 
@@ -66,21 +62,7 @@ impl App {
         None
     }
 
-    pub fn update_preview(&mut self) {
-        if let Some(file) = self.get_selected_file() {
-            let (title, content) = FilesystemService::generate_preview_content(file);
-            self.state.preview_title = title;
-            self.state.preview_content = content;
-        } else {
-            self.state.preview_title = "Preview".to_string();
-            self.state.preview_content = vec![Line::from(vec![Span::styled(
-                "No file selected".to_string(),
-                Style::default().fg(Color::Gray),
-            )])];
-        }
-        // Reset scroll position when content changes
-        self.reset_preview_scroll();
-    }
+
 
     fn save_current_position(&mut self) {
         if let Some(selected) = self.state.file_list_state.selected() {
@@ -119,7 +101,7 @@ impl App {
         self.update_filter();
 
         self.restore_position();
-        self.update_preview();
+        PreviewManager::update_preview_from_selection(self);
 
         Ok(())
     }

@@ -44,6 +44,8 @@ pub fn should_show_help(app: &App, mode: &crate::models::AppMode) -> bool {
         crate::models::AppMode::Search => {
             app.state.search_input.is_empty() || app.state.filtered_files.is_empty()
         }
-        crate::models::AppMode::History => true, // Always show help in history mode
+        crate::models::AppMode::History => {
+            app.state.history_state.selected().is_none() || app.state.history.is_empty()
+        }
     }
 }
