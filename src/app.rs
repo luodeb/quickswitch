@@ -74,15 +74,6 @@ impl App {
         None
     }
 
-    pub fn get_history_selected_file(&self) -> Option<&PathBuf> {
-        if let Some(selected) = self.state.history_state.selected() {
-            if let Some(path) = self.state.history.get(selected) {
-                return Some(path);
-            }
-        }
-        None
-    }
-
     fn save_current_position(&mut self) {
         if let Some(selected) = self.state.file_list_state.selected() {
             self.state
