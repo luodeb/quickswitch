@@ -7,7 +7,11 @@ use ratatui::{
 
 use crate::{
     app::App,
-    modes::{shared::renderers::Renderer, ModeHandler},
+    modes::{
+        ModeHandler,
+        normal::{FileListRenderer, NormalHelpRenderer},
+        shared::{PreviewRenderer, renderers::Renderer},
+    },
     services::state::StateService,
 };
 
@@ -27,9 +31,9 @@ impl Default for NormalModeHandler {
 impl NormalModeHandler {
     pub fn new() -> Self {
         Self {
-            file_list_renderer: Box::new(super::renderers::FileListRenderer::new()),
-            preview_renderer: Box::new(crate::modes::shared::PreviewRenderer::new()),
-            help_renderer: Box::new(super::renderers::NormalHelpRenderer::new()),
+            file_list_renderer: Box::new(FileListRenderer::new()),
+            preview_renderer: Box::new(PreviewRenderer::new()),
+            help_renderer: Box::new(NormalHelpRenderer::new()),
         }
     }
 }
@@ -52,7 +56,7 @@ impl ModeHandler for NormalModeHandler {
             if app.state.search_input.is_empty() {
                 (
                     "SEARCH - Type to search, ESC to exit search".to_string(),
-                    Style::default().fg(Color::Black).bg(Color::Yellow)
+                    Style::default().fg(Color::Black).bg(Color::Yellow),
                 )
             } else {
                 (
@@ -61,20 +65,26 @@ impl ModeHandler for NormalModeHandler {
                         app.state.search_input,
                         app.state.filtered_files.len()
                     ),
-                    Style::default().fg(Color::Black).bg(Color::Yellow)
+                    Style::default().fg(Color::Black).bg(Color::Yellow),
                 )
             }
+        } else if !app.state.search_input.is_empty() {
+            // Show search results even when not actively searching
+            (
+                format!(
+                    "FILTERED - '{}' - {} matches (/ to search again)",
+                    app.state.search_input,
+                    app.state.filtered_files.len()
+                ),
+                Style::default().fg(Color::Black).bg(Color::Green),
+            )
         } else {
             (
                 "NORMAL - hjkl navigate, / search, V history, Enter exit".to_string(),
-                Style::default().fg(Color::Yellow)
+                Style::default().fg(Color::Yellow),
             )
         };
-        (
-            info,
-            app.state.search_input.clone(),
-            style,
-        )
+        (info, app.state.search_input.clone(), style)
     }
 
     fn should_show_help(&self, app: &App) -> bool {
@@ -96,6 +106,4 @@ impl ModeHandler for NormalModeHandler {
         StateService::save_current_position(app);
         Ok(())
     }
-
-
 }

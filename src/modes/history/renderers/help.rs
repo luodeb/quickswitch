@@ -23,26 +23,23 @@ impl Renderer for HistoryHelpRenderer {
             Line::from("History Mode Navigation:"),
             Line::from(""),
             Line::from("j/k or ↑↓  - Navigate history"),
+            Line::from("l/→        - Enter directory & return to normal"),
             Line::from("/          - Search history"),
             Line::from("ESC        - Exit search (when searching)"),
-            Line::from("Enter      - Select directory"),
+            Line::from("Enter      - Select directory & exit app"),
             Line::from("ESC        - Return to normal mode"),
             Line::from(""),
             Line::from("Note: Selected directory will be"),
             Line::from("      moved to top of history"),
         ];
 
-        let help_items: Vec<ListItem> = help_content
-            .into_iter()
-            .map(ListItem::new)
-            .collect();
+        let help_items: Vec<ListItem> = help_content.into_iter().map(ListItem::new).collect();
 
-        let help_widget = List::new(help_items)
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title("Help - History Mode"),
-            );
+        let help_widget = List::new(help_items).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Help - History Mode"),
+        );
 
         f.render_widget(help_widget, area);
     }

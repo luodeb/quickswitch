@@ -12,11 +12,11 @@ use ratatui::{
 };
 use std::io;
 
-use crate::{events, modes::AppController};
+use crate::{events, models::AppMode, modes::AppController};
 
 pub async fn run_interactive_mode() -> Result<()> {
     let mut terminal = setup_terminal()?;
-    let mut controller = AppController::new(crate::models::AppMode::Normal)?;
+    let mut controller = AppController::new(AppMode::Normal)?;
     let result = run_app_loop(&mut terminal, &mut controller).await;
     cleanup_terminal(&mut terminal)?;
     result

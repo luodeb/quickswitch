@@ -53,7 +53,9 @@ impl App {
                 .iter()
                 .enumerate()
                 .filter(|(_, path)| {
-                    path.to_string_lossy().to_lowercase().contains(&search_lower)
+                    path.to_string_lossy()
+                        .to_lowercase()
+                        .contains(&search_lower)
                 })
                 .map(|(i, _)| i)
                 .collect();
@@ -80,8 +82,6 @@ impl App {
         }
         None
     }
-
-
 
     fn save_current_position(&mut self) {
         if let Some(selected) = self.state.file_list_state.selected() {

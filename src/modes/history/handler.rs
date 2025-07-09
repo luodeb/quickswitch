@@ -7,7 +7,11 @@ use ratatui::{
 
 use crate::{
     app::App,
-    modes::{shared::renderers::Renderer, ModeHandler},
+    modes::{
+        ModeHandler,
+        history::{HistoryHelpRenderer, HistoryListRenderer},
+        shared::{PreviewRenderer, renderers::Renderer},
+    },
     services::state::StateService,
 };
 
@@ -27,9 +31,9 @@ impl Default for HistoryModeHandler {
 impl HistoryModeHandler {
     pub fn new() -> Self {
         Self {
-            history_list_renderer: Box::new(super::renderers::HistoryListRenderer::new()),
-            preview_renderer: Box::new(crate::modes::shared::PreviewRenderer::new()),
-            help_renderer: Box::new(super::renderers::HistoryHelpRenderer::new()),
+            history_list_renderer: Box::new(HistoryListRenderer::new()),
+            preview_renderer: Box::new(PreviewRenderer::new()),
+            help_renderer: Box::new(HistoryHelpRenderer::new()),
         }
     }
 }
@@ -52,7 +56,7 @@ impl ModeHandler for HistoryModeHandler {
             if app.state.search_input.is_empty() {
                 (
                     "SEARCH - Type to search history, ESC to exit search".to_string(),
-                    Style::default().fg(Color::Black).bg(Color::Yellow)
+                    Style::default().fg(Color::Black).bg(Color::Yellow),
                 )
             } else {
                 (
@@ -61,23 +65,29 @@ impl ModeHandler for HistoryModeHandler {
                         app.state.search_input,
                         app.state.filtered_history.len()
                     ),
-                    Style::default().fg(Color::Black).bg(Color::Yellow)
+                    Style::default().fg(Color::Black).bg(Color::Yellow),
                 )
             }
+        } else if !app.state.search_input.is_empty() {
+            // Show search results even when not actively searching
+            (
+                format!(
+                    "FILTERED HISTORY - '{}' - {} matches (l/→ enter dir, / to search again, ESC to normal)",
+                    app.state.search_input,
+                    app.state.filtered_history.len()
+                ),
+                Style::default().fg(Color::Black).bg(Color::Green),
+            )
         } else {
             (
                 format!(
-                    "HISTORY - {} entries (jk navigate, / search, Enter select, ESC to normal)",
+                    "HISTORY - {} entries (jk navigate, l/→ enter dir, / search, Enter select, ESC to normal)",
                     app.state.history.len()
                 ),
-                Style::default().fg(Color::Cyan)
+                Style::default().fg(Color::Cyan),
             )
         };
-        (
-            info,
-            app.state.search_input.clone(),
-            style,
-        )
+        (info, app.state.search_input.clone(), style)
     }
 
     fn should_show_help(&self, app: &App) -> bool {

@@ -1,5 +1,9 @@
 use ratatui::{text::Line, widgets::ListState};
-use std::{collections::HashMap, path::{Path, PathBuf}, time::Instant};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+    time::Instant,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AppMode {
@@ -17,22 +21,21 @@ impl DisplayItem {
     pub fn get_display_name(&self) -> String {
         match self {
             DisplayItem::File(file) => file.name.clone(),
-            DisplayItem::HistoryPath(path) => {
-                path.file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or_default()
-                    .to_string()
-            }
+            DisplayItem::HistoryPath(path) => path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or_default()
+                .to_string(),
         }
     }
-    
+
     pub fn get_path(&self) -> &PathBuf {
         match self {
             DisplayItem::File(file) => &file.path,
             DisplayItem::HistoryPath(path) => path,
         }
     }
-    
+
     pub fn is_directory(&self) -> bool {
         match self {
             DisplayItem::File(file) => file.is_dir,
@@ -50,7 +53,8 @@ pub struct FileItem {
 
 impl FileItem {
     pub fn from_path(path: &Path) -> Self {
-        let name = path.file_name()
+        let name = path
+            .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or_default()
             .to_string();

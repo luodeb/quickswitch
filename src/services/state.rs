@@ -66,8 +66,6 @@ impl StateService {
         }
     }
 
-
-
     /// Move history item to front (used when selecting from history)
     pub fn move_history_to_front(app: &mut App, index: usize) -> Option<PathBuf> {
         if index < app.state.history.len() {

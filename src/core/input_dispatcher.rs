@@ -3,11 +3,11 @@ use crossterm::event::{KeyCode, MouseEvent, MouseEventKind};
 use ratatui::layout::Rect;
 
 use crate::{
+    FileItem,
     app::App,
-    handlers::navigation::NavigationHelper,
-    models::AppMode,
+    models::{AppMode, DisplayItem},
     modes::ModeAction,
-    services::{PreviewManager, create_data_provider},
+    services::{DataProvider, PreviewManager, create_data_provider},
 };
 
 /// Unified input dispatcher for handling all user interactions
@@ -63,12 +63,12 @@ impl InputDispatcher {
     fn handle_exit_keys(app: &mut App, key: KeyCode, current_mode: &AppMode) -> Option<ModeAction> {
         match key {
             KeyCode::Esc => {
-                // If searching, exit search mode
+                // If searching, exit search mode but keep search input and results
                 if app.state.is_searching {
                     app.state.is_searching = false;
-                    app.state.search_input.clear();
-                    app.update_filter();
-                    crate::services::PreviewManager::update_preview_from_selection(app);
+                    // Don't clear search_input - keep the search results visible
+                    // app.update_filter() is not needed since we're keeping the same filter
+                    PreviewManager::update_preview_from_selection(app);
                     Some(ModeAction::Stay)
                 } else if current_mode == &AppMode::Normal {
                     // In normal mode, Esc exits the application
@@ -83,11 +83,9 @@ impl InputDispatcher {
                 let provider = create_data_provider(current_mode);
                 if let Some(item) = provider.get_selected_item(app) {
                     match item {
-                        crate::models::DisplayItem::File(file) => {
-                            Some(ModeAction::Exit(Some(file)))
-                        }
-                        crate::models::DisplayItem::HistoryPath(path) => {
-                            let file_item = crate::models::FileItem::from_path(&path);
+                        DisplayItem::File(file) => Some(ModeAction::Exit(Some(file))),
+                        DisplayItem::HistoryPath(path) => {
+                            let file_item = FileItem::from_path(&path);
                             Some(ModeAction::Exit(Some(file_item)))
                         }
                     }
@@ -100,11 +98,17 @@ impl InputDispatcher {
     }
 
     /// Handle mode switching keys - unified across all modes
-    fn handle_mode_switch_keys(app: &mut App, key: KeyCode, current_mode: &AppMode) -> Option<ModeAction> {
+    fn handle_mode_switch_keys(
+        app: &mut App,
+        key: KeyCode,
+        current_mode: &AppMode,
+    ) -> Option<ModeAction> {
         match key {
             KeyCode::Char('/') => {
                 // Enable search functionality in normal and history modes
-                if matches!(current_mode, AppMode::Normal | AppMode::History) && !app.state.is_searching {
+                if matches!(current_mode, AppMode::Normal | AppMode::History)
+                    && !app.state.is_searching
+                {
                     app.state.is_searching = true;
                     Some(ModeAction::Stay)
                 } else {
@@ -142,22 +146,20 @@ impl InputDispatcher {
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Right => {
-                // History mode doesn't support directory navigation
-                if !provider.supports_directory_navigation() {
-                    return Ok(Some(ModeAction::Switch(AppMode::Normal)));
+                // Use provider's navigation method
+                if let Some(action) = provider.navigate_into_directory(app)? {
+                    Ok(Some(action))
+                } else {
+                    Ok(Some(ModeAction::Stay))
                 }
-
-                NavigationHelper::navigate_into_directory(app)?;
-                Ok(Some(ModeAction::Stay))
             }
             KeyCode::Left => {
-                // History mode doesn't support directory navigation
-                if !provider.supports_directory_navigation() {
-                    return Ok(Some(ModeAction::Switch(AppMode::Normal)));
+                // Use provider's navigation method
+                if let Some(action) = provider.navigate_to_parent(app)? {
+                    Ok(Some(action))
+                } else {
+                    Ok(Some(ModeAction::Stay))
                 }
-
-                NavigationHelper::navigate_to_parent(app)?;
-                Ok(Some(ModeAction::Stay))
             }
             // hjkl keys only work when not searching
             KeyCode::Char('k') if !app.state.is_searching => {
@@ -171,22 +173,20 @@ impl InputDispatcher {
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('l') if !app.state.is_searching => {
-                // History mode doesn't support directory navigation
-                if !provider.supports_directory_navigation() {
-                    return Ok(Some(ModeAction::Switch(AppMode::Normal)));
+                // Use provider's navigation method
+                if let Some(action) = provider.navigate_into_directory(app)? {
+                    Ok(Some(action))
+                } else {
+                    Ok(Some(ModeAction::Stay))
                 }
-
-                NavigationHelper::navigate_into_directory(app)?;
-                Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('h') if !app.state.is_searching => {
-                // History mode doesn't support directory navigation
-                if !provider.supports_directory_navigation() {
-                    return Ok(Some(ModeAction::Switch(AppMode::Normal)));
+                // Use provider's navigation method
+                if let Some(action) = provider.navigate_to_parent(app)? {
+                    Ok(Some(action))
+                } else {
+                    Ok(Some(ModeAction::Stay))
                 }
-
-                NavigationHelper::navigate_to_parent(app)?;
-                Ok(Some(ModeAction::Stay))
             }
             KeyCode::PageUp | KeyCode::PageDown => {
                 Self::handle_preview_navigation(app, key);
@@ -243,7 +243,7 @@ impl InputDispatcher {
     }
 
     /// Update preview if the data provider supports it
-    fn update_preview_if_needed(app: &mut App, provider: &dyn crate::services::DataProvider) {
+    fn update_preview_if_needed(app: &mut App, provider: &dyn DataProvider) {
         if let Some(path) = provider.get_preview_path(app) {
             PreviewManager::update_preview_for_path(app, &path);
         }
@@ -320,11 +320,15 @@ impl InputDispatcher {
         if is_double_click {
             if let Some(item) = provider.get_selected_item(app) {
                 match item {
-                    crate::models::DisplayItem::File(file) => {
-                        return Ok(ModeAction::Exit(Some(file)));
+                    DisplayItem::File(_) => {
+                        if let Some(action) = provider.navigate_into_directory(app)? {
+                            return Ok(action);
+                        } else {
+                            return Ok(ModeAction::Stay);
+                        }
                     }
-                    crate::models::DisplayItem::HistoryPath(path) => {
-                        let file_item = crate::models::FileItem::from_path(&path);
+                    DisplayItem::HistoryPath(path) => {
+                        let file_item = FileItem::from_path(&path);
                         return Ok(ModeAction::Exit(Some(file_item)));
                     }
                 }

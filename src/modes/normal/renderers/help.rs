@@ -5,7 +5,7 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem},
 };
 
-use crate::{app::App, modes::shared::renderers::Renderer, };
+use crate::{app::App, modes::shared::renderers::Renderer};
 
 /// Renderer for Normal mode help
 #[derive(Default)]
@@ -34,17 +34,13 @@ impl Renderer for NormalHelpRenderer {
             Line::from("ESC        - Quit application (when not searching)"),
         ];
 
-        let help_items: Vec<ListItem> = help_content
-            .into_iter()
-            .map(ListItem::new)
-            .collect();
+        let help_items: Vec<ListItem> = help_content.into_iter().map(ListItem::new).collect();
 
-        let help_widget = List::new(help_items)
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title("Help - Normal Mode"),
-            );
+        let help_widget = List::new(help_items).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Help - Normal Mode"),
+        );
 
         f.render_widget(help_widget, area);
     }

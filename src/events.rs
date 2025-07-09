@@ -8,7 +8,7 @@ use crossterm::{
 use ratatui::layout::Rect;
 use std::{env, io};
 
-use crate::modes::AppController;
+use crate::{FileItem, modes::AppController};
 
 /// Main entry point for keyboard event handling
 /// Now delegates to the app controller instead of handling directly
@@ -16,10 +16,7 @@ pub fn handle_key_event(controller: &mut AppController, key: KeyCode) -> Result<
     controller.handle_key(key)
 }
 
-pub fn handle_exit(
-    controller: &mut AppController,
-    file: Option<&crate::models::FileItem>,
-) -> Result<()> {
+pub fn handle_exit(controller: &mut AppController, file: Option<&FileItem>) -> Result<()> {
     let app = controller.get_app_mut();
 
     if let Some(file) = file {

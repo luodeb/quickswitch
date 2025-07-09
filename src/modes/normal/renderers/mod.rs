@@ -1,5 +1,5 @@
-pub mod help;
 pub mod file_list;
+pub mod help;
 
-pub use help::NormalHelpRenderer;
 pub use file_list::FileListRenderer;
+pub use help::NormalHelpRenderer;
