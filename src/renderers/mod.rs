@@ -39,10 +39,12 @@ pub fn create_renderer(renderer_type: RendererType) -> Box<dyn Renderer> {
 pub fn should_show_help(app: &App, mode: &crate::models::AppMode) -> bool {
     match mode {
         crate::models::AppMode::Normal => {
-            app.state.file_list_state.selected().is_none() || app.state.filtered_files.is_empty()
-        }
-        crate::models::AppMode::Search => {
-            app.state.search_input.is_empty() || app.state.filtered_files.is_empty()
+            // Show help if no selection or if searching with no results
+            if app.state.is_searching {
+                app.state.search_input.is_empty() || app.state.filtered_files.is_empty()
+            } else {
+                app.state.file_list_state.selected().is_none() || app.state.filtered_files.is_empty()
+            }
         }
         crate::models::AppMode::History => {
             app.state.history_state.selected().is_none() || app.state.history.is_empty()

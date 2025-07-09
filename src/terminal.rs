@@ -12,7 +12,7 @@ use ratatui::{
 };
 use std::io;
 
-use crate::{events, models::AppMode, modes::AppController};
+use crate::{events, modes::AppController};
 
 pub async fn run_interactive_mode() -> Result<()> {
     let mut terminal = setup_terminal()?;
@@ -111,8 +111,8 @@ fn render_ui(f: &mut Frame, controller: &AppController) {
     controller.render_left_panel(f, main_chunks[0]);
     controller.render_right_panel(f, main_chunks[1]);
 
-    // Set cursor position for search mode
-    if controller.is_mode(&AppMode::Search) {
+    // Set cursor position when searching
+    if controller.get_app().state.is_searching {
         f.set_cursor_position((
             chunks[0].x + controller.get_app().state.search_input.len() as u16 + 1,
             chunks[0].y + 1,

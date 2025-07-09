@@ -49,11 +49,36 @@ impl ModeHandler for HistoryModeHandler {
     }
 
     fn get_search_box_config(&self, app: &App) -> (String, String, Style) {
-        let info = format!(
-            "HISTORY - {} entries (jk navigate, Enter select, ESC to normal)",
-            app.state.history.len()
-        );
-        (info, String::new(), Style::default().fg(Color::Cyan))
+        let (info, style) = if app.state.is_searching {
+            if app.state.search_input.is_empty() {
+                (
+                    "SEARCH - Type to search history, ESC to exit search".to_string(),
+                    Style::default().fg(Color::Black).bg(Color::Yellow)
+                )
+            } else {
+                (
+                    format!(
+                        "SEARCH - '{}' - {} matches (ESC to exit)",
+                        app.state.search_input,
+                        app.state.filtered_files.len()
+                    ),
+                    Style::default().fg(Color::Black).bg(Color::Yellow)
+                )
+            }
+        } else {
+            (
+                format!(
+                    "HISTORY - {} entries (jk navigate, / search, Enter select, ESC to normal)",
+                    app.state.history.len()
+                ),
+                Style::default().fg(Color::Cyan)
+            )
+        };
+        (
+            info,
+            app.state.search_input.clone(),
+            style,
+        )
     }
 
     fn on_enter(&mut self, app: &mut App) -> Result<()> {

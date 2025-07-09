@@ -287,7 +287,7 @@ impl DataProvider for HistoryDataProvider {
 /// Factory function to create appropriate data provider for each mode
 pub fn create_data_provider(mode: &AppMode) -> Box<dyn DataProvider> {
     match mode {
-        AppMode::Normal | AppMode::Search => Box::new(FileListDataProvider),
+        AppMode::Normal => Box::new(FileListDataProvider),
         AppMode::History => Box::new(HistoryDataProvider),
     }
 }

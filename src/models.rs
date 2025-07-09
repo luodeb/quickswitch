@@ -4,7 +4,6 @@ use std::{collections::HashMap, path::{Path, PathBuf}, time::Instant};
 #[derive(Debug, Clone, PartialEq)]
 pub enum AppMode {
     Normal,  // Default navigation mode (command mode)
-    Search,  // Search input mode
     History, // History selection mode
 }
 
@@ -73,6 +72,7 @@ pub struct DoubleClickState {
 
 pub struct AppState {
     pub search_input: String,
+    pub is_searching: bool,
     pub current_dir: PathBuf,
     pub files: Vec<FileItem>,
     pub filtered_files: Vec<usize>,
@@ -93,6 +93,7 @@ impl AppState {
         let history_file_path = std::env::temp_dir().join("quickswitch.history");
         Ok(Self {
             search_input: String::new(),
+            is_searching: false,
             current_dir,
             files: Vec::new(),
             filtered_files: Vec::new(),

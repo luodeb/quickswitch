@@ -49,19 +49,32 @@ impl ModeHandler for NormalModeHandler {
     }
 
     fn get_search_box_config(&self, app: &App) -> (String, String, Style) {
-        let info = if app.state.search_input.is_empty() {
-            "NORMAL - hjkl navigate, / search, V history, Enter exit".to_string()
+        let (info, style) = if app.state.is_searching {
+            if app.state.search_input.is_empty() {
+                (
+                    "SEARCH - Type to search, ESC to exit search".to_string(),
+                    Style::default().fg(Color::Black).bg(Color::Yellow)
+                )
+            } else {
+                (
+                    format!(
+                        "SEARCH - '{}' - {} matches (ESC to exit)",
+                        app.state.search_input,
+                        app.state.filtered_files.len()
+                    ),
+                    Style::default().fg(Color::Black).bg(Color::Yellow)
+                )
+            }
         } else {
-            format!(
-                "NORMAL - Search: '{}' - {} matches",
-                app.state.search_input,
-                app.state.filtered_files.len()
+            (
+                "NORMAL - hjkl navigate, / search, V history, Enter exit".to_string(),
+                Style::default().fg(Color::Yellow)
             )
         };
         (
             info,
             app.state.search_input.clone(),
-            Style::default().fg(Color::Yellow),
+            style,
         )
     }
 

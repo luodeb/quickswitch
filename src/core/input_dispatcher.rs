@@ -27,7 +27,7 @@ impl InputDispatcher {
         }
 
         // Handle mode switch keys
-        if let Some(action) = Self::handle_mode_switch_keys(key, current_mode) {
+        if let Some(action) = Self::handle_mode_switch_keys(app, key, current_mode) {
             return Ok(action);
         }
 
@@ -63,8 +63,15 @@ impl InputDispatcher {
     fn handle_exit_keys(app: &mut App, key: KeyCode, current_mode: &AppMode) -> Option<ModeAction> {
         match key {
             KeyCode::Esc => {
-                // In normal mode, Esc exits the application
-                if current_mode == &AppMode::Normal {
+                // If searching, exit search mode
+                if app.state.is_searching {
+                    app.state.is_searching = false;
+                    app.state.search_input.clear();
+                    app.update_filter();
+                    crate::services::PreviewManager::update_preview_from_selection(app);
+                    Some(ModeAction::Stay)
+                } else if current_mode == &AppMode::Normal {
+                    // In normal mode, Esc exits the application
                     Some(ModeAction::Exit(None))
                 } else {
                     // In other modes, Esc returns to normal mode
@@ -93,11 +100,13 @@ impl InputDispatcher {
     }
 
     /// Handle mode switching keys - unified across all modes
-    fn handle_mode_switch_keys(key: KeyCode, current_mode: &AppMode) -> Option<ModeAction> {
+    fn handle_mode_switch_keys(app: &mut App, key: KeyCode, current_mode: &AppMode) -> Option<ModeAction> {
         match key {
             KeyCode::Char('/') => {
-                if current_mode != &AppMode::Search {
-                    Some(ModeAction::Switch(AppMode::Search))
+                // Enable search functionality in normal and history modes
+                if matches!(current_mode, AppMode::Normal | AppMode::History) && !app.state.is_searching {
+                    app.state.is_searching = true;
+                    Some(ModeAction::Stay)
                 } else {
                     None
                 }
@@ -162,11 +171,13 @@ impl InputDispatcher {
     fn handle_mode_specific_keys(
         app: &mut App,
         key: KeyCode,
-        current_mode: &AppMode,
+        _current_mode: &AppMode,
     ) -> Result<ModeAction> {
-        match current_mode {
-            AppMode::Search => Self::handle_search_keys(app, key),
-            _ => Ok(ModeAction::Stay),
+        // Handle search input when in search mode
+        if app.state.is_searching {
+            Self::handle_search_keys(app, key)
+        } else {
+            Ok(ModeAction::Stay)
         }
     }
 

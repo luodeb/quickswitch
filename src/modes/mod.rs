@@ -6,7 +6,6 @@ use crate::{app::App, services::ActionDispatcher};
 
 pub mod history;
 pub mod normal;
-pub mod search;
 
 /// Represents a mode switch request
 #[derive(Debug, Clone, PartialEq)]
@@ -40,7 +39,6 @@ pub trait ModeHandler {
 pub fn create_mode_handler(mode: &crate::models::AppMode) -> Box<dyn ModeHandler> {
     match mode {
         crate::models::AppMode::Normal => Box::new(normal::NormalModeHandler::new()),
-        crate::models::AppMode::Search => Box::new(search::SearchModeHandler::new()),
         crate::models::AppMode::History => Box::new(history::HistoryModeHandler::new()),
     }
 }
