@@ -4,7 +4,6 @@ pub mod events;
 pub mod handlers;
 pub mod models;
 pub mod modes;
-pub mod renderers;
 pub mod services;
 pub mod terminal;
 pub mod utils;

@@ -111,7 +111,7 @@ impl InputDispatcher {
                     None
                 }
             }
-            KeyCode::Char('v') => {
+            KeyCode::Char('v') if !app.state.is_searching => {
                 if current_mode != &AppMode::History {
                     Some(ModeAction::Switch(AppMode::History))
                 } else {
@@ -131,17 +131,17 @@ impl InputDispatcher {
         let provider = create_data_provider(current_mode);
 
         match key {
-            KeyCode::Char('k') | KeyCode::Up => {
+            KeyCode::Up => {
                 provider.navigate_up(app);
                 Self::update_preview_if_needed(app, &*provider);
                 Ok(Some(ModeAction::Stay))
             }
-            KeyCode::Char('j') | KeyCode::Down => {
+            KeyCode::Down => {
                 provider.navigate_down(app);
                 Self::update_preview_if_needed(app, &*provider);
                 Ok(Some(ModeAction::Stay))
             }
-            KeyCode::Char('l') | KeyCode::Right => {
+            KeyCode::Right => {
                 // History mode doesn't support directory navigation
                 if !provider.supports_directory_navigation() {
                     return Ok(Some(ModeAction::Switch(AppMode::Normal)));
@@ -150,7 +150,36 @@ impl InputDispatcher {
                 NavigationHelper::navigate_into_directory(app)?;
                 Ok(Some(ModeAction::Stay))
             }
-            KeyCode::Char('h') | KeyCode::Left => {
+            KeyCode::Left => {
+                // History mode doesn't support directory navigation
+                if !provider.supports_directory_navigation() {
+                    return Ok(Some(ModeAction::Switch(AppMode::Normal)));
+                }
+
+                NavigationHelper::navigate_to_parent(app)?;
+                Ok(Some(ModeAction::Stay))
+            }
+            // hjkl keys only work when not searching
+            KeyCode::Char('k') if !app.state.is_searching => {
+                provider.navigate_up(app);
+                Self::update_preview_if_needed(app, &*provider);
+                Ok(Some(ModeAction::Stay))
+            }
+            KeyCode::Char('j') if !app.state.is_searching => {
+                provider.navigate_down(app);
+                Self::update_preview_if_needed(app, &*provider);
+                Ok(Some(ModeAction::Stay))
+            }
+            KeyCode::Char('l') if !app.state.is_searching => {
+                // History mode doesn't support directory navigation
+                if !provider.supports_directory_navigation() {
+                    return Ok(Some(ModeAction::Switch(AppMode::Normal)));
+                }
+
+                NavigationHelper::navigate_into_directory(app)?;
+                Ok(Some(ModeAction::Stay))
+            }
+            KeyCode::Char('h') if !app.state.is_searching => {
                 // History mode doesn't support directory navigation
                 if !provider.supports_directory_navigation() {
                     return Ok(Some(ModeAction::Switch(AppMode::Normal)));

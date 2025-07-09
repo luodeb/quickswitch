@@ -66,23 +66,7 @@ impl StateService {
         }
     }
 
-    /// Clear search input and reset filters
-    pub fn clear_search(app: &mut App) {
-        app.state.search_input.clear();
-        Self::apply_search_filter(app);
-    }
 
-    /// Add character to search input and update filter
-    pub fn add_search_char(app: &mut App, c: char) {
-        app.state.search_input.push(c);
-        Self::apply_search_filter(app);
-    }
-
-    /// Remove last character from search input and update filter
-    pub fn remove_search_char(app: &mut App) {
-        app.state.search_input.pop();
-        Self::apply_search_filter(app);
-    }
 
     /// Move history item to front (used when selecting from history)
     pub fn move_history_to_front(app: &mut App, index: usize) -> Option<PathBuf> {

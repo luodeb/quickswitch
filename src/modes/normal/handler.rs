@@ -7,8 +7,7 @@ use ratatui::{
 
 use crate::{
     app::App,
-    modes::ModeHandler,
-    renderers::{Renderer, RendererType, create_renderer, should_show_help},
+    modes::{shared::renderers::Renderer, ModeHandler},
     services::state::StateService,
 };
 
@@ -28,9 +27,9 @@ impl Default for NormalModeHandler {
 impl NormalModeHandler {
     pub fn new() -> Self {
         Self {
-            file_list_renderer: create_renderer(RendererType::FileList),
-            preview_renderer: create_renderer(RendererType::Preview),
-            help_renderer: create_renderer(RendererType::NormalHelp),
+            file_list_renderer: Box::new(super::renderers::FileListRenderer::new()),
+            preview_renderer: Box::new(crate::modes::shared::PreviewRenderer::new()),
+            help_renderer: Box::new(super::renderers::NormalHelpRenderer::new()),
         }
     }
 }
@@ -41,7 +40,7 @@ impl ModeHandler for NormalModeHandler {
     }
 
     fn render_right_panel(&self, f: &mut Frame, area: Rect, app: &App) {
-        if should_show_help(app, &crate::models::AppMode::Normal) {
+        if self.should_show_help(app) {
             self.help_renderer.render(f, area, app);
         } else {
             self.preview_renderer.render(f, area, app);
@@ -76,6 +75,15 @@ impl ModeHandler for NormalModeHandler {
             app.state.search_input.clone(),
             style,
         )
+    }
+
+    fn should_show_help(&self, app: &App) -> bool {
+        // Show help if no selection or if searching with no results
+        if app.state.is_searching {
+            app.state.search_input.is_empty() || app.state.filtered_files.is_empty()
+        } else {
+            app.state.file_list_state.selected().is_none() || app.state.filtered_files.is_empty()
+        }
     }
 
     fn on_enter(&mut self, _app: &mut App) -> Result<()> {

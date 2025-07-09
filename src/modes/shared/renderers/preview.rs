@@ -4,7 +4,8 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem},
 };
 
-use crate::{app::App, renderers::Renderer};
+use super::Renderer;
+use crate::app::App;
 
 /// Renderer for preview panel showing file/directory content
 #[derive(Default)]

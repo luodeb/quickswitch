@@ -27,6 +27,7 @@ impl App {
     }
 
     pub fn update_filter(&mut self) {
+        // Filter files
         if self.state.search_input.is_empty() {
             self.state.filtered_files = (0..self.state.files.len()).collect();
         } else {
@@ -41,7 +42,25 @@ impl App {
                 .collect();
         }
 
+        // Filter history
+        if self.state.search_input.is_empty() {
+            self.state.filtered_history = (0..self.state.history.len()).collect();
+        } else {
+            let search_lower = self.state.search_input.to_lowercase();
+            self.state.filtered_history = self
+                .state
+                .history
+                .iter()
+                .enumerate()
+                .filter(|(_, path)| {
+                    path.to_string_lossy().to_lowercase().contains(&search_lower)
+                })
+                .map(|(i, _)| i)
+                .collect();
+        }
+
         self.state.file_list_state.select(None);
+        self.state.history_state.select(None);
     }
 
     pub fn get_selected_file(&self) -> Option<&FileItem> {
@@ -97,7 +116,10 @@ impl App {
 
         self.state.current_dir = new_dir;
         self.reload_directory()?;
+
+        // Clear search and exit search mode when changing directory
         self.state.search_input.clear();
+        self.state.is_searching = false;
         self.update_filter();
 
         self.restore_position();
@@ -120,6 +142,9 @@ impl App {
                 .map(|line| PathBuf::from(line.trim()))
                 .filter(|path| path.exists())
                 .collect();
+
+            // Initialize filtered_history with all indices
+            self.state.filtered_history = (0..self.state.history.len()).collect();
         }
         Ok(())
     }

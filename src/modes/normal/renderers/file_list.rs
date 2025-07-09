@@ -6,9 +6,9 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem},
 };
 
-use crate::{app::App, renderers::Renderer, utils};
+use crate::{app::App, modes::shared::renderers::Renderer, utils};
 
-/// Renderer for file list in Normal and Search modes
+/// Renderer for file list in Normal mode
 #[derive(Default)]
 pub struct FileListRenderer;
 

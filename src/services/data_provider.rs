@@ -165,8 +165,9 @@ pub struct HistoryDataProvider;
 impl DataProvider for HistoryDataProvider {
     fn get_items(&self, app: &App) -> Vec<DisplayItem> {
         app.state
-            .history
+            .filtered_history
             .iter()
+            .filter_map(|&i| app.state.history.get(i))
             .map(|path| DisplayItem::HistoryPath(path.clone()))
             .collect()
     }
@@ -180,7 +181,7 @@ impl DataProvider for HistoryDataProvider {
     }
 
     fn get_total_count(&self, app: &App) -> usize {
-        app.state.history.len()
+        app.state.filtered_history.len()
     }
 
     fn navigate_up(&self, app: &mut App) -> bool {
@@ -193,10 +194,10 @@ impl DataProvider for HistoryDataProvider {
                 }
                 return true;
             }
-        } else if !app.state.history.is_empty() {
+        } else if !app.state.filtered_history.is_empty() {
             app.state
                 .history_state
-                .select(Some(app.state.history.len() - 1));
+                .select(Some(app.state.filtered_history.len() - 1));
             self.update_scroll_offset(app, 20); // Default visible height
             if let Some(path) = self.get_preview_path(app) {
                 crate::services::PreviewManager::update_preview_for_path(app, &path);
@@ -207,7 +208,7 @@ impl DataProvider for HistoryDataProvider {
     }
 
     fn navigate_down(&self, app: &mut App) -> bool {
-        let total = app.state.history.len();
+        let total = app.state.filtered_history.len();
         if total == 0 {
             return false;
         }
@@ -234,8 +235,10 @@ impl DataProvider for HistoryDataProvider {
 
     fn get_selected_item(&self, app: &App) -> Option<DisplayItem> {
         if let Some(selected) = app.state.history_state.selected() {
-            if let Some(path) = app.state.history.get(selected) {
-                return Some(DisplayItem::HistoryPath(path.clone()));
+            if let Some(&history_index) = app.state.filtered_history.get(selected) {
+                if let Some(path) = app.state.history.get(history_index) {
+                    return Some(DisplayItem::HistoryPath(path.clone()));
+                }
             }
         }
         None

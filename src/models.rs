@@ -82,6 +82,7 @@ pub struct AppState {
     pub preview_scroll_offset: usize,
     pub dir_positions: HashMap<PathBuf, usize>,
     pub history: Vec<PathBuf>,
+    pub filtered_history: Vec<usize>,
     pub history_state: ListState,
     pub history_file_path: PathBuf,
     pub double_click_state: DoubleClickState,
@@ -103,6 +104,7 @@ impl AppState {
             preview_scroll_offset: 0,
             dir_positions: HashMap::new(),
             history: Vec::new(),
+            filtered_history: Vec::new(),
             history_state: ListState::default(),
             history_file_path,
             double_click_state: DoubleClickState {

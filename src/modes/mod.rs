@@ -6,6 +6,7 @@ use crate::{app::App, services::ActionDispatcher};
 
 pub mod history;
 pub mod normal;
+pub mod shared;
 
 /// Represents a mode switch request
 #[derive(Debug, Clone, PartialEq)]
@@ -27,6 +28,9 @@ pub trait ModeHandler {
 
     /// Get search box configuration (title, content, style)
     fn get_search_box_config(&self, app: &App) -> (String, String, Style);
+
+    /// Determine if help should be shown instead of preview
+    fn should_show_help(&self, app: &App) -> bool;
 
     /// Called when entering this mode
     fn on_enter(&mut self, app: &mut App) -> Result<()>;

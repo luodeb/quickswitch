@@ -5,7 +5,7 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem},
 };
 
-use crate::{app::App, renderers::Renderer};
+use crate::{app::App, modes::shared::renderers::Renderer, };
 
 /// Renderer for Normal mode help
 #[derive(Default)]
@@ -27,18 +27,11 @@ impl Renderer for NormalHelpRenderer {
             Line::from("k/↑        - Move up"),
             Line::from("l/→        - Enter directory"),
             Line::from(""),
-            Line::from("/          - Enter search mode"),
-            Line::from("v          - Enter history mode"),
+            Line::from("/          - Search files"),
+            Line::from("ESC        - Exit search (when searching)"),
+            Line::from("V          - Enter history mode"),
             Line::from("Enter      - Select and exit"),
-            Line::from("Esc        - Exit application"),
-            Line::from(""),
-            Line::from("Mouse:"),
-            Line::from("Click      - Select item"),
-            Line::from("Double-click - Select and exit"),
-            Line::from("Scroll     - Navigate list"),
-            Line::from(""),
-            Line::from("Preview:"),
-            Line::from("PageUp/Down - Scroll preview"),
+            Line::from("ESC        - Quit application (when not searching)"),
         ];
 
         let help_items: Vec<ListItem> = help_content
@@ -47,7 +40,11 @@ impl Renderer for NormalHelpRenderer {
             .collect();
 
         let help_widget = List::new(help_items)
-            .block(Block::default().title("Help").borders(Borders::ALL));
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("Help - Normal Mode"),
+            );
 
         f.render_widget(help_widget, area);
     }
