@@ -1,10 +1,13 @@
 use ratatui::{text::Line, widgets::ListState};
-use std::{collections::HashMap, path::{Path, PathBuf}, time::Instant};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+    time::Instant,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AppMode {
     Normal,  // Default navigation mode (command mode)
-    Search,  // Search input mode
     History, // History selection mode
 }
 
@@ -18,22 +21,21 @@ impl DisplayItem {
     pub fn get_display_name(&self) -> String {
         match self {
             DisplayItem::File(file) => file.name.clone(),
-            DisplayItem::HistoryPath(path) => {
-                path.file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or_default()
-                    .to_string()
-            }
+            DisplayItem::HistoryPath(path) => path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or_default()
+                .to_string(),
         }
     }
-    
+
     pub fn get_path(&self) -> &PathBuf {
         match self {
             DisplayItem::File(file) => &file.path,
             DisplayItem::HistoryPath(path) => path,
         }
     }
-    
+
     pub fn is_directory(&self) -> bool {
         match self {
             DisplayItem::File(file) => file.is_dir,
@@ -51,7 +53,8 @@ pub struct FileItem {
 
 impl FileItem {
     pub fn from_path(path: &Path) -> Self {
-        let name = path.file_name()
+        let name = path
+            .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or_default()
             .to_string();
@@ -73,6 +76,7 @@ pub struct DoubleClickState {
 
 pub struct AppState {
     pub search_input: String,
+    pub is_searching: bool,
     pub current_dir: PathBuf,
     pub files: Vec<FileItem>,
     pub filtered_files: Vec<usize>,
@@ -82,6 +86,7 @@ pub struct AppState {
     pub preview_scroll_offset: usize,
     pub dir_positions: HashMap<PathBuf, usize>,
     pub history: Vec<PathBuf>,
+    pub filtered_history: Vec<usize>,
     pub history_state: ListState,
     pub history_file_path: PathBuf,
     pub double_click_state: DoubleClickState,
@@ -93,6 +98,7 @@ impl AppState {
         let history_file_path = std::env::temp_dir().join("quickswitch.history");
         Ok(Self {
             search_input: String::new(),
+            is_searching: false,
             current_dir,
             files: Vec::new(),
             filtered_files: Vec::new(),
@@ -102,6 +108,7 @@ impl AppState {
             preview_scroll_offset: 0,
             dir_positions: HashMap::new(),
             history: Vec::new(),
+            filtered_history: Vec::new(),
             history_state: ListState::default(),
             history_file_path,
             double_click_state: DoubleClickState {

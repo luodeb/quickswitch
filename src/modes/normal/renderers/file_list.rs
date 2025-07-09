@@ -6,9 +6,9 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem},
 };
 
-use crate::{app::App, renderers::Renderer, utils};
+use crate::{FileItem, app::App, modes::shared::renderers::Renderer, utils};
 
-/// Renderer for file list in Normal and Search modes
+/// Renderer for file list in Normal mode
 #[derive(Default)]
 pub struct FileListRenderer;
 
@@ -44,10 +44,7 @@ impl Renderer for FileListRenderer {
 }
 
 /// Create a list item for a file with optional search highlighting
-fn create_file_list_item<'a>(
-    file: &'a crate::models::FileItem,
-    search_input: &'a str,
-) -> ListItem<'a> {
+fn create_file_list_item<'a>(file: &'a FileItem, search_input: &'a str) -> ListItem<'a> {
     let icon = if file.is_dir { "📁" } else { "📄" };
     let style = if file.is_dir {
         Style::default().fg(Color::Cyan)

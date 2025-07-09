@@ -3,11 +3,11 @@ use crossterm::event::{KeyCode, MouseEvent, MouseEventKind};
 use ratatui::layout::Rect;
 
 use crate::{
+    FileItem,
     app::App,
-    handlers::navigation::NavigationHelper,
-    models::AppMode,
+    models::{AppMode, DisplayItem},
     modes::ModeAction,
-    services::{PreviewManager, create_data_provider},
+    services::{DataProvider, PreviewManager, create_data_provider},
 };
 
 /// Unified input dispatcher for handling all user interactions
@@ -27,7 +27,7 @@ impl InputDispatcher {
         }
 
         // Handle mode switch keys
-        if let Some(action) = Self::handle_mode_switch_keys(key, current_mode) {
+        if let Some(action) = Self::handle_mode_switch_keys(app, key, current_mode) {
             return Ok(action);
         }
 
@@ -63,8 +63,15 @@ impl InputDispatcher {
     fn handle_exit_keys(app: &mut App, key: KeyCode, current_mode: &AppMode) -> Option<ModeAction> {
         match key {
             KeyCode::Esc => {
-                // In normal mode, Esc exits the application
-                if current_mode == &AppMode::Normal {
+                // If searching, exit search mode but keep search input and results
+                if app.state.is_searching {
+                    app.state.is_searching = false;
+                    // Don't clear search_input - keep the search results visible
+                    // app.update_filter() is not needed since we're keeping the same filter
+                    PreviewManager::update_preview_from_selection(app);
+                    Some(ModeAction::Stay)
+                } else if current_mode == &AppMode::Normal {
+                    // In normal mode, Esc exits the application
                     Some(ModeAction::Exit(None))
                 } else {
                     // In other modes, Esc returns to normal mode
@@ -76,11 +83,9 @@ impl InputDispatcher {
                 let provider = create_data_provider(current_mode);
                 if let Some(item) = provider.get_selected_item(app) {
                     match item {
-                        crate::models::DisplayItem::File(file) => {
-                            Some(ModeAction::Exit(Some(file)))
-                        }
-                        crate::models::DisplayItem::HistoryPath(path) => {
-                            let file_item = crate::models::FileItem::from_path(&path);
+                        DisplayItem::File(file) => Some(ModeAction::Exit(Some(file))),
+                        DisplayItem::HistoryPath(path) => {
+                            let file_item = FileItem::from_path(&path);
                             Some(ModeAction::Exit(Some(file_item)))
                         }
                     }
@@ -93,16 +98,24 @@ impl InputDispatcher {
     }
 
     /// Handle mode switching keys - unified across all modes
-    fn handle_mode_switch_keys(key: KeyCode, current_mode: &AppMode) -> Option<ModeAction> {
+    fn handle_mode_switch_keys(
+        app: &mut App,
+        key: KeyCode,
+        current_mode: &AppMode,
+    ) -> Option<ModeAction> {
         match key {
             KeyCode::Char('/') => {
-                if current_mode != &AppMode::Search {
-                    Some(ModeAction::Switch(AppMode::Search))
+                // Enable search functionality in normal and history modes
+                if matches!(current_mode, AppMode::Normal | AppMode::History)
+                    && !app.state.is_searching
+                {
+                    app.state.is_searching = true;
+                    Some(ModeAction::Stay)
                 } else {
                     None
                 }
             }
-            KeyCode::Char('v') => {
+            KeyCode::Char('v') if !app.state.is_searching => {
                 if current_mode != &AppMode::History {
                     Some(ModeAction::Switch(AppMode::History))
                 } else {
@@ -122,33 +135,58 @@ impl InputDispatcher {
         let provider = create_data_provider(current_mode);
 
         match key {
-            KeyCode::Char('k') | KeyCode::Up => {
+            KeyCode::Up => {
                 provider.navigate_up(app);
                 Self::update_preview_if_needed(app, &*provider);
                 Ok(Some(ModeAction::Stay))
             }
-            KeyCode::Char('j') | KeyCode::Down => {
+            KeyCode::Down => {
                 provider.navigate_down(app);
                 Self::update_preview_if_needed(app, &*provider);
                 Ok(Some(ModeAction::Stay))
             }
-            KeyCode::Char('l') | KeyCode::Right => {
-                // History mode doesn't support directory navigation
-                if !provider.supports_directory_navigation() {
-                    return Ok(Some(ModeAction::Switch(AppMode::Normal)));
+            KeyCode::Right => {
+                // Use provider's navigation method
+                if let Some(action) = provider.navigate_into_directory(app)? {
+                    Ok(Some(action))
+                } else {
+                    Ok(Some(ModeAction::Stay))
                 }
-
-                NavigationHelper::navigate_into_directory(app)?;
+            }
+            KeyCode::Left => {
+                // Use provider's navigation method
+                if let Some(action) = provider.navigate_to_parent(app)? {
+                    Ok(Some(action))
+                } else {
+                    Ok(Some(ModeAction::Stay))
+                }
+            }
+            // hjkl keys only work when not searching
+            KeyCode::Char('k') if !app.state.is_searching => {
+                provider.navigate_up(app);
+                Self::update_preview_if_needed(app, &*provider);
                 Ok(Some(ModeAction::Stay))
             }
-            KeyCode::Char('h') | KeyCode::Left => {
-                // History mode doesn't support directory navigation
-                if !provider.supports_directory_navigation() {
-                    return Ok(Some(ModeAction::Switch(AppMode::Normal)));
-                }
-
-                NavigationHelper::navigate_to_parent(app)?;
+            KeyCode::Char('j') if !app.state.is_searching => {
+                provider.navigate_down(app);
+                Self::update_preview_if_needed(app, &*provider);
                 Ok(Some(ModeAction::Stay))
+            }
+            KeyCode::Char('l') if !app.state.is_searching => {
+                // Use provider's navigation method
+                if let Some(action) = provider.navigate_into_directory(app)? {
+                    Ok(Some(action))
+                } else {
+                    Ok(Some(ModeAction::Stay))
+                }
+            }
+            KeyCode::Char('h') if !app.state.is_searching => {
+                // Use provider's navigation method
+                if let Some(action) = provider.navigate_to_parent(app)? {
+                    Ok(Some(action))
+                } else {
+                    Ok(Some(ModeAction::Stay))
+                }
             }
             KeyCode::PageUp | KeyCode::PageDown => {
                 Self::handle_preview_navigation(app, key);
@@ -162,11 +200,13 @@ impl InputDispatcher {
     fn handle_mode_specific_keys(
         app: &mut App,
         key: KeyCode,
-        current_mode: &AppMode,
+        _current_mode: &AppMode,
     ) -> Result<ModeAction> {
-        match current_mode {
-            AppMode::Search => Self::handle_search_keys(app, key),
-            _ => Ok(ModeAction::Stay),
+        // Handle search input when in search mode
+        if app.state.is_searching {
+            Self::handle_search_keys(app, key)
+        } else {
+            Ok(ModeAction::Stay)
         }
     }
 
@@ -203,7 +243,7 @@ impl InputDispatcher {
     }
 
     /// Update preview if the data provider supports it
-    fn update_preview_if_needed(app: &mut App, provider: &dyn crate::services::DataProvider) {
+    fn update_preview_if_needed(app: &mut App, provider: &dyn DataProvider) {
         if let Some(path) = provider.get_preview_path(app) {
             PreviewManager::update_preview_for_path(app, &path);
         }
@@ -280,11 +320,15 @@ impl InputDispatcher {
         if is_double_click {
             if let Some(item) = provider.get_selected_item(app) {
                 match item {
-                    crate::models::DisplayItem::File(file) => {
-                        return Ok(ModeAction::Exit(Some(file)));
+                    DisplayItem::File(_) => {
+                        if let Some(action) = provider.navigate_into_directory(app)? {
+                            return Ok(action);
+                        } else {
+                            return Ok(ModeAction::Stay);
+                        }
                     }
-                    crate::models::DisplayItem::HistoryPath(path) => {
-                        let file_item = crate::models::FileItem::from_path(&path);
+                    DisplayItem::HistoryPath(path) => {
+                        let file_item = FileItem::from_path(&path);
                         return Ok(ModeAction::Exit(Some(file_item)));
                     }
                 }
