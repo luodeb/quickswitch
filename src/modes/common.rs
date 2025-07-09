@@ -1,8 +1,12 @@
 use anyhow::Result;
 use crossterm::event::{KeyCode, MouseEvent, MouseEventKind};
 use ratatui::layout::Rect;
+use std::time::Instant;
 
 use crate::{app::App, handlers::navigation::NavigationHelper, modes::ModeAction};
+
+/// Double click detection interval in milliseconds
+const DOUBLE_CLICK_INTERVAL_MS: u64 = 150;
 
 /// Common functionality shared across different modes
 pub struct CommonModeLogic;
@@ -83,10 +87,47 @@ impl CommonModeLogic {
             MouseEventKind::Down(crossterm::event::MouseButton::Left) => {
                 // Calculate which file was clicked based on mouse position
                 if mouse.row >= area.y && mouse.row < area.y + area.height {
-                    let clicked_index = (mouse.row - area.y - 1) as usize;
+                    let visible_clicked_index = (mouse.row - area.y - 1) as usize;
+                    let scroll_offset = app.state.file_list_state.offset();
+                    let clicked_index = visible_clicked_index + scroll_offset;
                     if clicked_index < app.state.filtered_files.len() {
-                        app.state.file_list_state.select(Some(clicked_index));
-                        app.update_preview();
+                        let current_time = Instant::now();
+                        let mouse_position = (mouse.column, mouse.row);
+                        
+                        // Check for double-click
+                        let is_double_click = if let (Some(last_time), Some(last_pos), Some(last_idx)) = (
+                            app.state.double_click_state.last_click_time,
+                            app.state.double_click_state.last_click_position,
+                            app.state.double_click_state.last_clicked_index,
+                        ) {
+                            // Check if within time interval and same position and same file
+                            let elapsed = current_time.duration_since(last_time);
+                            elapsed.as_millis() <= DOUBLE_CLICK_INTERVAL_MS as u128
+                                && last_pos == mouse_position
+                                && last_idx == clicked_index
+                        } else {
+                            false
+                        };
+
+                        if is_double_click {
+                            // Reset double-click state
+                            app.state.double_click_state.last_click_time = None;
+                            app.state.double_click_state.last_click_position = None;
+                            app.state.double_click_state.last_clicked_index = None;
+                            
+                            // Execute double-click action (navigate into directory)
+                            app.state.file_list_state.select(Some(clicked_index));
+                            NavigationHelper::navigate_into_directory(app)?;
+                        } else {
+                            // Single click - update selection and record click state
+                            app.state.file_list_state.select(Some(clicked_index));
+                            app.update_preview();
+                            
+                            // Record this click for potential double-click detection
+                            app.state.double_click_state.last_click_time = Some(current_time);
+                            app.state.double_click_state.last_click_position = Some(mouse_position);
+                            app.state.double_click_state.last_clicked_index = Some(clicked_index);
+                        }
                     }
                 }
                 Ok(true)
@@ -145,5 +186,12 @@ impl CommonModeLogic {
             KeyCode::PageDown => Ok(app.scroll_preview_page_down(default_visible_height)),
             _ => Ok(false),
         }
+    }
+
+    /// Reset double-click state
+    pub fn reset_double_click_state(app: &mut App) {
+        app.state.double_click_state.last_click_time = None;
+        app.state.double_click_state.last_click_position = None;
+        app.state.double_click_state.last_clicked_index = None;
     }
 }

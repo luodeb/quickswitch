@@ -1,5 +1,5 @@
 use ratatui::{text::Line, widgets::ListState};
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, path::PathBuf, time::Instant};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AppMode {
@@ -15,6 +15,13 @@ pub struct FileItem {
     pub is_dir: bool,
 }
 
+#[derive(Clone, Debug)]
+pub struct DoubleClickState {
+    pub last_click_time: Option<Instant>,
+    pub last_click_position: Option<(u16, u16)>,
+    pub last_clicked_index: Option<usize>,
+}
+
 pub struct AppState {
     pub search_input: String,
     pub current_dir: PathBuf,
@@ -28,6 +35,7 @@ pub struct AppState {
     pub history: Vec<PathBuf>,
     pub history_state: ListState,
     pub history_file_path: PathBuf,
+    pub double_click_state: DoubleClickState,
 }
 
 impl AppState {
@@ -47,6 +55,11 @@ impl AppState {
             history: Vec::new(),
             history_state: ListState::default(),
             history_file_path,
+            double_click_state: DoubleClickState {
+                last_click_time: None,
+                last_click_position: None,
+                last_clicked_index: None,
+            },
         })
     }
 }
