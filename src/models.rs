@@ -15,6 +15,21 @@ pub struct FileItem {
     pub is_dir: bool,
 }
 
+impl FileItem {
+    pub fn from_path(path: &PathBuf) -> Self {
+        let name = path.file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or_default()
+            .to_string();
+        let is_dir = path.is_dir();
+        Self {
+            name,
+            path: path.to_path_buf(),
+            is_dir,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct DoubleClickState {
     pub last_click_time: Option<Instant>,

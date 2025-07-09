@@ -57,6 +57,15 @@ impl App {
         None
     }
 
+    pub fn get_history_selected_file(&self) -> Option<&PathBuf> {
+        if let Some(selected) = self.state.history_state.selected() {
+            if let Some(path) = self.state.history.get(selected) {
+                return Some(path);
+            }
+        }
+        None
+    }
+
     pub fn update_preview(&mut self) {
         if let Some(file) = self.get_selected_file() {
             let (title, content) = FilesystemService::generate_preview_content(file);

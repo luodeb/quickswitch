@@ -53,19 +53,9 @@ impl ModeHandler for HistoryModeHandler {
                     }
                 } else {
                     // Regular Enter: Exit with selected directory
-                    if let Some(selected) = app.state.history_state.selected() {
-                        if let Some(path) = app.state.history.get(selected) {
-                            let file_item = crate::models::FileItem {
-                                name: path
-                                    .file_name()
-                                    .unwrap_or_default()
-                                    .to_string_lossy()
-                                    .into_owned(),
-                                path: path.to_path_buf(),
-                                is_dir: path.is_dir(),
-                            };
-                            return Ok(ModeAction::Exit(Some(file_item)));
-                        }
+                    if let Some(path) = app.get_history_selected_file() {
+                        let file_item = crate::models::FileItem::from_path(path);
+                        return Ok(ModeAction::Exit(Some(file_item)));
                     }
                 }
                 Ok(ModeAction::Stay)
@@ -88,8 +78,9 @@ impl ModeHandler for HistoryModeHandler {
         left_area: Rect,
         _right_area: Rect,
     ) -> Result<ModeAction> {
-        // Handle mouse scroll for history navigation
+        // Import CommonModeLogic for mouse handling
         use crate::handlers::navigation::NavigationHelper;
+        use crate::modes::common::CommonModeLogic;
         use crossterm::event::MouseEventKind;
 
         match mouse.kind {
@@ -107,20 +98,17 @@ impl ModeHandler for HistoryModeHandler {
                 }
                 Ok(ModeAction::Stay)
             }
-            MouseEventKind::Down(crossterm::event::MouseButton::Left) => {
-                if mouse.row >= left_area.y && mouse.row < left_area.y + left_area.height {
-                    let clicked_index = (mouse.row - left_area.y - 1) as usize;
-                    let state = &mut app.state.history_state;
-                    if let Some(selected) = state.selected() {
-                        if selected <= app.state.history.len().saturating_sub(1) {
-                            state.select(Some(clicked_index));
-                            app.update_preview();
-                        }
+            _ => {
+                // Handle history list mouse click
+                if CommonModeLogic::handle_history_list_mouse_click(app, mouse, left_area)? {
+                    // Regular Enter: Exit with selected directory
+                    if let Some(path) = app.get_history_selected_file() {
+                        let file_item = crate::models::FileItem::from_path(path);
+                        return Ok(ModeAction::Exit(Some(file_item)));
                     }
                 }
                 Ok(ModeAction::Stay)
             }
-            _ => Ok(ModeAction::Stay),
         }
     }
 

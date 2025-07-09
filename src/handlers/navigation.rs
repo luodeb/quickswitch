@@ -83,12 +83,22 @@ impl NavigationHelper {
 
     /// Navigate up in history list
     pub fn navigate_history_up(app: &mut App) -> bool {
-        Self::navigate_up(&mut app.state.history_state, app.state.history.len())
+        let changed = Self::navigate_up(&mut app.state.history_state, app.state.history.len());
+        if changed {
+            // Update offset for automatic scrolling (assuming 20 as default visible height)
+            Self::update_history_offset(app, 20);
+        }
+        changed
     }
 
     /// Navigate down in history list
     pub fn navigate_history_down(app: &mut App) -> bool {
-        Self::navigate_down(&mut app.state.history_state, app.state.history.len())
+        let changed = Self::navigate_down(&mut app.state.history_state, app.state.history.len());
+        if changed {
+            // Update offset for automatic scrolling (assuming 20 as default visible height)
+            Self::update_history_offset(app, 20);
+        }
+        changed
     }
 
     /// Update list offset for automatic scrolling when selection moves beyond half of visible area
@@ -118,6 +128,37 @@ impl NavigationHelper {
 
             if new_offset != current_offset {
                 *app.state.file_list_state.offset_mut() = new_offset;
+            }
+        }
+    }
+
+    /// Update history list offset for automatic scrolling when selection moves beyond half of visible area
+    fn update_history_offset(app: &mut App, visible_height: usize) {
+        if let Some(selected) = app.state.history_state.selected() {
+            let current_offset = app.state.history_state.offset();
+            let half_visible = visible_height / 2;
+
+            let new_offset = if selected >= current_offset + visible_height {
+                // 向下滚动：选中项超出底部
+                selected.saturating_sub(half_visible)
+            } else if selected < current_offset {
+                // 向上滚动：选中项超出顶部
+                selected.saturating_sub(half_visible)
+            } else {
+                // 选中项在可见范围内，检查是否需要居中滚动
+                if selected > current_offset + half_visible + 2 {
+                    // 选中项在下半部分，向下滚动
+                    selected.saturating_sub(half_visible)
+                } else if selected < current_offset + half_visible.saturating_sub(2) {
+                    // 选中项在上半部分，向上滚动
+                    selected.saturating_sub(half_visible)
+                } else {
+                    current_offset
+                }
+            };
+
+            if new_offset != current_offset {
+                *app.state.history_state.offset_mut() = new_offset;
             }
         }
     }

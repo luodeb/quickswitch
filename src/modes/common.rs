@@ -93,14 +93,56 @@ impl CommonModeLogic {
                     if clicked_index < app.state.filtered_files.len() {
                         let current_time = Instant::now();
                         let mouse_position = (mouse.column, mouse.row);
-                        
+
+                        if Self::app_is_double_click(app, mouse_position, clicked_index) {
+                            // Reset double-click state
+                            Self::reset_double_click_state(app);
+
+                            // Execute double-click action (navigate into directory)
+                            app.state.file_list_state.select(Some(clicked_index));
+                            NavigationHelper::navigate_into_directory(app)?;
+                        } else {
+                            // Single click - update selection and record click state
+                            app.state.file_list_state.select(Some(clicked_index));
+                            app.update_preview();
+
+                            // Record this click for potential double-click detection
+                            app.state.double_click_state.last_click_time = Some(current_time);
+                            app.state.double_click_state.last_click_position = Some(mouse_position);
+                            app.state.double_click_state.last_clicked_index = Some(clicked_index);
+                        }
+                    }
+                }
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    /// Handle history list mouse click navigation
+    pub fn handle_history_list_mouse_click(
+        app: &mut App,
+        mouse: MouseEvent,
+        area: Rect,
+    ) -> Result<bool> {
+        match mouse.kind {
+            MouseEventKind::Down(crossterm::event::MouseButton::Left) => {
+                // Calculate which history item was clicked based on mouse position
+                if mouse.row >= area.y && mouse.row < area.y + area.height {
+                    let visible_clicked_index = (mouse.row - area.y - 1) as usize;
+                    let scroll_offset = app.state.history_state.offset();
+                    let clicked_index = visible_clicked_index + scroll_offset;
+                    if clicked_index < app.state.history.len() {
+                        let current_time = Instant::now();
+                        let mouse_position = (mouse.column, mouse.row);
+
                         // Check for double-click
                         let is_double_click = if let (Some(last_time), Some(last_pos), Some(last_idx)) = (
                             app.state.double_click_state.last_click_time,
                             app.state.double_click_state.last_click_position,
                             app.state.double_click_state.last_clicked_index,
                         ) {
-                            // Check if within time interval and same position and same file
+                            // Check if within time interval and same position and same item
                             let elapsed = current_time.duration_since(last_time);
                             elapsed.as_millis() <= DOUBLE_CLICK_INTERVAL_MS as u128
                                 && last_pos == mouse_position
@@ -114,15 +156,12 @@ impl CommonModeLogic {
                             app.state.double_click_state.last_click_time = None;
                             app.state.double_click_state.last_click_position = None;
                             app.state.double_click_state.last_clicked_index = None;
-                            
-                            // Execute double-click action (navigate into directory)
-                            app.state.file_list_state.select(Some(clicked_index));
-                            NavigationHelper::navigate_into_directory(app)?;
+
+                            return Ok(true);
                         } else {
-                            // Single click - update selection and record click state
-                            app.state.file_list_state.select(Some(clicked_index));
-                            app.update_preview();
-                            
+                            // Single click - update selection
+                            app.state.history_state.select(Some(clicked_index));
+
                             // Record this click for potential double-click detection
                             app.state.double_click_state.last_click_time = Some(current_time);
                             app.state.double_click_state.last_click_position = Some(mouse_position);
@@ -130,7 +169,7 @@ impl CommonModeLogic {
                         }
                     }
                 }
-                Ok(true)
+                Ok(false)
             }
             _ => Ok(false),
         }
@@ -185,6 +224,23 @@ impl CommonModeLogic {
             KeyCode::PageUp => Ok(app.scroll_preview_page_up(default_visible_height)),
             KeyCode::PageDown => Ok(app.scroll_preview_page_down(default_visible_height)),
             _ => Ok(false),
+        }
+    }
+
+    pub fn app_is_double_click(app: &App, mouse_position: (u16, u16), clicked_index: usize) -> bool {
+        let current_time = Instant::now();
+        if let (Some(last_time), Some(last_pos), Some(last_idx)) = (
+            app.state.double_click_state.last_click_time,
+            app.state.double_click_state.last_click_position,
+            app.state.double_click_state.last_clicked_index,
+        ) {
+            // Check if within time interval and same position and same file
+            let elapsed = current_time.duration_since(last_time);
+            elapsed.as_millis() <= DOUBLE_CLICK_INTERVAL_MS as u128
+                && last_pos == mouse_position
+                && last_idx == clicked_index
+        } else {
+            false
         }
     }
 
