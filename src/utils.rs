@@ -83,6 +83,25 @@ impl FileItem {
             is_dir,
         }
     }
+
+    /// Check if the file is an image based on its extension
+    pub fn is_image(&self) -> bool {
+        if self.is_dir {
+            return false;
+        }
+
+        let extension = self.path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .map(|ext| ext.to_lowercase());
+
+        match extension.as_deref() {
+            Some("jpg") | Some("jpeg") | Some("png") | Some("gif") |
+            Some("bmp") | Some("webp") | Some("tiff") | Some("tif") |
+            Some("svg") | Some("ico") | Some("avif") => true,
+            _ => false,
+        }
+    }
 }
 
 pub fn highlight_search_term<'a>(text: &'a str, search: &'a str) -> Vec<Span<'a>> {
@@ -165,9 +184,11 @@ fn qs_init_powershell() -> Result<()> {
 function qs {
     $errorFile = [System.IO.Path]::GetTempFileName()
     quickswitch.exe 2>$errorFile
-    $errors = Get-Content $errorFile
+    $errors = (Get-Content $errorFile -Raw)
+    $bytes = [System.Text.Encoding]::GetEncoding("GBK").GetBytes($errors)
+    $correct = [System.Text.Encoding]::UTF8.GetString($bytes)
     Remove-Item $errorFile
-    $firstLine = ($errors -split "`n")[0]
+    $firstLine = ($correct -split "`n")[0]
     if ($firstLine -match ":") {
         $userSelectPath = ($firstLine -split ":", 2)[1].Trim()
         cd $userSelectPath
