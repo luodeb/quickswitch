@@ -8,7 +8,7 @@ pub mod terminal;
 pub mod utils;
 
 pub use app::App;
-pub use models::{AppState, FileItem};
+pub use models::AppState;
 pub use modes::ModeHandler;
 pub use services::FilesystemService;
 pub use terminal::run_interactive_mode;

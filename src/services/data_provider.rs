@@ -1,10 +1,10 @@
 use anyhow::Result;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::{
     app::App,
-    models::{AppMode, DisplayItem},
     modes::{ModeAction, history, normal},
+    utils::{AppMode, DisplayItem},
 };
 
 /// Unified data provider trait for different modes
@@ -49,8 +49,6 @@ pub trait DataProvider {
     /// Returns Some(ModeAction) if mode should change, None if should stay in current mode
     fn navigate_to_selected(&self, app: &mut App) -> Result<bool>;
 
-    // === Data Management Methods ===
-
     /// Load initial data for this mode
     fn load_data(&self, app: &mut App) -> Result<()>;
 
@@ -61,7 +59,7 @@ pub trait DataProvider {
     fn restore_position(&self, app: &mut App);
 
     /// Handle directory change (called when current_dir changes)
-    fn on_directory_changed(&self, app: &mut App, new_dir: &PathBuf) -> Result<()>;
+    fn on_directory_changed(&self, app: &mut App, new_dir: &Path) -> Result<()>;
 }
 
 /// Factory function to create appropriate data provider for each mode

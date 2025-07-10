@@ -12,7 +12,6 @@ use crate::{
         history::{HistoryHelpRenderer, HistoryListRenderer},
         shared::{PreviewRenderer, renderers::Renderer},
     },
-    services::state::StateService,
 };
 
 /// Handler for History mode (navigate previous directories)
@@ -101,7 +100,7 @@ impl ModeHandler for HistoryModeHandler {
 
     fn on_enter(&mut self, app: &mut App) -> Result<()> {
         // Initialize history mode selection
-        StateService::initialize_history_mode(app);
+        app.state.file_list_state.select(None);
         Ok(())
     }
 

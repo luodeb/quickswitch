@@ -1,16 +1,16 @@
 use anyhow::Result;
-use crossterm::event::{KeyCode, MouseEvent};
 use ratatui::{Frame, layout::Rect, style::Style};
 
 use crate::{
-    models::{AppMode, AppState, DisplayItem},
-    modes::{ModeAction, ModeManager},
-    services::{ActionDispatcher, PreviewManager, create_data_provider},
+    models::AppState,
+    modes::ModeManager,
+    services::{PreviewManager, create_data_provider},
+    utils::{AppMode, DisplayItem},
 };
 
 pub struct App {
     pub state: AppState,
-    mode_manager: ModeManager,
+    pub mode_manager: ModeManager,
 }
 
 impl App {
@@ -50,21 +50,6 @@ impl App {
         let app_ptr = self as *mut App;
 
         unsafe { (*mode_manager_ptr).switch_mode(&mut *app_ptr, &new_mode) }
-    }
-
-    pub fn handle_key(&mut self, key: KeyCode) -> Result<ModeAction> {
-        let current_mode = self.mode_manager.get_current_mode().clone();
-        ActionDispatcher::handle_key_event(self, key, &current_mode)
-    }
-
-    pub fn handle_mouse(
-        &mut self,
-        mouse: MouseEvent,
-        left_area: Rect,
-        right_area: Rect,
-    ) -> Result<ModeAction> {
-        let current_mode = self.mode_manager.get_current_mode().clone();
-        ActionDispatcher::handle_mouse_event(self, mouse, left_area, right_area, &current_mode)
     }
 
     pub fn render_left_panel(&self, f: &mut Frame, area: Rect) {

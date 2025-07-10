@@ -1,11 +1,11 @@
 use anyhow::Result;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::{
     app::App,
-    models::DisplayItem,
     modes::ModeAction,
     services::{DataProvider, FilesystemService, PreviewManager},
+    utils::DisplayItem,
 };
 
 /// Data provider for file list (Normal and Search modes)
@@ -194,7 +194,7 @@ impl DataProvider for FileListDataProvider {
         }
     }
 
-    fn on_directory_changed(&self, app: &mut App, _new_dir: &PathBuf) -> Result<()> {
+    fn on_directory_changed(&self, app: &mut App, _new_dir: &Path) -> Result<()> {
         // Clear search and exit search mode when changing directory
         app.state.search_input.clear();
         app.state.is_searching = false;

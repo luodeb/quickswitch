@@ -3,11 +3,10 @@ use crossterm::event::{KeyCode, MouseEvent, MouseEventKind};
 use ratatui::layout::Rect;
 
 use crate::{
-    FileItem,
     app::App,
-    models::{AppMode, DisplayItem},
     modes::ModeAction,
     services::{DataProvider, PreviewManager, create_data_provider},
+    utils::{AppMode, DisplayItem, FileItem},
 };
 
 /// Unified input dispatcher for handling all user interactions

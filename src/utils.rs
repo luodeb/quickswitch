@@ -3,7 +3,10 @@ use ratatui::{
     style::{Color, Style},
     text::Span,
 };
-use std::io::IsTerminal;
+use std::{
+    io::IsTerminal,
+    path::{Path, PathBuf},
+};
 
 pub enum ShellType {
     Bash,
@@ -18,6 +21,68 @@ pub fn is_tty() -> bool {
     std::io::stdin().is_terminal()
         && std::io::stdout().is_terminal()
         && std::io::stderr().is_terminal()
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AppMode {
+    Normal,  // Default navigation mode (command mode)
+    History, // History selection mode
+}
+
+#[derive(Clone, Debug)]
+pub enum DisplayItem {
+    File(FileItem),
+    HistoryPath(PathBuf),
+}
+
+impl DisplayItem {
+    pub fn get_display_name(&self) -> String {
+        match self {
+            DisplayItem::File(file) => file.name.clone(),
+            DisplayItem::HistoryPath(path) => path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or_default()
+                .to_string(),
+        }
+    }
+
+    pub fn get_path(&self) -> &PathBuf {
+        match self {
+            DisplayItem::File(file) => &file.path,
+            DisplayItem::HistoryPath(path) => path,
+        }
+    }
+
+    pub fn is_directory(&self) -> bool {
+        match self {
+            DisplayItem::File(file) => file.is_dir,
+            DisplayItem::HistoryPath(path) => path.is_dir(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct FileItem {
+    pub name: String,
+    pub path: PathBuf,
+    pub is_dir: bool,
+}
+
+impl FileItem {
+    pub fn from_path(path: &Path) -> Self {
+        let name = path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or_default()
+            .to_string();
+        let is_dir = path.is_dir();
+        Self {
+            name,
+            path: path.to_path_buf(),
+            is_dir,
+        }
+    }
 }
 
 pub fn highlight_search_term<'a>(text: &'a str, search: &'a str) -> Vec<Span<'a>> {

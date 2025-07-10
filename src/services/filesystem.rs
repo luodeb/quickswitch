@@ -5,7 +5,7 @@ use ratatui::{
 };
 use std::{fs, path::PathBuf};
 
-use crate::models::FileItem;
+use crate::utils::FileItem;
 
 /// Service for filesystem operations
 pub struct FilesystemService;
@@ -175,13 +175,4 @@ impl FilesystemService {
         };
         (title, content)
     }
-}
-
-// Re-export the old function names for backward compatibility during transition
-pub fn load_directory(current_dir: &PathBuf) -> Result<Vec<FileItem>> {
-    FilesystemService::load_directory(current_dir)
-}
-
-pub fn generate_preview_content(file: &FileItem) -> (String, Vec<Line<'static>>) {
-    FilesystemService::generate_preview_content(file)
 }

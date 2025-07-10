@@ -1,11 +1,11 @@
 use anyhow::Result;
-use std::{fs, path::PathBuf};
+use std::{fs, path::{Path, PathBuf}};
 
 use crate::{
     app::App,
-    models::{AppMode, DisplayItem},
     modes::ModeAction,
     services::{DataProvider, PreviewManager},
+    utils::{AppMode, DisplayItem},
 };
 
 /// Data provider for history list (History mode)
@@ -17,7 +17,7 @@ impl HistoryDataProvider {
     }
 
     fn load_history_from_file(&self) -> Result<Vec<PathBuf>> {
-        if let Ok(content) = fs::read_to_string(&self.get_history_file_path()) {
+        if let Ok(content) = fs::read_to_string(self.get_history_file_path()) {
             let history_paths: Vec<PathBuf> = content
                 .lines()
                 .filter(|line| !line.trim().is_empty())
@@ -31,14 +31,14 @@ impl HistoryDataProvider {
     }
 
     /// Save history data to file
-    pub fn save_history(&self, history_paths: Vec<PathBuf>) -> Result<()> {
+    fn save_history_to_file(&self, history_paths: Vec<PathBuf>) -> Result<()> {
         let content = history_paths
             .iter()
             .map(|path| path.to_string_lossy().to_string())
             .collect::<Vec<_>>()
             .join("\n");
 
-        fs::write(&self.get_history_file_path(), content)?;
+        fs::write(self.get_history_file_path(), content)?;
         Ok(())
     }
 
@@ -51,7 +51,7 @@ impl HistoryDataProvider {
             history_paths.truncate(100);
         }
 
-        self.save_history(history_paths)?;
+        self.save_history_to_file(history_paths)?;
         Ok(())
     }
 }
@@ -203,7 +203,7 @@ impl DataProvider for HistoryDataProvider {
         }
     }
 
-    fn on_directory_changed(&self, _app: &mut App, _new_dir: &PathBuf) -> Result<()> {
+    fn on_directory_changed(&self, _app: &mut App, _new_dir: &Path) -> Result<()> {
         // History mode doesn't handle directory changes
         Ok(())
     }

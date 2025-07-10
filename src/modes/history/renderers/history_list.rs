@@ -1,4 +1,3 @@
-use crate::models::DisplayItem;
 use ratatui::{
     Frame,
     layout::Rect,
@@ -7,7 +6,7 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem},
 };
 
-use crate::{app::App, modes::shared::renderers::Renderer};
+use crate::{app::App, modes::shared::renderers::Renderer, utils::DisplayItem};
 
 /// Renderer for history list in History mode
 #[derive(Default)]
@@ -56,10 +55,7 @@ impl Renderer for HistoryListRenderer {
 }
 
 /// Create a list item for a history entry with directory name and full path
-fn create_history_list_item<'a>(
-    item: &'a crate::models::DisplayItem,
-    search_input: &'a str,
-) -> ListItem<'a> {
+fn create_history_list_item<'a>(item: &'a DisplayItem, search_input: &'a str) -> ListItem<'a> {
     match item {
         DisplayItem::HistoryPath(path) => {
             let icon = "📁";

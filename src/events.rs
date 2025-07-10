@@ -9,14 +9,17 @@ use ratatui::layout::Rect;
 use std::{env, io};
 
 use crate::{
-    App, FileItem,
+    App,
+    core::InputDispatcher,
     modes::{ModeAction, history::HistoryDataProvider},
+    utils::FileItem,
 };
 
 /// Main entry point for keyboard event handling
 /// Now delegates to the app instead of handling directly
 pub fn handle_key_event(app: &mut App, key: KeyCode) -> Result<bool> {
-    let action = app.handle_key(key)?;
+    let current_mode = app.mode_manager.get_current_mode().clone();
+    let action = InputDispatcher::handle_key_event(app, key, &current_mode)?;
     match action {
         ModeAction::Stay => Ok(true),
         ModeAction::Switch(new_mode) => {
@@ -37,7 +40,9 @@ pub fn handle_mouse_event(
     left_area: Rect,
     right_area: Rect,
 ) -> Result<bool> {
-    let action = app.handle_mouse(mouse, left_area, right_area)?;
+    let current_mode = app.mode_manager.get_current_mode().clone();
+    let action =
+        InputDispatcher::handle_mouse_event(app, mouse, left_area, right_area, &current_mode)?;
     match action {
         ModeAction::Stay => Ok(true),
         ModeAction::Switch(new_mode) => {

@@ -6,7 +6,11 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem},
 };
 
-use crate::{FileItem, app::App, modes::shared::renderers::Renderer, utils};
+use crate::{
+    app::App,
+    modes::shared::renderers::Renderer,
+    utils::{self, DisplayItem, FileItem},
+};
 
 /// Renderer for file list in Normal mode
 #[derive(Default)]
@@ -65,12 +69,7 @@ fn create_file_list_item<'a>(file: &'a FileItem, search_input: &'a str) -> ListI
 }
 
 /// Create a list item for a DisplayItem with optional search highlighting
-fn create_display_item_list_item<'a>(
-    item: &'a crate::models::DisplayItem,
-    search_input: &'a str,
-) -> ListItem<'a> {
-    use crate::models::DisplayItem;
-
+fn create_display_item_list_item<'a>(item: &'a DisplayItem, search_input: &'a str) -> ListItem<'a> {
     match item {
         DisplayItem::File(file) => create_file_list_item(file, search_input),
         DisplayItem::HistoryPath(path) => {

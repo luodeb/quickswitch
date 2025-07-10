@@ -12,7 +12,6 @@ use crate::{
         normal::{FileListRenderer, NormalHelpRenderer},
         shared::{PreviewRenderer, renderers::Renderer},
     },
-    services::state::StateService,
 };
 
 /// Handler for Normal mode (default navigation mode)
@@ -97,13 +96,10 @@ impl ModeHandler for NormalModeHandler {
     }
 
     fn on_enter(&mut self, _app: &mut App) -> Result<()> {
-        // Normal mode is the default, no special initialization needed
         Ok(())
     }
 
-    fn on_exit(&mut self, app: &mut App) -> Result<()> {
-        // Save current position before leaving normal mode
-        StateService::save_current_position(app);
+    fn on_exit(&mut self, _app: &mut App) -> Result<()> {
         Ok(())
     }
 }

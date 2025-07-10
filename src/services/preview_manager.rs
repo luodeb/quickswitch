@@ -3,7 +3,11 @@ use ratatui::{
     text::{Line, Span},
 };
 
-use crate::{FileItem, FilesystemService, app::App, models::DisplayItem};
+use crate::{
+    FilesystemService,
+    app::App,
+    utils::{DisplayItem, FileItem},
+};
 
 /// Unified preview manager for handling all preview functionality
 pub struct PreviewManager;

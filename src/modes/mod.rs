@@ -1,8 +1,10 @@
 use anyhow::Result;
-use crossterm::event::{KeyCode, MouseEvent};
 use ratatui::{Frame, layout::Rect, style::Style};
 
-use crate::{FileItem, app::App, models::AppMode, services::ActionDispatcher};
+use crate::{
+    app::App,
+    utils::{AppMode, FileItem},
+};
 
 pub mod history;
 pub mod normal;
@@ -76,20 +78,6 @@ impl ModeManager {
         self.current_mode = new_mode.clone();
         self.current_handler.on_enter(app)?;
         Ok(())
-    }
-
-    pub fn handle_key(&mut self, app: &mut App, key: KeyCode) -> Result<ModeAction> {
-        ActionDispatcher::handle_key_event(app, key, &self.current_mode)
-    }
-
-    pub fn handle_mouse(
-        &mut self,
-        app: &mut App,
-        mouse: MouseEvent,
-        left_area: Rect,
-        right_area: Rect,
-    ) -> Result<ModeAction> {
-        ActionDispatcher::handle_mouse_event(app, mouse, left_area, right_area, &self.current_mode)
     }
 
     pub fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App) {

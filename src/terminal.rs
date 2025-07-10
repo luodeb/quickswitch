@@ -12,7 +12,7 @@ use ratatui::{
 };
 use std::io;
 
-use crate::{App, events, models::AppMode};
+use crate::{App, events, utils::AppMode};
 
 pub async fn run_interactive_mode() -> Result<()> {
     let mut terminal = setup_terminal()?;
