@@ -112,7 +112,10 @@ pub trait DataProvider {
                 selected
             } else if selected >= current_offset + visible_height {
                 selected.saturating_sub(visible_height - 1)
-            } else {
+            } else if selected < current_offset + visible_height - 1 {
+                selected.saturating_sub(visible_height - 1)
+            }
+             else {
                 current_offset
             };
 

@@ -48,9 +48,12 @@ impl InputDispatcher {
             MouseEventKind::ScrollUp | MouseEventKind::ScrollDown => {
                 Self::handle_scroll_navigation(app_state, mouse, current_mode)
             }
-            MouseEventKind::Down(crossterm::event::MouseButton::Left) => {
+            MouseEventKind::Up(crossterm::event::MouseButton::Left) => {
                 Self::handle_left_click(app_state, mouse, current_mode)
             }
+            MouseEventKind::Up(crossterm::event::MouseButton::Right) => {
+                Self::handle_right_click(app_state, mouse, current_mode)
+            },
             _ => Ok(ModeAction::Stay),
         }
     }
@@ -276,6 +279,20 @@ impl InputDispatcher {
         }
 
         Ok(ModeAction::Stay)
+    }
+
+    fn handle_right_click(
+        app_state: &mut AppState,
+        _mouse: MouseEvent,
+        current_mode: &AppMode,
+    ) -> Result<ModeAction> {
+        let provider = create_data_provider(current_mode);
+        // Use provider's navigation method
+        if let Some(action) = provider.navigate_to_parent(app_state)? {
+            Ok(action)
+        } else {
+            Ok(ModeAction::Stay)
+        }
     }
 
     /// Handle left mouse click using unified data providers
