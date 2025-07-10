@@ -116,8 +116,6 @@ impl AppState {
         self.reset_filter();
     }
 
-
-
     /// Reset filter and selection
     pub fn reset_filter(&mut self) {
         self.filtered_files = (0..self.files.len()).collect();
@@ -135,7 +133,9 @@ impl AppState {
                 .iter()
                 .enumerate()
                 .filter(|(_, item)| {
-                    item.get_display_name().to_lowercase().contains(&search_lower)
+                    item.get_display_name()
+                        .to_lowercase()
+                        .contains(&search_lower)
                 })
                 .map(|(i, _)| i)
                 .collect();

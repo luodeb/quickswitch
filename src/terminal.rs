@@ -12,12 +12,12 @@ use ratatui::{
 };
 use std::io;
 
-use crate::{events, models::AppMode, modes::AppController};
+use crate::{App, events, models::AppMode};
 
 pub async fn run_interactive_mode() -> Result<()> {
     let mut terminal = setup_terminal()?;
-    let mut controller = AppController::new(AppMode::Normal)?;
-    let result = run_app_loop(&mut terminal, &mut controller).await;
+    let mut app = App::new(AppMode::Normal)?;
+    let result = run_app_loop(&mut terminal, &mut app).await;
     cleanup_terminal(&mut terminal)?;
     result
 }
@@ -44,7 +44,7 @@ pub fn cleanup_terminal(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -
 
 pub async fn run_app_loop<W>(
     terminal: &mut Terminal<CrosstermBackend<W>>,
-    controller: &mut AppController,
+    app: &mut App,
 ) -> Result<()>
 where
     W: std::io::Write,
@@ -64,19 +64,18 @@ where
         let left_area = main_chunks[0];
         let right_area = main_chunks[1];
 
-        terminal.draw(|f| render_ui(f, controller))?;
+        terminal.draw(|f| render_ui(f, app))?;
 
         if event::poll(std::time::Duration::from_millis(100))? {
             match event::read()? {
                 Event::Key(key) => {
-                    if key.kind == KeyEventKind::Press
-                        && !events::handle_key_event(controller, key.code)?
+                    if key.kind == KeyEventKind::Press && !events::handle_key_event(app, key.code)?
                     {
                         break;
                     }
                 }
                 Event::Mouse(mouse) => {
-                    if !events::handle_mouse_event(controller, mouse, left_area, right_area)? {
+                    if !events::handle_mouse_event(app, mouse, left_area, right_area)? {
                         break;
                     }
                 }
@@ -88,14 +87,14 @@ where
 }
 
 /// Simple UI rendering function that delegates to mode manager
-fn render_ui(f: &mut Frame, controller: &AppController) {
+fn render_ui(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(3), Constraint::Min(0)])
         .split(f.area());
 
     // Render search box
-    let (title, content, style) = controller.get_search_box_config();
+    let (title, content, style) = app.get_search_box_config();
     let search_box = Paragraph::new(content)
         .block(Block::default().borders(Borders::ALL).title(title))
         .style(style);
@@ -107,14 +106,14 @@ fn render_ui(f: &mut Frame, controller: &AppController) {
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(chunks[1]);
 
-    // Delegate rendering to controller
-    controller.render_left_panel(f, main_chunks[0]);
-    controller.render_right_panel(f, main_chunks[1]);
+    // Delegate rendering to app
+    app.render_left_panel(f, main_chunks[0]);
+    app.render_right_panel(f, main_chunks[1]);
 
     // Set cursor position when searching
-    if controller.get_app().state.is_searching {
+    if app.state.is_searching {
         f.set_cursor_position((
-            chunks[0].x + controller.get_app().state.search_input.len() as u16 + 1,
+            chunks[0].x + app.state.search_input.len() as u16 + 1,
             chunks[0].y + 1,
         ));
     }

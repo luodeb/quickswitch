@@ -5,7 +5,7 @@ use crate::{
     app::App,
     models::DisplayItem,
     modes::ModeAction,
-    services::{DataProvider, PreviewManager, FilesystemService},
+    services::{DataProvider, FilesystemService, PreviewManager},
 };
 
 /// Data provider for file list (Normal and Search modes)

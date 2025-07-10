@@ -58,7 +58,9 @@ impl StateService {
                 // Remove the item from its current position
                 app.state.files.remove(file_index);
                 // Insert at the front
-                app.state.files.insert(0, DisplayItem::HistoryPath(path.clone()));
+                app.state
+                    .files
+                    .insert(0, DisplayItem::HistoryPath(path.clone()));
                 // Update filtered_files indices
                 app.state.apply_search_filter();
                 Some(path)

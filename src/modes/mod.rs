@@ -2,7 +2,7 @@ use anyhow::Result;
 use crossterm::event::{KeyCode, MouseEvent};
 use ratatui::{Frame, layout::Rect, style::Style};
 
-use crate::{FileItem, app::App, events::handle_exit, models::AppMode, services::ActionDispatcher};
+use crate::{FileItem, app::App, models::AppMode, services::ActionDispatcher};
 
 pub mod history;
 pub mod normal;
@@ -49,14 +49,8 @@ pub fn create_mode_handler(mode: &AppMode) -> Box<dyn ModeHandler> {
 
 /// Mode manager that coordinates between different modes
 pub struct ModeManager {
-    current_handler: Box<dyn ModeHandler>,
-    current_mode: AppMode,
-}
-
-/// App controller that coordinates between App and ModeManager
-pub struct AppController {
-    app: App,
-    mode_manager: ModeManager,
+    pub current_handler: Box<dyn ModeHandler>,
+    pub current_mode: AppMode,
 }
 
 impl ModeManager {
@@ -116,90 +110,5 @@ impl ModeManager {
 
     pub fn is_mode(&self, mode: &AppMode) -> bool {
         self.current_mode == *mode
-    }
-}
-
-impl AppController {
-    pub fn new(initial_mode: AppMode) -> Result<Self> {
-        let mut app = App::new()?;
-
-        // Load initial data using data provider
-        let data_provider = crate::services::create_data_provider(&initial_mode);
-        data_provider.load_data(&mut app)?;
-
-        // Clear preview
-        crate::services::PreviewManager::clear_preview(&mut app);
-
-        let mode_manager = ModeManager::new(&initial_mode);
-        Ok(Self { app, mode_manager })
-    }
-
-    pub fn switch_mode(&mut self, new_mode: AppMode) -> Result<()> {
-        self.mode_manager.switch_mode(&mut self.app, &new_mode)
-    }
-
-    pub fn handle_key(&mut self, key: KeyCode) -> Result<bool> {
-        let action = self.mode_manager.handle_key(&mut self.app, key)?;
-        match action {
-            ModeAction::Stay => Ok(true),
-            ModeAction::Switch(new_mode) => {
-                self.switch_mode(new_mode)?;
-                Ok(true)
-            }
-            ModeAction::Exit(file_item) => {
-                handle_exit(self, file_item.as_ref())?;
-                Ok(false) // This should never be reached due to process::exit in handle_exit
-            }
-        }
-    }
-
-    pub fn handle_mouse(
-        &mut self,
-        mouse: MouseEvent,
-        left_area: Rect,
-        right_area: Rect,
-    ) -> Result<bool> {
-        let action = self
-            .mode_manager
-            .handle_mouse(&mut self.app, mouse, left_area, right_area)?;
-        match action {
-            ModeAction::Stay => Ok(true),
-            ModeAction::Switch(new_mode) => {
-                self.switch_mode(new_mode)?;
-                Ok(true)
-            }
-            ModeAction::Exit(file_item) => {
-                handle_exit(self, file_item.as_ref())?;
-                Ok(false) // This should never be reached due to process::exit in handle_exit
-            }
-        }
-    }
-
-    pub fn render_left_panel(&self, f: &mut Frame, area: Rect) {
-        self.mode_manager.render_left_panel(f, area, &self.app);
-    }
-
-    pub fn render_right_panel(&self, f: &mut Frame, area: Rect) {
-        self.mode_manager.render_right_panel(f, area, &self.app);
-    }
-
-    pub fn get_search_box_config(&self) -> (String, String, Style) {
-        self.mode_manager.get_search_box_config(&self.app)
-    }
-
-    pub fn get_current_mode(&self) -> &AppMode {
-        self.mode_manager.get_current_mode()
-    }
-
-    pub fn is_mode(&self, mode: &AppMode) -> bool {
-        self.mode_manager.is_mode(mode)
-    }
-
-    pub fn get_app(&self) -> &App {
-        &self.app
-    }
-
-    pub fn get_app_mut(&mut self) -> &mut App {
-        &mut self.app
     }
 }

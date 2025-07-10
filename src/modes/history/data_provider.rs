@@ -12,7 +12,6 @@ use crate::{
 pub struct HistoryDataProvider;
 
 impl HistoryDataProvider {
-
     fn get_history_file_path(&self) -> PathBuf {
         std::env::temp_dir().join("quickswitch.history")
     }
@@ -209,4 +208,3 @@ impl DataProvider for HistoryDataProvider {
         Ok(())
     }
 }
-

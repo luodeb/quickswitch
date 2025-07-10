@@ -65,7 +65,10 @@ fn create_file_list_item<'a>(file: &'a FileItem, search_input: &'a str) -> ListI
 }
 
 /// Create a list item for a DisplayItem with optional search highlighting
-fn create_display_item_list_item<'a>(item: &'a crate::models::DisplayItem, search_input: &'a str) -> ListItem<'a> {
+fn create_display_item_list_item<'a>(
+    item: &'a crate::models::DisplayItem,
+    search_input: &'a str,
+) -> ListItem<'a> {
     use crate::models::DisplayItem;
 
     match item {
@@ -73,7 +76,8 @@ fn create_display_item_list_item<'a>(item: &'a crate::models::DisplayItem, searc
         DisplayItem::HistoryPath(path) => {
             let icon = "📁";
             let style = Style::default().fg(Color::Cyan);
-            let name = path.file_name()
+            let name = path
+                .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or_default();
 
