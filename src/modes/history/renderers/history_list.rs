@@ -97,7 +97,7 @@ fn create_history_list_item<'a>(item: &'a DisplayItem, search_input: &'a str) ->
             // Add full path in darker color
             spans.push(Span::raw("  "));
             spans.push(Span::styled(
-                format!("({})", full_path),
+                format!("({full_path})"),
                 Style::default().fg(Color::DarkGray),
             ));
 
