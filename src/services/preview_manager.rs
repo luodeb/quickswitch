@@ -2,35 +2,19 @@ use ratatui::{
     style::{Color, Style},
     text::{Line, Span},
 };
-use std::path::Path;
 
-use crate::{app::App, models::FileItem, services::FilesystemService};
+use crate::{app::App, models::DisplayItem, FileItem, FilesystemService};
 
 /// Unified preview manager for handling all preview functionality
 pub struct PreviewManager;
 
 impl PreviewManager {
-    /// Update preview based on current selection
-    pub fn update_preview_from_selection(app: &mut App) {
-        if let Some(file) = app.get_selected_file().cloned() {
-            Self::update_preview_for_file(app, &file);
-        } else {
-            Self::clear_preview(app);
-        }
-    }
-
-    /// Update preview for a specific file
-    pub fn update_preview_for_file(app: &mut App, file: &FileItem) {
-        let (title, content) = FilesystemService::generate_preview_content(file);
+    /// Update preview for a DisplayItem (unified function for files and directories)
+    pub fn update_preview_for_item(app: &mut App, item: &DisplayItem) {
+        let (title, content) = Self::generate_preview_content_for_item(item);
         app.state.preview_title = title;
         app.state.preview_content = content;
         Self::reset_preview_scroll(app);
-    }
-
-    /// Update preview for a specific path
-    pub fn update_preview_for_path(app: &mut App, path: &Path) {
-        let file_item = FileItem::from_path(path);
-        Self::update_preview_for_file(app, &file_item);
     }
 
     /// Clear preview content
@@ -95,5 +79,16 @@ impl PreviewManager {
     /// Reset preview scroll position to top
     pub fn reset_preview_scroll(app: &mut App) {
         app.state.preview_scroll_offset = 0;
+    }
+
+    /// Generate preview content for a DisplayItem (unified function)
+    fn generate_preview_content_for_item(item: &DisplayItem) -> (String, Vec<Line<'static>>) {
+        match item {
+            DisplayItem::File(file) => FilesystemService::generate_preview_content(file),
+            DisplayItem::HistoryPath(path) => {
+                let file_item = FileItem::from_path(path);
+                FilesystemService::generate_preview_content(&file_item)
+            }
+        }
     }
 }

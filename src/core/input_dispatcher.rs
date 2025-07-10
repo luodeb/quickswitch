@@ -68,7 +68,6 @@ impl InputDispatcher {
                     app.state.is_searching = false;
                     // Don't clear search_input - keep the search results visible
                     // app.update_filter() is not needed since we're keeping the same filter
-                    PreviewManager::update_preview_from_selection(app);
                     Some(ModeAction::Stay)
                 } else if current_mode == &AppMode::Normal {
                     // In normal mode, Esc exits the application
@@ -216,13 +215,11 @@ impl InputDispatcher {
             KeyCode::Char(c) => {
                 app.state.search_input.push(c);
                 app.update_filter();
-                PreviewManager::update_preview_from_selection(app);
                 Ok(ModeAction::Stay)
             }
             KeyCode::Backspace => {
                 app.state.search_input.pop();
                 app.update_filter();
-                PreviewManager::update_preview_from_selection(app);
                 Ok(ModeAction::Stay)
             }
             _ => Ok(ModeAction::Stay),
@@ -244,8 +241,8 @@ impl InputDispatcher {
 
     /// Update preview if the data provider supports it
     fn update_preview_if_needed(app: &mut App, provider: &dyn DataProvider) {
-        if let Some(path) = provider.get_preview_path(app) {
-            PreviewManager::update_preview_for_path(app, &path);
+        if let Some(item) = provider.get_selected_item(app) {
+            PreviewManager::update_preview_for_item(app, &item);
         }
     }
 

@@ -22,7 +22,7 @@ impl App {
         app.load_history().unwrap_or(()); // Ignore errors when loading history
         app.update_filter();
         app.state.file_list_state.select(None);
-        PreviewManager::update_preview_from_selection(&mut app);
+        PreviewManager::clear_preview(&mut app);
         Ok(app)
     }
 
@@ -114,7 +114,7 @@ impl App {
         self.update_filter();
 
         self.restore_position();
-        PreviewManager::update_preview_from_selection(self);
+        PreviewManager::clear_preview(self);
 
         Ok(())
     }

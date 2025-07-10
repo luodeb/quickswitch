@@ -69,6 +69,13 @@ impl ModeManager {
 
     pub fn switch_mode(&mut self, app: &mut App, new_mode: &AppMode) -> Result<()> {
         self.current_handler.on_exit(app)?;
+
+        // Clear search and reload directory when switching modes
+        app.state.search_input.clear();
+        app.state.is_searching = false;
+        app.reload_directory()?;
+        app.update_filter();
+
         self.current_handler = create_mode_handler(new_mode);
         self.current_mode = new_mode.clone();
         self.current_handler.on_enter(app)?;

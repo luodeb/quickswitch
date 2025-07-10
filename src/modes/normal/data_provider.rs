@@ -38,8 +38,8 @@ impl DataProvider for FileListDataProvider {
             if selected > 0 {
                 app.state.file_list_state.select(Some(selected - 1));
                 self.update_scroll_offset(app, 20); // Default visible height
-                if let Some(path) = self.get_preview_path(app) {
-                    PreviewManager::update_preview_for_path(app, &path);
+                if let Some(item) = self.get_selected_item(app) {
+                    PreviewManager::update_preview_for_item(app, &item);
                 }
                 return true;
             }
@@ -48,8 +48,8 @@ impl DataProvider for FileListDataProvider {
                 .file_list_state
                 .select(Some(app.state.filtered_files.len() - 1));
             self.update_scroll_offset(app, 20); // Default visible height
-            if let Some(path) = self.get_preview_path(app) {
-                PreviewManager::update_preview_for_path(app, &path);
+            if let Some(item) = self.get_selected_item(app) {
+                PreviewManager::update_preview_for_item(app, &item);
             }
             return true;
         }
@@ -66,16 +66,16 @@ impl DataProvider for FileListDataProvider {
             if selected + 1 < total {
                 app.state.file_list_state.select(Some(selected + 1));
                 self.update_scroll_offset(app, 20); // Default visible height
-                if let Some(path) = self.get_preview_path(app) {
-                    PreviewManager::update_preview_for_path(app, &path);
+                if let Some(item) = self.get_selected_item(app) {
+                    PreviewManager::update_preview_for_item(app, &item);
                 }
                 return true;
             }
         } else {
             app.state.file_list_state.select(Some(0));
             self.update_scroll_offset(app, 20); // Default visible height
-            if let Some(path) = self.get_preview_path(app) {
-                PreviewManager::update_preview_for_path(app, &path);
+            if let Some(item) = self.get_selected_item(app) {
+                PreviewManager::update_preview_for_item(app, &item);
             }
             return true;
         }
@@ -119,9 +119,9 @@ impl DataProvider for FileListDataProvider {
     }
 
     fn navigate_into_directory(&self, app: &mut App) -> Result<Option<ModeAction>> {
-        if let Some(file) = app.get_selected_file() {
-            if file.is_dir {
-                app.change_directory(file.path.clone())?;
+        if let Some(file) = self.get_selected_item(&app) {
+            if file.is_directory() {
+                app.change_directory(file.get_path().to_path_buf())?;
                 return Ok(None); // Stay in current mode
             }
         }

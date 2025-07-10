@@ -16,6 +16,17 @@ pub fn handle_key_event(controller: &mut AppController, key: KeyCode) -> Result<
     controller.handle_key(key)
 }
 
+/// Handle mouse events
+pub fn handle_mouse_event(
+    controller: &mut AppController,
+    mouse: MouseEvent,
+    left_area: Rect,
+    right_area: Rect,
+) -> Result<bool> {
+    controller.handle_mouse(mouse, left_area, right_area)
+}
+
+
 pub fn handle_exit(controller: &mut AppController, file: Option<&FileItem>) -> Result<()> {
     let app = controller.get_app_mut();
 
@@ -53,12 +64,3 @@ pub fn handle_exit(controller: &mut AppController, file: Option<&FileItem>) -> R
     std::process::exit(0);
 }
 
-/// Handle mouse events
-pub fn handle_mouse_event(
-    controller: &mut AppController,
-    mouse: MouseEvent,
-    left_area: Rect,
-    right_area: Rect,
-) -> Result<bool> {
-    controller.handle_mouse(mouse, left_area, right_area)
-}
