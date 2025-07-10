@@ -5,7 +5,7 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem},
 };
 
-use crate::{app::App, modes::shared::renderers::Renderer};
+use crate::{AppState, modes::Renderer};
 
 /// Renderer for History mode help
 #[derive(Default)]
@@ -18,7 +18,7 @@ impl HistoryHelpRenderer {
 }
 
 impl Renderer for HistoryHelpRenderer {
-    fn render(&self, f: &mut Frame, area: Rect, _app: &App) {
+    fn render(&self, f: &mut Frame, area: Rect, _state: &AppState) {
         let help_content = vec![
             Line::from("History Mode Navigation:"),
             Line::from(""),

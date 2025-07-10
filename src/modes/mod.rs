@@ -2,13 +2,18 @@ use anyhow::Result;
 use ratatui::{Frame, layout::Rect, style::Style};
 
 use crate::{
-    app::App,
+    app_state::AppState,
     utils::{AppMode, FileItem},
 };
 
 pub mod history;
 pub mod normal;
-pub mod shared;
+pub mod preview;
+
+pub trait Renderer {
+    /// Render the component in the given area
+    fn render(&self, f: &mut Frame, area: Rect, state: &AppState);
+}
 
 /// Represents a mode switch request
 #[derive(Debug, Clone, PartialEq)]
@@ -23,22 +28,26 @@ pub enum ModeAction {
 /// All input handling is now unified through InputDispatcher
 pub trait ModeHandler {
     /// Render the left panel (file list or history list)
-    fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App);
+    fn render_left_panel(&self, f: &mut Frame, area: Rect, state: &AppState);
 
     /// Render the right panel (preview or help)
-    fn render_right_panel(&self, f: &mut Frame, area: Rect, app: &App);
+    fn render_right_panel(&self, f: &mut Frame, area: Rect, state: &AppState);
 
     /// Get search box configuration (title, content, style)
-    fn get_search_box_config(&self, app: &App) -> (String, String, Style);
+    fn get_search_box_config(&self, state: &AppState) -> (String, String, Style);
 
     /// Determine if help should be shown instead of preview
-    fn should_show_help(&self, app: &App) -> bool;
+    fn should_show_help(&self, state: &AppState) -> bool;
 
     /// Called when entering this mode
-    fn on_enter(&mut self, app: &mut App) -> Result<()>;
+    fn on_enter(&mut self, _state: &mut AppState) -> Result<()> {
+        Ok(())
+    }
 
     /// Called when exiting this mode
-    fn on_exit(&mut self, app: &mut App) -> Result<()>;
+    fn on_exit(&mut self, _state: &mut AppState) -> Result<()> {
+        Ok(())
+    }
 }
 
 /// Factory function to create mode handlers
@@ -63,33 +72,33 @@ impl ModeManager {
         }
     }
 
-    pub fn switch_mode(&mut self, app: &mut App, new_mode: &AppMode) -> Result<()> {
-        self.current_handler.on_exit(app)?;
+    pub fn switch_mode(&mut self, state: &mut AppState, new_mode: &AppMode) -> Result<()> {
+        self.current_handler.on_exit(state)?;
 
         // Clear search when switching modes
-        app.state.search_input.clear();
-        app.state.is_searching = false;
+        state.search_input.clear();
+        state.is_searching = false;
 
         // Load appropriate data for the new mode using data provider
         let data_provider = crate::services::create_data_provider(new_mode);
-        data_provider.load_data(app)?;
+        data_provider.load_data(state)?;
 
         self.current_handler = create_mode_handler(new_mode);
         self.current_mode = new_mode.clone();
-        self.current_handler.on_enter(app)?;
+        self.current_handler.on_enter(state)?;
         Ok(())
     }
 
-    pub fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App) {
-        self.current_handler.render_left_panel(f, area, app);
+    pub fn render_left_panel(&self, f: &mut Frame, area: Rect, state: &AppState) {
+        self.current_handler.render_left_panel(f, area, state);
     }
 
-    pub fn render_right_panel(&self, f: &mut Frame, area: Rect, app: &App) {
-        self.current_handler.render_right_panel(f, area, app);
+    pub fn render_right_panel(&self, f: &mut Frame, area: Rect, state: &AppState) {
+        self.current_handler.render_right_panel(f, area, state);
     }
 
-    pub fn get_search_box_config(&self, app: &App) -> (String, String, Style) {
-        self.current_handler.get_search_box_config(app)
+    pub fn get_search_box_config(&self, state: &AppState) -> (String, String, Style) {
+        self.current_handler.get_search_box_config(state)
     }
 
     pub fn get_current_mode(&self) -> &AppMode {

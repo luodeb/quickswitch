@@ -5,7 +5,7 @@ use ratatui::{
 };
 
 use super::Renderer;
-use crate::app::App;
+use crate::AppState;
 
 /// Renderer for preview panel showing file/directory content
 #[derive(Default)]
@@ -18,11 +18,11 @@ impl PreviewRenderer {
 }
 
 impl Renderer for PreviewRenderer {
-    fn render(&self, f: &mut Frame, area: Rect, app: &App) {
+    fn render(&self, f: &mut Frame, area: Rect, state: &AppState) {
         // Calculate the visible content based on scroll offset
-        let total_lines = app.state.preview_content.len();
+        let total_lines = state.preview_content.len();
         let visible_height = area.height.saturating_sub(2) as usize; // Account for borders
-        let scroll_offset = app.state.preview_scroll_offset;
+        let scroll_offset = state.preview_scroll_offset;
 
         // Determine the range of lines to display
         let start_line = scroll_offset;
@@ -30,7 +30,7 @@ impl Renderer for PreviewRenderer {
 
         // Get the visible content slice
         let visible_content: Vec<_> = if start_line < total_lines {
-            app.state.preview_content[start_line..end_line]
+            state.preview_content[start_line..end_line]
                 .iter()
                 .map(|line| ListItem::new(line.clone()))
                 .collect()
@@ -41,7 +41,7 @@ impl Renderer for PreviewRenderer {
         let preview_list = List::new(visible_content).block(
             Block::default()
                 .borders(Borders::ALL)
-                .title(&*app.state.preview_title),
+                .title(&*state.preview_title),
         );
 
         f.render_widget(preview_list, area);

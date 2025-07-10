@@ -5,7 +5,6 @@ use crossterm::{
     execute,
     terminal::{LeaveAlternateScreen, disable_raw_mode},
 };
-use ratatui::layout::Rect;
 use std::{env, io};
 
 use crate::{
@@ -19,34 +18,22 @@ use crate::{
 /// Now delegates to the app instead of handling directly
 pub fn handle_key_event(app: &mut App, key: KeyCode) -> Result<bool> {
     let current_mode = app.mode_manager.get_current_mode().clone();
-    let action = InputDispatcher::handle_key_event(app, key, &current_mode)?;
-    match action {
-        ModeAction::Stay => Ok(true),
-        ModeAction::Switch(new_mode) => {
-            app.switch_mode(new_mode)?;
-            Ok(true)
-        }
-        ModeAction::Exit(file_item) => {
-            handle_exit(app, file_item.as_ref())?;
-            Ok(false) // This should never be reached due to process::exit in handle_exit
-        }
-    }
+    let action = InputDispatcher::handle_key_event(&mut app.state, key, &current_mode)?;
+    handle_action(app, action)
 }
 
 /// Handle mouse events
-pub fn handle_mouse_event(
-    app: &mut App,
-    mouse: MouseEvent,
-    left_area: Rect,
-    right_area: Rect,
-) -> Result<bool> {
+pub fn handle_mouse_event(app: &mut App, mouse: MouseEvent) -> Result<bool> {
     let current_mode = app.mode_manager.get_current_mode().clone();
-    let action =
-        InputDispatcher::handle_mouse_event(app, mouse, left_area, right_area, &current_mode)?;
+    let action = InputDispatcher::handle_mouse_event(&mut app.state, mouse, &current_mode)?;
+    handle_action(app, action)
+}
+
+fn handle_action(app: &mut App, action: ModeAction) -> Result<bool> {
     match action {
         ModeAction::Stay => Ok(true),
         ModeAction::Switch(new_mode) => {
-            app.switch_mode(new_mode)?;
+            app.mode_manager.switch_mode(&mut app.state, &new_mode)?;
             Ok(true)
         }
         ModeAction::Exit(file_item) => {
@@ -56,7 +43,7 @@ pub fn handle_mouse_event(
     }
 }
 
-pub fn handle_exit(app: &mut App, file: Option<&FileItem>) -> Result<()> {
+fn handle_exit(app: &mut App, file: Option<&FileItem>) -> Result<()> {
     if let Some(file) = file {
         let select_path = if file.is_dir {
             file.path.clone()

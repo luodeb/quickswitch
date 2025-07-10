@@ -7,8 +7,8 @@ use ratatui::{
 };
 
 use crate::{
-    app::App,
-    modes::shared::renderers::Renderer,
+    AppState,
+    modes::Renderer,
     utils::{self, DisplayItem, FileItem},
 };
 
@@ -23,27 +23,26 @@ impl FileListRenderer {
 }
 
 impl Renderer for FileListRenderer {
-    fn render(&self, f: &mut Frame, area: Rect, app: &App) {
-        let files: Vec<ListItem> = app
-            .state
+    fn render(&self, f: &mut Frame, area: Rect, state: &AppState) {
+        let files: Vec<ListItem> = state
             .filtered_files
             .iter()
-            .filter_map(|&i| app.state.files.get(i))
-            .map(|item| create_display_item_list_item(item, &app.state.search_input))
+            .filter_map(|&i| state.files.get(i))
+            .map(|item| create_display_item_list_item(item, &state.search_input))
             .collect();
 
         let files_title = format!(
             "Files - {} ({}/{})",
-            app.state.current_dir.display(),
-            app.state.filtered_files.len(),
-            app.state.files.len()
+            state.current_dir.display(),
+            state.filtered_files.len(),
+            state.files.len()
         );
 
         let files_list = List::new(files)
             .block(Block::default().borders(Borders::ALL).title(files_title))
             .highlight_style(Style::default().bg(Color::DarkGray));
 
-        f.render_stateful_widget(files_list, area, &mut app.state.file_list_state.clone());
+        f.render_stateful_widget(files_list, area, &mut state.file_list_state.clone());
     }
 }
 

@@ -1,4 +1,3 @@
-use anyhow::Result;
 use ratatui::{
     Frame,
     layout::Rect,
@@ -6,11 +5,11 @@ use ratatui::{
 };
 
 use crate::{
-    app::App,
+    app_state::AppState,
     modes::{
-        ModeHandler,
+        ModeHandler, Renderer,
         normal::{FileListRenderer, NormalHelpRenderer},
-        shared::{PreviewRenderer, renderers::Renderer},
+        preview::PreviewRenderer,
     },
 };
 
@@ -38,21 +37,21 @@ impl NormalModeHandler {
 }
 
 impl ModeHandler for NormalModeHandler {
-    fn render_left_panel(&self, f: &mut Frame, area: Rect, app: &App) {
-        self.file_list_renderer.render(f, area, app);
+    fn render_left_panel(&self, f: &mut Frame, area: Rect, state: &AppState) {
+        self.file_list_renderer.render(f, area, state);
     }
 
-    fn render_right_panel(&self, f: &mut Frame, area: Rect, app: &App) {
-        if self.should_show_help(app) {
-            self.help_renderer.render(f, area, app);
+    fn render_right_panel(&self, f: &mut Frame, area: Rect, state: &AppState) {
+        if self.should_show_help(state) {
+            self.help_renderer.render(f, area, state);
         } else {
-            self.preview_renderer.render(f, area, app);
+            self.preview_renderer.render(f, area, state);
         }
     }
 
-    fn get_search_box_config(&self, app: &App) -> (String, String, Style) {
-        let (info, style) = if app.state.is_searching {
-            if app.state.search_input.is_empty() {
+    fn get_search_box_config(&self, state: &AppState) -> (String, String, Style) {
+        let (info, style) = if state.is_searching {
+            if state.search_input.is_empty() {
                 (
                     "SEARCH - Type to search, ESC to exit search".to_string(),
                     Style::default().fg(Color::Black).bg(Color::Yellow),
@@ -61,19 +60,19 @@ impl ModeHandler for NormalModeHandler {
                 (
                     format!(
                         "SEARCH - '{}' - {} matches (ESC to exit)",
-                        app.state.search_input,
-                        app.state.filtered_files.len()
+                        state.search_input,
+                        state.filtered_files.len()
                     ),
                     Style::default().fg(Color::Black).bg(Color::Yellow),
                 )
             }
-        } else if !app.state.search_input.is_empty() {
+        } else if !state.search_input.is_empty() {
             // Show search results even when not actively searching
             (
                 format!(
                     "FILTERED - '{}' - {} matches (/ to search again)",
-                    app.state.search_input,
-                    app.state.filtered_files.len()
+                    state.search_input,
+                    state.filtered_files.len()
                 ),
                 Style::default().fg(Color::Black).bg(Color::Green),
             )
@@ -83,23 +82,15 @@ impl ModeHandler for NormalModeHandler {
                 Style::default().fg(Color::Yellow),
             )
         };
-        (info, app.state.search_input.clone(), style)
+        (info, state.search_input.clone(), style)
     }
 
-    fn should_show_help(&self, app: &App) -> bool {
+    fn should_show_help(&self, state: &AppState) -> bool {
         // Show help if no selection or if searching with no results
-        if app.state.is_searching {
-            app.state.search_input.is_empty() || app.state.filtered_files.is_empty()
+        if state.is_searching {
+            state.search_input.is_empty() || state.filtered_files.is_empty()
         } else {
-            app.state.file_list_state.selected().is_none() || app.state.filtered_files.is_empty()
+            state.file_list_state.selected().is_none() || state.filtered_files.is_empty()
         }
-    }
-
-    fn on_enter(&mut self, _app: &mut App) -> Result<()> {
-        Ok(())
-    }
-
-    fn on_exit(&mut self, _app: &mut App) -> Result<()> {
-        Ok(())
     }
 }

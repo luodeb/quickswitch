@@ -1,7 +1,10 @@
 use ratatui::{text::Line, widgets::ListState};
 use std::{collections::HashMap, path::PathBuf, time::Instant};
 
-use crate::utils::{DisplayItem, FileItem};
+use crate::{
+    core::layout::LayoutManager,
+    utils::{DisplayItem, FileItem},
+};
 
 #[derive(Clone, Debug)]
 pub struct DoubleClickState {
@@ -22,6 +25,7 @@ pub struct AppState {
     pub preview_scroll_offset: usize,
     pub dir_positions: HashMap<PathBuf, usize>,
     pub double_click_state: DoubleClickState,
+    pub layout: LayoutManager,
 }
 
 impl AppState {
@@ -43,7 +47,28 @@ impl AppState {
                 last_click_position: None,
                 last_clicked_index: None,
             },
+            layout: LayoutManager::new(),
         })
+    }
+
+    /// Update the layout based on terminal size
+    pub fn update_layout(&mut self, terminal_size: ratatui::layout::Rect) {
+        self.layout.update_layout(terminal_size);
+    }
+
+    /// Check if a point is in the left panel area
+    pub fn is_point_in_left_panel(&self, x: u16, y: u16) -> bool {
+        self.layout.is_in_left_area(x, y)
+    }
+
+    /// Check if a point is in the right panel area
+    pub fn is_point_in_right_panel(&self, x: u16, y: u16) -> bool {
+        self.layout.is_in_right_area(x, y)
+    }
+
+    /// Check if a point is in the search area
+    pub fn is_point_in_search_area(&self, x: u16, y: u16) -> bool {
+        self.layout.is_in_search_area(x, y)
     }
 
     /// Load file items for Normal mode

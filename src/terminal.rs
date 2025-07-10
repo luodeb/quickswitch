@@ -7,12 +7,12 @@ use crossterm::{
 use ratatui::{
     Frame, Terminal,
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::Rect,
     widgets::{Block, Borders, Paragraph},
 };
 use std::io;
 
-use crate::{App, events, utils::AppMode};
+use crate::{App, core::events, utils::AppMode};
 
 pub async fn run_interactive_mode() -> Result<()> {
     let mut terminal = setup_terminal()?;
@@ -50,19 +50,13 @@ where
     W: std::io::Write,
 {
     loop {
-        // Calculate layout areas for mouse event handling
+        // Update layout if terminal size changed
         let terminal_size = terminal.size()?;
         let terminal_area = Rect::new(0, 0, terminal_size.width, terminal_size.height);
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Length(3), Constraint::Min(0)])
-            .split(terminal_area);
-        let main_chunks = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-            .split(chunks[1]);
-        let left_area = main_chunks[0];
-        let right_area = main_chunks[1];
+
+        if app.state.layout.needs_update(terminal_area) {
+            app.state.update_layout(terminal_area);
+        }
 
         terminal.draw(|f| render_ui(f, app))?;
 
@@ -75,7 +69,7 @@ where
                     }
                 }
                 Event::Mouse(mouse) => {
-                    if !events::handle_mouse_event(app, mouse, left_area, right_area)? {
+                    if !events::handle_mouse_event(app, mouse)? {
                         break;
                     }
                 }
@@ -88,33 +82,28 @@ where
 
 /// Simple UI rendering function that delegates to mode manager
 fn render_ui(f: &mut Frame, app: &App) {
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(0)])
-        .split(f.area());
+    // Use the layout manager from app state
+    let layout = &app.state.layout;
 
     // Render search box
-    let (title, content, style) = app.get_search_box_config();
+    let (title, content, style) = app.mode_manager.get_search_box_config(&app.state);
     let search_box = Paragraph::new(content)
         .block(Block::default().borders(Borders::ALL).title(title))
         .style(style);
-    f.render_widget(search_box, chunks[0]);
+    f.render_widget(search_box, layout.get_search_area());
 
-    // Split main area for left and right panels
-    let main_chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-        .split(chunks[1]);
-
-    // Delegate rendering to app
-    app.render_left_panel(f, main_chunks[0]);
-    app.render_right_panel(f, main_chunks[1]);
+    // Delegate rendering to app using layout areas
+    app.mode_manager
+        .render_left_panel(f, layout.get_left_area(), &app.state);
+    app.mode_manager
+        .render_right_panel(f, layout.get_right_area(), &app.state);
 
     // Set cursor position when searching
     if app.state.is_searching {
+        let search_area = layout.get_search_area();
         f.set_cursor_position((
-            chunks[0].x + app.state.search_input.len() as u16 + 1,
-            chunks[0].y + 1,
+            search_area.x + app.state.search_input.len() as u16 + 1,
+            search_area.y + 1,
         ));
     }
 }
