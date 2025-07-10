@@ -8,7 +8,7 @@ use crossterm::{
 use ratatui::layout::Rect;
 use std::{env, io};
 
-use crate::{FileItem, modes::AppController};
+use crate::{modes::{history::HistoryDataProvider, AppController}, FileItem};
 
 /// Main entry point for keyboard event handling
 /// Now delegates to the app controller instead of handling directly
@@ -36,8 +36,9 @@ pub fn handle_exit(controller: &mut AppController, file: Option<&FileItem>) -> R
         } else {
             app.state.current_dir.clone()
         };
-        // Save to history
-        app.add_to_history(select_path.clone()).unwrap_or(());
+        // Save to history using history data provider
+        let history_provider: HistoryDataProvider = HistoryDataProvider;
+        history_provider.add_to_history(select_path.clone()).unwrap_or(());
 
         // Properly cleanup terminal state before exit
         disable_raw_mode()?;

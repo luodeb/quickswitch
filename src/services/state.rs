@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::app::App;
+use crate::{app::App, models::DisplayItem};
 
 /// Service for managing application state transitions and operations
 pub struct StateService;
@@ -8,22 +8,7 @@ pub struct StateService;
 impl StateService {
     /// Apply search filter to file list
     pub fn apply_search_filter(app: &mut App) {
-        if app.state.search_input.is_empty() {
-            app.state.filtered_files = (0..app.state.files.len()).collect();
-        } else {
-            let search_lower = app.state.search_input.to_lowercase();
-            app.state.filtered_files = app
-                .state
-                .files
-                .iter()
-                .enumerate()
-                .filter(|(_, file)| file.name.to_lowercase().contains(&search_lower))
-                .map(|(i, _)| i)
-                .collect();
-        }
-
-        // Reset selection when filter changes
-        app.state.file_list_state.select(None);
+        app.state.apply_search_filter();
     }
 
     /// Save current position for the current directory
@@ -59,19 +44,27 @@ impl StateService {
 
     /// Initialize history state when entering history mode
     pub fn initialize_history_mode(app: &mut App) {
-        if !app.state.history.is_empty() {
-            app.state.history_state.select(Some(0));
+        if !app.state.filtered_files.is_empty() {
+            app.state.file_list_state.select(Some(0));
         } else {
-            app.state.history_state.select(None);
+            app.state.file_list_state.select(None);
         }
     }
 
     /// Move history item to front (used when selecting from history)
     pub fn move_history_to_front(app: &mut App, index: usize) -> Option<PathBuf> {
-        if index < app.state.history.len() {
-            let selected_path = app.state.history.remove(index);
-            app.state.history.insert(0, selected_path.clone());
-            Some(selected_path)
+        if let Some(&file_index) = app.state.filtered_files.get(index) {
+            if let Some(DisplayItem::HistoryPath(path)) = app.state.files.get(file_index).cloned() {
+                // Remove the item from its current position
+                app.state.files.remove(file_index);
+                // Insert at the front
+                app.state.files.insert(0, DisplayItem::HistoryPath(path.clone()));
+                // Update filtered_files indices
+                app.state.apply_search_filter();
+                Some(path)
+            } else {
+                None
+            }
         } else {
             None
         }

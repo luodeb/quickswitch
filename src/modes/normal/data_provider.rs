@@ -5,7 +5,7 @@ use crate::{
     app::App,
     models::DisplayItem,
     modes::ModeAction,
-    services::{DataProvider, PreviewManager},
+    services::{DataProvider, PreviewManager, FilesystemService},
 };
 
 /// Data provider for file list (Normal and Search modes)
@@ -17,7 +17,7 @@ impl DataProvider for FileListDataProvider {
             .filtered_files
             .iter()
             .filter_map(|&index| app.state.files.get(index))
-            .map(|file| DisplayItem::File(file.clone()))
+            .cloned()
             .collect()
     }
 
@@ -85,9 +85,7 @@ impl DataProvider for FileListDataProvider {
     fn get_selected_item(&self, app: &App) -> Option<DisplayItem> {
         if let Some(selected) = app.state.file_list_state.selected() {
             if let Some(&file_index) = app.state.filtered_files.get(selected) {
-                if let Some(file) = app.state.files.get(file_index) {
-                    return Some(DisplayItem::File(file.clone()));
-                }
+                return app.state.files.get(file_index).cloned();
             }
         }
         None
@@ -119,9 +117,17 @@ impl DataProvider for FileListDataProvider {
     }
 
     fn navigate_into_directory(&self, app: &mut App) -> Result<Option<ModeAction>> {
-        if let Some(file) = self.get_selected_item(&app) {
+        if let Some(file) = self.get_selected_item(app) {
             if file.is_directory() {
-                app.change_directory(file.get_path().to_path_buf())?;
+                // Save current position before changing directory
+                self.save_position(app);
+
+                // Change directory
+                app.state.current_dir = file.get_path().to_path_buf();
+
+                // Handle directory change
+                self.on_directory_changed(app, &app.state.current_dir.clone())?;
+
                 return Ok(None); // Stay in current mode
             }
         }
@@ -130,10 +136,78 @@ impl DataProvider for FileListDataProvider {
 
     fn navigate_to_parent(&self, app: &mut App) -> Result<Option<ModeAction>> {
         if let Some(parent) = app.state.current_dir.parent() {
-            app.change_directory(parent.to_path_buf())?;
+            let parent_path = parent.to_path_buf();
+
+            // Save current position before changing directory
+            self.save_position(app);
+
+            // Change directory
+            app.state.current_dir = parent_path.clone();
+
+            // Handle directory change
+            self.on_directory_changed(app, &parent_path)?;
+
             Ok(None) // Stay in current mode
         } else {
             Ok(None)
         }
+    }
+
+    fn navigate_to_selected(&self, _app: &mut App) -> Result<bool> {
+        Ok(true)
+    }
+
+    // === Data Management Methods ===
+
+    fn load_data(&self, app: &mut App) -> Result<()> {
+        let files = FilesystemService::load_directory(&app.state.current_dir)?;
+        app.state.load_file_items(files);
+        app.state.apply_search_filter();
+        Ok(())
+    }
+
+    fn save_position(&self, app: &mut App) {
+        if let Some(selected) = app.state.file_list_state.selected() {
+            app.state
+                .dir_positions
+                .insert(app.state.current_dir.clone(), selected);
+        }
+    }
+
+    fn restore_position(&self, app: &mut App) {
+        if let Some(&saved_position) = app.state.dir_positions.get(&app.state.current_dir) {
+            // 确保保存的位置在当前过滤结果范围内
+            if saved_position < app.state.filtered_files.len() {
+                app.state.file_list_state.select(Some(saved_position));
+            } else {
+                // 如果保存的位置超出范围，选择最后一个
+                if !app.state.filtered_files.is_empty() {
+                    app.state
+                        .file_list_state
+                        .select(Some(app.state.filtered_files.len() - 1));
+                } else {
+                    app.state.file_list_state.select(None);
+                }
+            }
+        } else {
+            app.state.file_list_state.select(None);
+        }
+    }
+
+    fn on_directory_changed(&self, app: &mut App, _new_dir: &PathBuf) -> Result<()> {
+        // Clear search and exit search mode when changing directory
+        app.state.search_input.clear();
+        app.state.is_searching = false;
+
+        // Load new directory contents
+        self.load_data(app)?;
+
+        // Restore position for the new directory
+        self.restore_position(app);
+
+        // Clear preview
+        PreviewManager::clear_preview(app);
+
+        Ok(())
     }
 }

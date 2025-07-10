@@ -70,11 +70,13 @@ impl ModeManager {
     pub fn switch_mode(&mut self, app: &mut App, new_mode: &AppMode) -> Result<()> {
         self.current_handler.on_exit(app)?;
 
-        // Clear search and reload directory when switching modes
+        // Clear search when switching modes
         app.state.search_input.clear();
         app.state.is_searching = false;
-        app.reload_directory()?;
-        app.update_filter();
+
+        // Load appropriate data for the new mode using data provider
+        let data_provider = crate::services::create_data_provider(new_mode);
+        data_provider.load_data(app)?;
 
         self.current_handler = create_mode_handler(new_mode);
         self.current_mode = new_mode.clone();
@@ -119,7 +121,15 @@ impl ModeManager {
 
 impl AppController {
     pub fn new(initial_mode: AppMode) -> Result<Self> {
-        let app = App::new()?;
+        let mut app = App::new()?;
+
+        // Load initial data using data provider
+        let data_provider = crate::services::create_data_provider(&initial_mode);
+        data_provider.load_data(&mut app)?;
+
+        // Clear preview
+        crate::services::PreviewManager::clear_preview(&mut app);
+
         let mode_manager = ModeManager::new(&initial_mode);
         Ok(Self { app, mode_manager })
     }

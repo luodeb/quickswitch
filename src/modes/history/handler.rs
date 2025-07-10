@@ -63,7 +63,7 @@ impl ModeHandler for HistoryModeHandler {
                     format!(
                         "SEARCH - '{}' - {} matches (ESC to exit)",
                         app.state.search_input,
-                        app.state.filtered_history.len()
+                        app.state.filtered_files.len()
                     ),
                     Style::default().fg(Color::Black).bg(Color::Yellow),
                 )
@@ -74,7 +74,7 @@ impl ModeHandler for HistoryModeHandler {
                 format!(
                     "FILTERED HISTORY - '{}' - {} matches (l/→ enter dir, / to search again, ESC to normal)",
                     app.state.search_input,
-                    app.state.filtered_history.len()
+                    app.state.filtered_files.len()
                 ),
                 Style::default().fg(Color::Black).bg(Color::Green),
             )
@@ -82,7 +82,7 @@ impl ModeHandler for HistoryModeHandler {
             (
                 format!(
                     "HISTORY - {} entries (jk navigate, l/→ enter dir, / search, Enter select, ESC to normal)",
-                    app.state.history.len()
+                    app.state.files.len()
                 ),
                 Style::default().fg(Color::Cyan),
             )
@@ -93,9 +93,9 @@ impl ModeHandler for HistoryModeHandler {
     fn should_show_help(&self, app: &App) -> bool {
         // Show help if no selection or if searching with no results
         if app.state.is_searching {
-            app.state.search_input.is_empty() || app.state.filtered_history.is_empty()
+            app.state.search_input.is_empty() || app.state.filtered_files.is_empty()
         } else {
-            app.state.history_state.selected().is_none() || app.state.history.is_empty()
+            app.state.file_list_state.selected().is_none()
         }
     }
 

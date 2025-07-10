@@ -78,24 +78,19 @@ pub struct AppState {
     pub search_input: String,
     pub is_searching: bool,
     pub current_dir: PathBuf,
-    pub files: Vec<FileItem>,
+    pub files: Vec<DisplayItem>,
     pub filtered_files: Vec<usize>,
     pub file_list_state: ListState,
     pub preview_content: Vec<Line<'static>>,
     pub preview_title: String,
     pub preview_scroll_offset: usize,
     pub dir_positions: HashMap<PathBuf, usize>,
-    pub history: Vec<PathBuf>,
-    pub filtered_history: Vec<usize>,
-    pub history_state: ListState,
-    pub history_file_path: PathBuf,
     pub double_click_state: DoubleClickState,
 }
 
 impl AppState {
     pub fn new() -> anyhow::Result<Self> {
         let current_dir = std::env::current_dir()?;
-        let history_file_path = std::env::temp_dir().join("quickswitch.history");
         Ok(Self {
             search_input: String::new(),
             is_searching: false,
@@ -107,15 +102,44 @@ impl AppState {
             preview_title: String::new(),
             preview_scroll_offset: 0,
             dir_positions: HashMap::new(),
-            history: Vec::new(),
-            filtered_history: Vec::new(),
-            history_state: ListState::default(),
-            history_file_path,
             double_click_state: DoubleClickState {
                 last_click_time: None,
                 last_click_position: None,
                 last_clicked_index: None,
             },
         })
+    }
+
+    /// Load file items for Normal mode
+    pub fn load_file_items(&mut self, file_items: Vec<FileItem>) {
+        self.files = file_items.into_iter().map(DisplayItem::File).collect();
+        self.reset_filter();
+    }
+
+
+
+    /// Reset filter and selection
+    pub fn reset_filter(&mut self) {
+        self.filtered_files = (0..self.files.len()).collect();
+        self.file_list_state.select(None);
+    }
+
+    /// Apply search filter to current items
+    pub fn apply_search_filter(&mut self) {
+        if self.search_input.is_empty() {
+            self.filtered_files = (0..self.files.len()).collect();
+        } else {
+            let search_lower = self.search_input.to_lowercase();
+            self.filtered_files = self
+                .files
+                .iter()
+                .enumerate()
+                .filter(|(_, item)| {
+                    item.get_display_name().to_lowercase().contains(&search_lower)
+                })
+                .map(|(i, _)| i)
+                .collect();
+        }
+        self.file_list_state.select(None);
     }
 }

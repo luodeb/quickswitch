@@ -67,7 +67,6 @@ impl InputDispatcher {
                 if app.state.is_searching {
                     app.state.is_searching = false;
                     // Don't clear search_input - keep the search results visible
-                    // app.update_filter() is not needed since we're keeping the same filter
                     Some(ModeAction::Stay)
                 } else if current_mode == &AppMode::Normal {
                     // In normal mode, Esc exits the application
@@ -81,6 +80,7 @@ impl InputDispatcher {
                 // Handle selection and exit using unified data provider
                 let provider = create_data_provider(current_mode);
                 if let Some(item) = provider.get_selected_item(app) {
+                    let _ = provider.navigate_to_selected(app);
                     match item {
                         DisplayItem::File(file) => Some(ModeAction::Exit(Some(file))),
                         DisplayItem::HistoryPath(path) => {
@@ -228,12 +228,14 @@ impl InputDispatcher {
 
     /// Handle preview navigation (Page Up/Down)
     fn handle_preview_navigation(app: &mut App, key: KeyCode) {
+        // Use a reasonable default height for page scrolling
+        let visible_height = 20; // This could be made configurable or passed as parameter
         match key {
             KeyCode::PageUp => {
-                PreviewManager::scroll_preview_up(app);
+                PreviewManager::scroll_preview_page_up(app, visible_height);
             }
             KeyCode::PageDown => {
-                PreviewManager::scroll_preview_down(app);
+                PreviewManager::scroll_preview_page_down(app, visible_height);
             }
             _ => {}
         }
@@ -365,10 +367,8 @@ impl InputDispatcher {
     }
 
     /// Get the current scroll offset for the given mode
-    fn get_scroll_offset(app: &App, current_mode: &AppMode) -> usize {
-        match current_mode {
-            AppMode::History => app.state.history_state.offset(),
-            _ => app.state.file_list_state.offset(), // Normal and Search modes use file_list_state
-        }
+    fn get_scroll_offset(app: &App, _current_mode: &AppMode) -> usize {
+        // All modes now use the unified file_list_state
+        app.state.file_list_state.offset()
     }
 }

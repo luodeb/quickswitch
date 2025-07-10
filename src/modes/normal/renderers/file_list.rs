@@ -25,7 +25,7 @@ impl Renderer for FileListRenderer {
             .filtered_files
             .iter()
             .filter_map(|&i| app.state.files.get(i))
-            .map(|file| create_file_list_item(file, &app.state.search_input))
+            .map(|item| create_display_item_list_item(item, &app.state.search_input))
             .collect();
 
         let files_title = format!(
@@ -62,4 +62,31 @@ fn create_file_list_item<'a>(file: &'a FileItem, search_input: &'a str) -> ListI
     spans.extend(display_name);
 
     ListItem::new(Line::from(spans))
+}
+
+/// Create a list item for a DisplayItem with optional search highlighting
+fn create_display_item_list_item<'a>(item: &'a crate::models::DisplayItem, search_input: &'a str) -> ListItem<'a> {
+    use crate::models::DisplayItem;
+
+    match item {
+        DisplayItem::File(file) => create_file_list_item(file, search_input),
+        DisplayItem::HistoryPath(path) => {
+            let icon = "📁";
+            let style = Style::default().fg(Color::Cyan);
+            let name = path.file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or_default();
+
+            let display_name = if !search_input.is_empty() {
+                utils::highlight_search_term(name, search_input)
+            } else {
+                vec![Span::styled(name, style)]
+            };
+
+            let mut spans = vec![Span::raw(icon), Span::raw(" ")];
+            spans.extend(display_name);
+
+            ListItem::new(Line::from(spans))
+        }
+    }
 }

@@ -44,6 +44,24 @@ pub trait DataProvider {
     /// Navigate to parent directory (if applicable)
     /// Returns Some(ModeAction) if mode should change, None if should stay in current mode
     fn navigate_to_parent(&self, app: &mut App) -> Result<Option<ModeAction>>;
+
+    /// Navigate to selected item (if applicable)
+    /// Returns Some(ModeAction) if mode should change, None if should stay in current mode
+    fn navigate_to_selected(&self, app: &mut App) -> Result<bool>;
+
+    // === Data Management Methods ===
+
+    /// Load initial data for this mode
+    fn load_data(&self, app: &mut App) -> Result<()>;
+
+    /// Save current position before navigation
+    fn save_position(&self, app: &mut App);
+
+    /// Restore position after navigation
+    fn restore_position(&self, app: &mut App);
+
+    /// Handle directory change (called when current_dir changes)
+    fn on_directory_changed(&self, app: &mut App, new_dir: &PathBuf) -> Result<()>;
 }
 
 /// Factory function to create appropriate data provider for each mode
