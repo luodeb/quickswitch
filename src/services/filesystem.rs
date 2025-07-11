@@ -15,6 +15,11 @@ impl FilesystemService {
     pub fn load_directory(current_dir: &PathBuf) -> Result<Vec<FileItem>> {
         let mut files = Vec::new();
 
+        // Check if we're at Windows drives view and should show drives
+        if Self::should_show_drives(current_dir) {
+            return Self::load_drives();
+        }
+
         // 添加当前目录
         files.push(FileItem {
             name: ".".to_string(),
@@ -44,6 +49,49 @@ impl FilesystemService {
         Ok(files)
     }
 
+    /// Check if we should show drives instead of directory contents
+    fn should_show_drives(current_dir: &PathBuf) -> bool {
+        #[cfg(windows)]
+        {
+            // On Windows, only show drives when we're at the special "DRIVES:" path
+            current_dir.to_string_lossy() == "DRIVES:"
+        }
+        #[cfg(not(windows))]
+        {
+            let _ = current_dir; // Suppress unused variable warning
+            false
+        }
+    }
+
+    /// Load available drives on Windows
+    pub fn load_drives() -> Result<Vec<FileItem>> {
+        #[cfg(windows)]
+        {
+            let mut drives = Vec::new();
+
+            // Try common drive letters and check if they exist
+            for letter in 'A'..='Z' {
+                let drive_path = format!("{}:\\", letter);
+                let path = PathBuf::from(&drive_path);
+
+                // Check if the drive is accessible by trying to read its metadata
+                if path.exists() && path.is_dir() {
+                    drives.push(FileItem {
+                        name: drive_path.clone(),
+                        path,
+                        is_dir: true,
+                    });
+                }
+            }
+
+            Ok(drives)
+        }
+        #[cfg(not(windows))]
+        {
+            Ok(Vec::new())
+        }
+    }
+
     /// Generate preview content for a file or directory
     pub fn generate_preview_content(file: &FileItem) -> (String, Vec<Line<'static>>) {
         if file.is_dir {
@@ -55,6 +103,11 @@ impl FilesystemService {
 
     /// Generate preview content for a directory
     fn generate_directory_preview(file: &FileItem) -> (String, Vec<Line<'static>>) {
+        // Special handling for Windows drives view
+        if file.path.to_string_lossy() == "DRIVES:" {
+            return Self::generate_drives_preview();
+        }
+
         let title = format!("📁 {}", file.name);
         let content = match fs::read_dir(&file.path) {
             Ok(entries) => {
@@ -108,14 +161,109 @@ impl FilesystemService {
         (title, content)
     }
 
+    /// Generate preview content for Windows drives view
+    fn generate_drives_preview() -> (String, Vec<Line<'static>>) {
+        let title = "💾 Available Drives".to_string();
+
+        #[cfg(windows)]
+        {
+            match Self::load_drives() {
+                Ok(drives) => {
+                    if drives.is_empty() {
+                        let content = vec![Line::from(vec![Span::styled(
+                            "No drives found".to_string(),
+                            Style::default().fg(Color::Gray),
+                        )])];
+                        (title, content)
+                    } else {
+                        let content: Vec<Line<'static>> = drives
+                            .iter()
+                            .map(|drive| {
+                                Line::from(vec![
+                                    Span::raw("💾 ".to_string()),
+                                    Span::styled(
+                                        drive.name.clone(),
+                                        Style::default().fg(Color::Cyan),
+                                    ),
+                                ])
+                            })
+                            .collect();
+                        (title, content)
+                    }
+                }
+                Err(e) => {
+                    let content = vec![Line::from(vec![Span::styled(
+                        format!("Error loading drives: {e}"),
+                        Style::default().fg(Color::Red),
+                    )])];
+                    (title, content)
+                }
+            }
+        }
+        #[cfg(not(windows))]
+        {
+            let content = vec![Line::from(vec![Span::styled(
+                "Drive view not available on this platform".to_string(),
+                Style::default().fg(Color::Gray),
+            )])];
+            (title, content)
+        }
+    }
+
     /// Generate preview content for a file
     fn generate_file_preview(file: &FileItem) -> (String, Vec<Line<'static>>) {
         let title = format!("📄 {}", file.name);
+
+        // First check file size to avoid reading large files
+        let metadata = match fs::metadata(&file.path) {
+            Ok(metadata) => metadata,
+            Err(e) => {
+                let content = vec![Line::from(vec![Span::styled(
+                    format!("Error reading file metadata: {e}"),
+                    Style::default().fg(Color::Red),
+                )])];
+                return (title, content);
+            }
+        };
+
+        let file_size = metadata.len();
+        const MAX_PREVIEW_SIZE: u64 = 5 * 1024 * 1024; // 5MB
+
+        // If file is too large, only show basic information
+        if file_size > MAX_PREVIEW_SIZE {
+            let content = vec![
+                Line::from(vec![Span::styled(
+                    "Large File".to_string(),
+                    Style::default().fg(Color::Yellow),
+                )]),
+                Line::from(vec![Span::raw("".to_string())]),
+                Line::from(vec![Span::styled(
+                    format!(
+                        "Size: {} bytes ({:.2} MB)",
+                        file_size,
+                        file_size as f64 / 1024.0 / 1024.0
+                    ),
+                    Style::default().fg(Color::Gray),
+                )]),
+                Line::from(vec![Span::styled(
+                    "File too large for preview (>5MB)".to_string(),
+                    Style::default().fg(Color::Gray),
+                )]),
+                Line::from(vec![Span::raw("".to_string())]),
+                Line::from(vec![Span::styled(
+                    "Basic file information:".to_string(),
+                    Style::default().fg(Color::Cyan),
+                )]),
+            ];
+            return (title, content);
+        }
+
+        // For files under 5MB, try to read and preview content
         let content = match fs::read_to_string(&file.path) {
             Ok(content) => {
                 let size_info = Line::from(vec![Span::styled(
                     format!(
-                        "Size: {} bytes, {} lines\n",
+                        "Size: {} bytes, {} lines",
                         content.len(),
                         content.lines().count()
                     ),
@@ -147,31 +295,24 @@ impl FilesystemService {
 
                 lines
             }
-            Err(_) => match fs::metadata(&file.path) {
-                Ok(metadata) => {
-                    vec![
-                        Line::from(vec![Span::styled(
-                            "Binary File".to_string(),
-                            Style::default().fg(Color::Yellow),
-                        )]),
-                        Line::from(vec![Span::raw("".to_string())]),
-                        Line::from(vec![Span::styled(
-                            format!("Size: {} bytes", metadata.len()),
-                            Style::default().fg(Color::Gray),
-                        )]),
-                        Line::from(vec![Span::styled(
-                            "Cannot preview binary content".to_string(),
-                            Style::default().fg(Color::Gray),
-                        )]),
-                    ]
-                }
-                Err(e) => {
-                    vec![Line::from(vec![Span::styled(
-                        format!("Error reading file: {e}"),
-                        Style::default().fg(Color::Red),
-                    )])]
-                }
-            },
+            Err(_) => {
+                // File exists but can't be read as text (likely binary)
+                vec![
+                    Line::from(vec![Span::styled(
+                        "Binary File".to_string(),
+                        Style::default().fg(Color::Yellow),
+                    )]),
+                    Line::from(vec![Span::raw("".to_string())]),
+                    Line::from(vec![Span::styled(
+                        format!("Size: {} bytes", file_size),
+                        Style::default().fg(Color::Gray),
+                    )]),
+                    Line::from(vec![Span::styled(
+                        "Cannot preview binary content".to_string(),
+                        Style::default().fg(Color::Gray),
+                    )]),
+                ]
+            }
         };
         (title, content)
     }

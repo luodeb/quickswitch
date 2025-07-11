@@ -40,6 +40,11 @@ impl DataProvider for FileListDataProvider {
     }
 
     fn navigate_to_parent(&self, state: &mut AppState) -> Result<Option<ModeAction>> {
+        // Special handling for DRIVES: view - return to the last drive root
+        if state.current_dir.to_string_lossy() == "DRIVES:" {
+            return Ok(None);
+        }
+
         if let Some(parent) = state.current_dir.parent() {
             let parent_path = parent.to_path_buf();
 
@@ -54,9 +59,28 @@ impl DataProvider for FileListDataProvider {
 
             Ok(None) // Stay in current mode
         } else {
+            // On Windows, if we're at a drive root (like C:\), show drives
+            #[cfg(windows)]
+            {
+                if self.is_windows_drive_root(&state.current_dir) {
+                    // Save current position before changing to drives view
+                    self.save_position(state);
+
+                    // Set to special drives path
+                    state.current_dir = PathBuf::from("DRIVES:");
+
+                    // Handle directory change
+                    self.on_directory_changed(state, &state.current_dir.clone())?;
+
+                    return Ok(None);
+                }
+            }
+
             Ok(None)
         }
     }
+
+
 
     fn load_data(&self, state: &mut AppState) -> Result<()> {
         let files = FilesystemService::load_directory(&state.current_dir)?;
@@ -108,5 +132,14 @@ impl DataProvider for FileListDataProvider {
         PreviewManager::clear_preview(state);
 
         Ok(())
+    }
+}
+
+impl FileListDataProvider {
+    #[cfg(windows)]
+    fn is_windows_drive_root(&self, path: &PathBuf) -> bool {
+        let path_str = path.to_string_lossy();
+        // Check if it's a drive root like "C:\" or "D:\"
+        path_str.len() == 3 && path_str.ends_with(":\\") && path_str.chars().next().unwrap().is_ascii_alphabetic()
     }
 }
