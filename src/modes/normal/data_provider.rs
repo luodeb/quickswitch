@@ -80,8 +80,6 @@ impl DataProvider for FileListDataProvider {
         }
     }
 
-
-
     fn load_data(&self, state: &mut AppState) -> Result<()> {
         let files = FilesystemService::load_directory(&state.current_dir)?;
         state.load_file_items(files);
@@ -140,6 +138,8 @@ impl FileListDataProvider {
     fn is_windows_drive_root(&self, path: &PathBuf) -> bool {
         let path_str = path.to_string_lossy();
         // Check if it's a drive root like "C:\" or "D:\"
-        path_str.len() == 3 && path_str.ends_with(":\\") && path_str.chars().next().unwrap().is_ascii_alphabetic()
+        path_str.len() == 3
+            && path_str.ends_with(":\\")
+            && path_str.chars().next().unwrap().is_ascii_alphabetic()
     }
 }
