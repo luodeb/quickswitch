@@ -110,6 +110,11 @@ impl FilesystemService {
 
     /// Generate preview content for a file
     fn generate_file_preview(file: &FileItem) -> (String, Vec<Line<'static>>) {
+        // Check if it's an image file first
+        if file.is_image() {
+            return Self::generate_image_file_preview(file);
+        }
+
         let title = format!("📄 {}", file.name);
         let content = match fs::read_to_string(&file.path) {
             Ok(content) => {
@@ -174,5 +179,16 @@ impl FilesystemService {
             },
         };
         (title, content)
+    }
+
+    /// Generate preview content for an image file
+    fn generate_image_file_preview(file: &FileItem) -> (String, Vec<Line<'static>>) {
+        use crate::services::ImagePreview;
+        use ratatui::layout::Rect;
+
+        // Use a default area for preview calculation
+        let preview_area = Rect::new(0, 0, 80, 24);
+
+        ImagePreview::generate_image_preview(file, preview_area)
     }
 }

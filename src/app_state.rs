@@ -13,6 +13,14 @@ pub struct DoubleClickState {
     pub last_clicked_index: Option<usize>,
 }
 
+/// Preview type to determine how to render the preview content
+pub enum PreviewType {
+    Text,
+    Image {
+        path: PathBuf,
+    },
+}
+
 pub struct AppState {
     pub search_input: String,
     pub is_searching: bool,
@@ -23,6 +31,7 @@ pub struct AppState {
     pub preview_content: Vec<Line<'static>>,
     pub preview_title: String,
     pub preview_scroll_offset: usize,
+    pub preview_type: PreviewType,
     pub dir_positions: HashMap<PathBuf, usize>,
     pub double_click_state: DoubleClickState,
     pub layout: LayoutManager,
@@ -41,6 +50,7 @@ impl AppState {
             preview_content: Vec::new(),
             preview_title: String::new(),
             preview_scroll_offset: 0,
+            preview_type: PreviewType::Text,
             dir_positions: HashMap::new(),
             double_click_state: DoubleClickState {
                 last_click_time: None,

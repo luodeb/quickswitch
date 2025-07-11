@@ -13,6 +13,8 @@ ratatui = { version = "0.29.0", features = ["crossterm"] }
 crossterm = "0.29.0"
 anyhow = "1.0"
 tokio = { version = "1.0", features = ["full"] }
+ratatui-image = "1.0"
+image = "0.24"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["consoleapi", "processenv", "winbase"] }

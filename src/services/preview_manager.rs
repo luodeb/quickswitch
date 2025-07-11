@@ -5,7 +5,7 @@ use ratatui::{
 
 use crate::{
     FilesystemService,
-    app_state::AppState,
+    app_state::{AppState, PreviewType},
     utils::{DisplayItem, FileItem},
 };
 
@@ -18,6 +18,27 @@ impl PreviewManager {
         let (title, content) = Self::generate_preview_content_for_item(item);
         state.preview_title = title;
         state.preview_content = content;
+
+        // Set preview type based on item
+        state.preview_type = match item {
+            DisplayItem::File(file) if file.is_image() => {
+                PreviewType::Image {
+                    path: file.path.clone(),
+                }
+            }
+            DisplayItem::HistoryPath(path) => {
+                let file_item = FileItem::from_path(path);
+                if file_item.is_image() {
+                    PreviewType::Image {
+                        path: path.clone(),
+                    }
+                } else {
+                    PreviewType::Text
+                }
+            }
+            _ => PreviewType::Text,
+        };
+
         Self::reset_preview_scroll(state);
     }
 
@@ -28,6 +49,7 @@ impl PreviewManager {
             "No file selected".to_string(),
             Style::default().fg(Color::Gray),
         )])];
+        state.preview_type = PreviewType::Text;
         Self::reset_preview_scroll(state);
     }
 
