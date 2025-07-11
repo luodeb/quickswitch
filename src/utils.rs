@@ -183,15 +183,11 @@ fn qs_init_powershell() -> Result<()> {
     let powershell_init = r#"
 function qs {
     $errorFile = [System.IO.Path]::GetTempFileName()
-    quickswitch.exe 2>$errorFile
-    $errors = (Get-Content $errorFile -Raw)
-    $bytes = [System.Text.Encoding]::GetEncoding("GBK").GetBytes($errors)
-    $correct = [System.Text.Encoding]::UTF8.GetString($bytes)
+    Start-Process -FilePath "quickswitch.exe" -NoNewWindow -Wait -RedirectStandardError $errorFile
+    $errorOutput = Get-Content -Path $errorFile -Encoding UTF8
     Remove-Item $errorFile
-    $firstLine = ($correct -split "`n")[0]
-    if ($firstLine -match ":") {
-        $userSelectPath = ($firstLine -split ":", 2)[1].Trim()
-        cd $userSelectPath
+    if ($errorOutput -and (Test-Path $errorOutput)) {
+        cd $errorOutput
     }
 }
     "#;
