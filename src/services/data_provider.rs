@@ -110,12 +110,11 @@ pub trait DataProvider {
             let current_offset = state.file_list_state.offset();
             let new_offset = if selected < current_offset {
                 selected
-            } else if selected >= current_offset + visible_height {
+            } else if selected >= current_offset + visible_height
+                || selected < current_offset + visible_height - 1
+            {
                 selected.saturating_sub(visible_height - 1)
-            } else if selected < current_offset + visible_height - 1 {
-                selected.saturating_sub(visible_height - 1)
-            }
-             else {
+            } else {
                 current_offset
             };
 

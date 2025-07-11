@@ -90,17 +90,26 @@ impl FileItem {
             return false;
         }
 
-        let extension = self.path
+        let extension = self
+            .path
             .extension()
             .and_then(|ext| ext.to_str())
             .map(|ext| ext.to_lowercase());
 
-        match extension.as_deref() {
-            Some("jpg") | Some("jpeg") | Some("png") | Some("gif") |
-            Some("bmp") | Some("webp") | Some("tiff") | Some("tif") |
-            Some("svg") | Some("ico") | Some("avif") => true,
-            _ => false,
-        }
+        matches!(
+            extension.as_deref(),
+            Some("jpg")
+                | Some("jpeg")
+                | Some("png")
+                | Some("gif")
+                | Some("bmp")
+                | Some("webp")
+                | Some("tiff")
+                | Some("tif")
+                | Some("svg")
+                | Some("ico")
+                | Some("avif")
+        )
     }
 }
 

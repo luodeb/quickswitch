@@ -92,13 +92,16 @@ jobs:
         shell: bash
         run: |
           PACKAGE_NAME=$(grep '^name' Cargo.toml | head -n1 | cut -d'=' -f2 | tr -d ' "')
+          PACKAGE_VERSION=$(grep '^version' Cargo.toml | head -n1 | cut -d'=' -f2 | tr -d ' "')
           echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+          echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
 
           # Generate library name based on platform
           LIB_NAME="${PACKAGE_NAME}${{ matrix.lib_suffix }}"
           echo "lib_name=$LIB_NAME" >> $GITHUB_OUTPUT
 
           echo "Package name: $PACKAGE_NAME"
+          echo "Package version: $PACKAGE_VERSION"
           echo "Library base name: $LIB_BASE_NAME"
           echo "Library name: $LIB_NAME"
 
@@ -158,6 +161,7 @@ jobs:
 
             const libName = '${{ steps.package-info.outputs.lib_name }}';
             const packageName = '${{ steps.package-info.outputs.package_name }}';
+            const packageVersion = '${{ steps.package-info.outputs.package_version }}';
 
             let assetPath;
             if ('${{ matrix.platform }}' === 'macos-latest') {
@@ -166,8 +170,8 @@ jobs:
               assetPath = `target/${{ matrix.target }}/release/${libName}`;
             }
 
-            // Generate asset name using package name and architecture
-            const assetName = `${{ matrix.platform_name }}-${packageName}-${{ matrix.arch }}.${{ matrix.file_extension }}`;
+            // Generate asset name using package name, version and architecture
+            const assetName = `${{ matrix.platform_name }}-${packageName}-v${packageVersion}-${{ matrix.arch }}.${{ matrix.file_extension }}`;
 
             console.log(`Uploading ${assetPath} as ${assetName}`);
 

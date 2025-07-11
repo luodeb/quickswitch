@@ -53,7 +53,7 @@ impl InputDispatcher {
             }
             MouseEventKind::Up(crossterm::event::MouseButton::Right) => {
                 Self::handle_right_click(app_state, mouse, current_mode)
-            },
+            }
             _ => Ok(ModeAction::Stay),
         }
     }

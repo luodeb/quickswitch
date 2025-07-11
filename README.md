@@ -19,6 +19,9 @@
 
 可以从 [GitHub Releases](https://github.com/luodeb/quickswitch/releases/latest) 页面下载最新的二进制文件。
 下载后，解压并将可执行文件移动到系统路径中，例如 `/usr/local/bin`，或者别的 Path 路径中。
+
+**并重命名为 `quickswitch`，Windows 需要保留 `.exe` 拓展名**
+
 测试安装是否成功：
 
 ```bash
