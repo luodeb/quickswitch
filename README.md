@@ -13,6 +13,20 @@
 - ⚡ **高性能**: 异步处理，响应迅速
 - 🌐 **跨平台支持**: 兼容 Linux、macOS 和 Windows
 
+## 界面预览
+
+### 目录预览
+
+![Directory Preview](./assets/directroy_preview.png)
+
+### 文件内容预览
+
+![File Preview](./assets/file_preview.png)
+
+### 图片预览
+
+![Image Preview](./assets/image_preview.png)
+
 ## 安装指南
 
 ### Release 安装
