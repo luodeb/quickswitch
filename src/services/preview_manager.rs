@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use crate::{
     FilesystemService,
     app_state::AppState,
-    preview_content::{PreviewContent, ImageState},
+    preview_content::{ImageState, PreviewContent},
     utils::{DisplayItem, FileItem},
 };
 
@@ -86,7 +86,10 @@ impl PreviewManager {
     }
 
     /// Generate preview content for a DisplayItem (unified function)
-    fn generate_preview_content_for_item(state: &AppState, item: &DisplayItem) -> (String, PreviewContent, Option<ImageState>) {
+    fn generate_preview_content_for_item(
+        state: &AppState,
+        item: &DisplayItem,
+    ) -> (String, PreviewContent, Option<ImageState>) {
         match item {
             DisplayItem::File(file) => FilesystemService::generate_preview_content(state, file),
             DisplayItem::HistoryPath(path) => {

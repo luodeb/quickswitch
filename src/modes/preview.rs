@@ -25,7 +25,7 @@ impl Renderer for PreviewRenderer {
                 self.render_text_preview(f, area, state, lines);
             }
             PreviewContent::Image(protocol) => {
-                self.render_image_preview(f, area, state, protocol);
+                self.render_image_preview(f, area, state, protocol.as_ref());
             }
         }
     }
@@ -33,7 +33,13 @@ impl Renderer for PreviewRenderer {
 
 impl PreviewRenderer {
     /// Render text preview content
-    fn render_text_preview(&self, f: &mut Frame, area: Rect, state: &AppState, lines: &[ratatui::text::Line<'static>]) {
+    fn render_text_preview(
+        &self,
+        f: &mut Frame,
+        area: Rect,
+        state: &AppState,
+        lines: &[ratatui::text::Line<'static>],
+    ) {
         // Calculate the visible content based on scroll offset
         let total_lines = lines.len();
         let visible_height = area.height.saturating_sub(2) as usize; // Account for borders
@@ -63,7 +69,13 @@ impl PreviewRenderer {
     }
 
     /// Render image preview content
-    fn render_image_preview(&self, f: &mut Frame, area: Rect, state: &AppState, _protocol: &Box<dyn ratatui_image::protocol::StatefulProtocol>) {
+    fn render_image_preview(
+        &self,
+        f: &mut Frame,
+        area: Rect,
+        state: &AppState,
+        _protocol: &dyn ratatui_image::protocol::StatefulProtocol,
+    ) {
         // Check if we have image state available
         if let Some(image_state_cell) = &state.image_state {
             // Try to borrow the image state mutably
@@ -83,7 +95,8 @@ impl PreviewRenderer {
             ListItem::new(""),
             ListItem::new("Image loaded successfully!"),
             ListItem::new("Rendering with StatefulImage widget..."),
-        ]).block(
+        ])
+        .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title(&*state.preview_title),

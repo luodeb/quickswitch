@@ -8,7 +8,7 @@ use std::{fs, path::PathBuf};
 
 use crate::{
     app_state::AppState,
-    preview_content::{PreviewContent, ImageState},
+    preview_content::{ImageState, PreviewContent},
     utils::FileItem,
 };
 
@@ -98,7 +98,10 @@ impl FilesystemService {
     }
 
     /// Generate preview content for a file or directory
-    pub fn generate_preview_content(state: &AppState, file: &FileItem) -> (String, PreviewContent, Option<ImageState>) {
+    pub fn generate_preview_content(
+        state: &AppState,
+        file: &FileItem,
+    ) -> (String, PreviewContent, Option<ImageState>) {
         if file.is_dir {
             let (title, content) = Self::generate_directory_preview(file);
             (title, PreviewContent::text(content), None)
@@ -217,7 +220,10 @@ impl FilesystemService {
     }
 
     /// Generate preview content for a file
-    fn generate_file_preview(state: &AppState, file: &FileItem) -> (String, PreviewContent, Option<ImageState>) {
+    fn generate_file_preview(
+        state: &AppState,
+        file: &FileItem,
+    ) -> (String, PreviewContent, Option<ImageState>) {
         // Check if this is an image file
         if file.is_image() {
             return Self::generate_image_preview(state, file);
@@ -329,7 +335,10 @@ impl FilesystemService {
     }
 
     /// Generate preview content for an image file
-    fn generate_image_preview(_state: &AppState, file: &FileItem) -> (String, PreviewContent, Option<ImageState>) {
+    fn generate_image_preview(
+        _state: &AppState,
+        file: &FileItem,
+    ) -> (String, PreviewContent, Option<ImageState>) {
         let title = format!("🖼️ {}", file.name);
 
         // Try to load the image
@@ -340,7 +349,7 @@ impl FilesystemService {
                     Ok(picker) => {
                         // Successfully detected terminal settings - this should give the best quality
                         picker
-                    },
+                    }
                     Err(_) => {
                         // Fallback: use more reasonable default font size
                         // Most terminals use roughly 1:2 width:height ratio for font cells
@@ -353,7 +362,9 @@ impl FilesystemService {
                 let protocol = picker.new_resize_protocol(img);
 
                 // Create image state
-                let image_state = ImageState { protocol: protocol.clone() };
+                let image_state = ImageState {
+                    protocol: protocol.clone(),
+                };
 
                 (title, PreviewContent::image(protocol), Some(image_state))
             }

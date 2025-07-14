@@ -1,9 +1,9 @@
 use ratatui::widgets::ListState;
-use std::{collections::HashMap, path::PathBuf, time::Instant, cell::RefCell};
+use std::{cell::RefCell, collections::HashMap, path::PathBuf, time::Instant};
 
 use crate::{
     core::layout::LayoutManager,
-    preview_content::{PreviewContent, ImageState},
+    preview_content::{ImageState, PreviewContent},
     utils::{DisplayItem, FileItem},
 };
 

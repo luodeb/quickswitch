@@ -44,18 +44,18 @@ impl PreviewContent {
     }
 
     /// Get image protocol if this is image content
-    pub fn as_image(&self) -> Option<&Box<dyn StatefulProtocol>> {
+    pub fn as_image(&self) -> Option<&dyn StatefulProtocol> {
         match self {
             Self::Text(_) => None,
-            Self::Image(protocol) => Some(protocol),
+            Self::Image(protocol) => Some(protocol.as_ref()),
         }
     }
 
     /// Get mutable image protocol if this is image content
-    pub fn as_image_mut(&mut self) -> Option<&mut Box<dyn StatefulProtocol>> {
+    pub fn as_image_mut(&mut self) -> Option<&mut dyn StatefulProtocol> {
         match self {
             Self::Text(_) => None,
-            Self::Image(protocol) => Some(protocol),
+            Self::Image(protocol) => Some(protocol.as_mut()),
         }
     }
 }
