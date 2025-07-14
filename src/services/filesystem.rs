@@ -303,7 +303,7 @@ impl FilesystemService {
                                 format!("{:3} ", i + 1),
                                 Style::default().fg(Color::DarkGray),
                             ),
-                            Span::raw(line.to_string()),
+                            Span::raw(Self::process_special_characters(line)),
                         ])
                     })
                     .collect();
@@ -332,6 +332,38 @@ impl FilesystemService {
             }
         };
         (title, PreviewContent::text(content), None)
+    }
+
+    /// Process special characters in text for better display
+    fn process_special_characters(text: &str) -> String {
+        let mut result = String::new();
+
+        for ch in text.chars() {
+            match ch {
+                '\t' => {
+                    // Replace tab with visible representation and spaces
+                    result.push_str("→   "); // Arrow symbol followed by 3 spaces for tab width
+                }
+                '\r' => {
+                    // Replace carriage return with visible representation
+                    result.push_str("\\r");
+                }
+                '\0' => {
+                    // Replace null character with visible representation
+                    result.push_str("\\0");
+                }
+                c if c.is_control() && c != '\n' => {
+                    // Replace other control characters with their escape sequence
+                    result.push_str(&format!("\\x{:02x}", c as u8));
+                }
+                c => {
+                    // Keep normal characters as-is
+                    result.push(c);
+                }
+            }
+        }
+
+        result
     }
 
     /// Generate preview content for an image file
