@@ -3,9 +3,14 @@ use ratatui::{
     style::{Color, Style},
     text::{Line, Span},
 };
+use ratatui_image::picker::Picker;
 use std::{fs, path::PathBuf};
 
-use crate::utils::FileItem;
+use crate::{
+    app_state::AppState,
+    preview_content::{PreviewContent, ImageState},
+    utils::FileItem,
+};
 
 /// Service for filesystem operations
 pub struct FilesystemService;
@@ -93,11 +98,12 @@ impl FilesystemService {
     }
 
     /// Generate preview content for a file or directory
-    pub fn generate_preview_content(file: &FileItem) -> (String, Vec<Line<'static>>) {
+    pub fn generate_preview_content(state: &AppState, file: &FileItem) -> (String, PreviewContent, Option<ImageState>) {
         if file.is_dir {
-            Self::generate_directory_preview(file)
+            let (title, content) = Self::generate_directory_preview(file);
+            (title, PreviewContent::text(content), None)
         } else {
-            Self::generate_file_preview(file)
+            Self::generate_file_preview(state, file)
         }
     }
 
@@ -211,7 +217,12 @@ impl FilesystemService {
     }
 
     /// Generate preview content for a file
-    fn generate_file_preview(file: &FileItem) -> (String, Vec<Line<'static>>) {
+    fn generate_file_preview(state: &AppState, file: &FileItem) -> (String, PreviewContent, Option<ImageState>) {
+        // Check if this is an image file
+        if file.is_image() {
+            return Self::generate_image_preview(state, file);
+        }
+
         let title = format!("📄 {}", file.name);
 
         // First check file size to avoid reading large files
@@ -222,7 +233,7 @@ impl FilesystemService {
                     format!("Error reading file metadata: {e}"),
                     Style::default().fg(Color::Red),
                 )])];
-                return (title, content);
+                return (title, PreviewContent::text(content), None);
             }
         };
 
@@ -255,7 +266,7 @@ impl FilesystemService {
                     Style::default().fg(Color::Cyan),
                 )]),
             ];
-            return (title, content);
+            return (title, PreviewContent::text(content), None);
         }
 
         // For files under 5MB, try to read and preview content
@@ -314,6 +325,52 @@ impl FilesystemService {
                 ]
             }
         };
-        (title, content)
+        (title, PreviewContent::text(content), None)
+    }
+
+    /// Generate preview content for an image file
+    fn generate_image_preview(_state: &AppState, file: &FileItem) -> (String, PreviewContent, Option<ImageState>) {
+        let title = format!("🖼️ {}", file.name);
+
+        // Try to load the image
+        match image::open(&file.path) {
+            Ok(img) => {
+                // Create a picker with auto-detected settings from terminal
+                let mut picker = match Picker::from_termios() {
+                    Ok(picker) => {
+                        // Successfully detected terminal settings - this should give the best quality
+                        picker
+                    },
+                    Err(_) => {
+                        // Fallback: use more reasonable default font size
+                        // Most terminals use roughly 1:2 width:height ratio for font cells
+                        // This is much better than the previous (14, 14) square ratio
+                        Picker::new((8, 16))
+                    }
+                };
+
+                // Create a protocol for the image
+                let protocol = picker.new_resize_protocol(img);
+
+                // Create image state
+                let image_state = ImageState { protocol: protocol.clone() };
+
+                (title, PreviewContent::image(protocol), Some(image_state))
+            }
+            Err(e) => {
+                let content = vec![
+                    Line::from(vec![Span::styled(
+                        "Image Load Error".to_string(),
+                        Style::default().fg(Color::Red),
+                    )]),
+                    Line::from(vec![Span::raw("".to_string())]),
+                    Line::from(vec![Span::styled(
+                        format!("Failed to load image: {e}"),
+                        Style::default().fg(Color::Gray),
+                    )]),
+                ];
+                (title, PreviewContent::text(content), None)
+            }
+        }
     }
 }
