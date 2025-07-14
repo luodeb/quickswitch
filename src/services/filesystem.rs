@@ -345,28 +345,29 @@ impl FilesystemService {
         match image::open(&file.path) {
             Ok(img) => {
                 // Create a picker with auto-detected settings from terminal
-                let mut picker = match Picker::from_termios() {
+                let picker = match Picker::from_query_stdio() {
                     Ok(picker) => {
                         // Successfully detected terminal settings - this should give the best quality
                         picker
                     }
                     Err(_) => {
-                        // Fallback: use more reasonable default font size
+                        // Fallback: use reasonable default font size
                         // Most terminals use roughly 1:2 width:height ratio for font cells
-                        // This is much better than the previous (14, 14) square ratio
-                        Picker::new((8, 16))
+                        Picker::from_fontsize((8, 16))
                     }
                 };
 
                 // Create a protocol for the image
                 let protocol = picker.new_resize_protocol(img);
 
-                // Create image state
-                let image_state = ImageState {
-                    protocol: protocol.clone(),
-                };
+                // For now, we'll store the protocol in the image state and use a placeholder in PreviewContent
+                let image_state = ImageState { protocol };
 
-                (title, PreviewContent::image(protocol), Some(image_state))
+                (
+                    title,
+                    PreviewContent::text(vec![Line::from("🖼️ Image loaded - rendering...")]),
+                    Some(image_state),
+                )
             }
             Err(e) => {
                 let content = vec![

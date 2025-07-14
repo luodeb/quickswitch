@@ -1,9 +1,10 @@
 use ratatui::{
     Frame,
     layout::Rect,
-    widgets::{Block, Borders, List, ListItem, StatefulWidget},
+    text::Line,
+    widgets::{Block, Borders, List, ListItem},
 };
-use ratatui_image::StatefulImage;
+use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
 
 use super::Renderer;
 use crate::{AppState, preview_content::PreviewContent};
@@ -20,12 +21,23 @@ impl PreviewRenderer {
 
 impl Renderer for PreviewRenderer {
     fn render(&self, f: &mut Frame, area: Rect, state: &AppState) {
+        // Check if we have an image state - if so, render the image
+        if let Some(image_state_cell) = &state.image_state {
+            if let Ok(mut image_state) = image_state_cell.try_borrow_mut() {
+                self.render_image_preview(f, area, state, &mut image_state.protocol);
+                return;
+            }
+        }
+
+        // Otherwise, render text content
         match &state.preview_content {
             PreviewContent::Text(lines) => {
                 self.render_text_preview(f, area, state, lines);
             }
-            PreviewContent::Image(protocol) => {
-                self.render_image_preview(f, area, state, protocol.as_ref());
+            PreviewContent::Image(_) => {
+                // This shouldn't happen with our new architecture, but fallback to text
+                let fallback_lines = vec![Line::from("Image preview unavailable")];
+                self.render_text_preview(f, area, state, &fallback_lines);
             }
         }
     }
@@ -74,34 +86,25 @@ impl PreviewRenderer {
         f: &mut Frame,
         area: Rect,
         state: &AppState,
-        _protocol: &dyn ratatui_image::protocol::StatefulProtocol,
+        protocol: &mut StatefulProtocol,
     ) {
-        // Check if we have image state available
-        if let Some(image_state_cell) = &state.image_state {
-            // Try to borrow the image state mutably
-            if let Ok(mut image_state) = image_state_cell.try_borrow_mut() {
-                // Create the StatefulImage widget
-                let image_widget = StatefulImage::new(None);
+        // Create the StatefulImage widget with a border
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .title(&*state.preview_title);
+        let inner_area = block.inner(area);
 
-                // Render the image with the protocol state
-                image_widget.render(area, f.buffer_mut(), &mut image_state.protocol);
-                return;
-            }
+        // Render the block first
+        f.render_widget(block, area);
+
+        // Create and render the StatefulImage widget
+        let image_widget = StatefulImage::default();
+        f.render_stateful_widget(image_widget, inner_area, protocol);
+
+        // Handle encoding result (important for ratatui-image 8.0)
+        if let Some(Err(_e)) = protocol.last_encoding_result() {
+            // If there's an encoding error, we could log it or show an error message
+            // For now, we'll just continue - the image might still render partially
         }
-
-        // Fallback: render a message indicating image preview is available
-        let preview_list = List::new(vec![
-            ListItem::new("🖼️ Image Preview"),
-            ListItem::new(""),
-            ListItem::new("Image loaded successfully!"),
-            ListItem::new("Rendering with StatefulImage widget..."),
-        ])
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(&*state.preview_title),
-        );
-
-        f.render_widget(preview_list, area);
     }
 }

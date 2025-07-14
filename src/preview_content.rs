@@ -6,12 +6,12 @@ pub enum PreviewContent {
     /// Text content with lines for display
     Text(Vec<Line<'static>>),
     /// Image content with protocol for rendering
-    Image(Box<dyn StatefulProtocol>),
+    Image(StatefulProtocol),
 }
 
 /// Image state that can be stored in AppState
 pub struct ImageState {
-    pub protocol: Box<dyn StatefulProtocol>,
+    pub protocol: StatefulProtocol,
 }
 
 impl PreviewContent {
@@ -21,7 +21,7 @@ impl PreviewContent {
     }
 
     /// Create image preview content
-    pub fn image(protocol: Box<dyn StatefulProtocol>) -> Self {
+    pub fn image(protocol: StatefulProtocol) -> Self {
         Self::Image(protocol)
     }
 
@@ -44,18 +44,18 @@ impl PreviewContent {
     }
 
     /// Get image protocol if this is image content
-    pub fn as_image(&self) -> Option<&dyn StatefulProtocol> {
+    pub fn as_image(&self) -> Option<&StatefulProtocol> {
         match self {
             Self::Text(_) => None,
-            Self::Image(protocol) => Some(protocol.as_ref()),
+            Self::Image(protocol) => Some(protocol),
         }
     }
 
     /// Get mutable image protocol if this is image content
-    pub fn as_image_mut(&mut self) -> Option<&mut dyn StatefulProtocol> {
+    pub fn as_image_mut(&mut self) -> Option<&mut StatefulProtocol> {
         match self {
             Self::Text(_) => None,
-            Self::Image(protocol) => Some(protocol.as_mut()),
+            Self::Image(protocol) => Some(protocol),
         }
     }
 }
