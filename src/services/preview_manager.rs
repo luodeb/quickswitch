@@ -28,7 +28,6 @@ impl PreviewManager {
             "No file selected".to_string(),
             Style::default().fg(Color::Gray),
         )])]);
-        state.image_state = None;
         Self::reset_preview_scroll(state);
     }
 

@@ -12,6 +12,6 @@ pub use app_state::AppState;
 pub use modes::ModeHandler;
 pub use services::FilesystemService;
 pub use terminal::run_interactive_mode;
-pub use utils::{ShellType, is_tty, qs_init, run_non_interactive};
+pub use utils::{ShellType, AppMode, is_tty, qs_init, run_non_interactive};
 
 pub type Result<T> = anyhow::Result<T>;

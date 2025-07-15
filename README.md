@@ -106,7 +106,8 @@ sudo cp target/release/quickswitch /usr/local/bin/
 > 绑定按键（可选/推荐）Ctrl + E：
 >
 > ```sh
-> bind '"\C-e": "qs\n"'
+> bind '"\C-e": "qs\n"' # 普通模式
+> bind '"\C-w": "qshs\n"' # 历史模式
 > ```
 >
 > 重新加载配置：
@@ -129,7 +130,8 @@ sudo cp target/release/quickswitch /usr/local/bin/
 > 绑定按键（可选/推荐）Ctrl + E：
 >
 > ```sh
-> bind \ce qs
+> bind \ce qs # 普通模式
+> bind \cw qshs # 历史模式
 > ```
 >
 > 重新加载配置：
@@ -155,11 +157,20 @@ sudo cp target/release/quickswitch /usr/local/bin/
 > Import-Module PSReadLine
 >
 > # 绑定 Ctrl+E 快捷键
+> # 普通模式
 > Set-PSReadLineKeyHandler -Key 'Ctrl+e' `
 >     -BriefDescription 'RunMyFunction' `
 >     -ScriptBlock {
 >        [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
 >        [Microsoft.PowerShell.PSConsoleReadLine]::Insert("qs")
+>        [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+>    }
+> # 历史模式
+> Set-PSReadLineKeyHandler -Key 'Ctrl+w' `
+>     -BriefDescription 'RunMyFunction' `
+>     -ScriptBlock {
+>        [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
+>        [Microsoft.PowerShell.PSConsoleReadLine]::Insert("qshs")
 >        [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 >    }
 > ```

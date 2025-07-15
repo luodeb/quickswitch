@@ -14,9 +14,9 @@ use std::io;
 
 use crate::{App, core::events, utils::AppMode};
 
-pub async fn run_interactive_mode() -> Result<()> {
+pub async fn run_interactive_mode(mode: AppMode) -> Result<()> {
     let mut terminal = setup_terminal()?;
-    let mut app = App::new(AppMode::Normal)?;
+    let mut app = App::new(mode)?;
     let result = run_app_loop(&mut terminal, &mut app).await;
     cleanup_terminal(&mut terminal)?;
     result

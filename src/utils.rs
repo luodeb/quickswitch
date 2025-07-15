@@ -175,6 +175,14 @@ qs() {
         cd "$dir"
     fi
 }
+
+qshs() {
+    local dir
+    dir=$(quickswitch --mode history 2>&1 >/dev/tty | tail -n 1)
+    if [ -d "$dir" ]; then
+        cd "$dir"
+    fi
+}
     "#;
     println!("{bash_init}");
 
@@ -185,6 +193,20 @@ fn qs_init_fish() -> Result<()> {
     let fish_init = r#"
 function qs
     set -l result (quickswitch 2>&1 >/dev/tty)
+
+    if [ -n "$result" ]
+        cd -- $result
+
+        # Remove last token from commandline.
+        commandline -t ""
+        commandline -it -- $prefix
+    end
+
+    commandline -f repaint
+end
+
+function qshs
+    set -l result (quickswitch --mode history 2>&1 >/dev/tty)
 
     if [ -n "$result" ]
         cd -- $result
@@ -207,6 +229,16 @@ fn qs_init_powershell() -> Result<()> {
 function qs {
     $errorFile = [System.IO.Path]::GetTempFileName()
     Start-Process -FilePath "quickswitch.exe" -NoNewWindow -Wait -RedirectStandardError $errorFile
+    $errorOutput = Get-Content -Path $errorFile -Encoding UTF8
+    Remove-Item $errorFile
+    if ($errorOutput -and (Test-Path $errorOutput)) {
+        cd $errorOutput
+    }
+}
+
+function qshs {
+    $errorFile = [System.IO.Path]::GetTempFileName()
+    Start-Process -FilePath "quickswitch.exe" -NoNewWindow -Wait -RedirectStandardError $errorFile -ArgumentList "--mode history"
     $errorOutput = Get-Content -Path $errorFile -Encoding UTF8
     Remove-Item $errorFile
     if ($errorOutput -and (Test-Path $errorOutput)) {

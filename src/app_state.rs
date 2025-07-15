@@ -1,9 +1,9 @@
 use ratatui::widgets::ListState;
-use std::{cell::RefCell, collections::HashMap, path::PathBuf, time::Instant};
+use std::{collections::HashMap, path::PathBuf, time::Instant};
 
 use crate::{
     core::layout::LayoutManager,
-    preview_content::{ImageState, PreviewContent},
+    preview_content::PreviewContent,
     utils::{DisplayItem, FileItem},
 };
 
@@ -27,7 +27,6 @@ pub struct AppState {
     pub dir_positions: HashMap<PathBuf, usize>,
     pub double_click_state: DoubleClickState,
     pub layout: LayoutManager,
-    pub image_state: Option<RefCell<ImageState>>,
 }
 
 impl AppState {
@@ -50,7 +49,6 @@ impl AppState {
                 last_clicked_index: None,
             },
             layout: LayoutManager::new(),
-            image_state: None,
         })
     }
 
