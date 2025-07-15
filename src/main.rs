@@ -1,16 +1,24 @@
-use quickswitch::{Result, ShellType, qs_init, run_interactive_mode, run_non_interactive, utils::AppMode};
+use quickswitch::{
+    Result, ShellType, qs_init, run_interactive_mode, run_non_interactive, utils::AppMode,
+};
 use std::env;
 
 fn print_help() {
-    println!("quickswitch - A terminal-based tool for quickly switching between directories and files");
+    println!(
+        "quickswitch - A terminal-based tool for quickly switching between directories and files"
+    );
     println!();
     println!("USAGE:");
     println!("    quickswitch [OPTIONS]");
     println!();
     println!("OPTIONS:");
-    println!("    --mode <MODE>           Set the startup mode (normal, history) [default: normal]");
+    println!(
+        "    --mode <MODE>           Set the startup mode (normal, history) [default: normal]"
+    );
     println!("    --non-interactive       Run in non-interactive mode");
-    println!("    --init <SHELL>          Initialize shell configuration (bash, zsh, fish, powershell, cmd)");
+    println!(
+        "    --init <SHELL>          Initialize shell configuration (bash, zsh, fish, powershell, cmd)"
+    );
     println!("    --version               Print version information");
     println!("    --help, -h              Print this help message");
     println!();
@@ -37,7 +45,10 @@ async fn main() -> Result<()> {
                         "normal" => mode = AppMode::Normal,
                         "history" => mode = AppMode::History,
                         _ => {
-                            eprintln!("Error: Unsupported mode '{}'. Supported modes: normal, history", args[i + 1]);
+                            eprintln!(
+                                "Error: Unsupported mode '{}'. Supported modes: normal, history",
+                                args[i + 1]
+                            );
                             std::process::exit(1);
                         }
                     }

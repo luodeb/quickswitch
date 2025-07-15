@@ -14,6 +14,6 @@ pub use config::get_data_dir;
 pub use modes::ModeHandler;
 pub use services::FilesystemService;
 pub use terminal::run_interactive_mode;
-pub use utils::{ShellType, AppMode, is_tty, qs_init, run_non_interactive};
+pub use utils::{AppMode, ShellType, is_tty, qs_init, run_non_interactive};
 
 pub type Result<T> = anyhow::Result<T>;

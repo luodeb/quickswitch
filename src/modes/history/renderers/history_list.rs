@@ -57,13 +57,14 @@ impl Renderer for HistoryListRenderer {
 /// Create a list item for a history entry with directory name and full path
 fn create_history_list_item<'a>(item: &'a DisplayItem, search_input: &'a str) -> ListItem<'a> {
     match item {
-        DisplayItem::HistoryPath(path) => {
+        DisplayItem::History(entry) => {
             let icon = "📁";
-            let dir_name = path
+            let dir_name = entry
+                .path
                 .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or_default();
-            let full_path = path.to_string_lossy();
+            let full_path = entry.path.to_string_lossy();
 
             // Create spans for the display
             let mut spans = vec![
@@ -94,8 +95,14 @@ fn create_history_list_item<'a>(item: &'a DisplayItem, search_input: &'a str) ->
                 spans.push(Span::styled(dir_name, Style::default().fg(Color::Cyan)));
             }
 
+            // Add frequency indicator
+            spans.push(Span::styled(
+                format!(" ({}×)", entry.frequency),
+                Style::default().fg(Color::Yellow),
+            ));
+
             // Add full path in darker color
-            spans.push(Span::raw("  "));
+            spans.push(Span::raw(" "));
             spans.push(Span::styled(
                 format!("({full_path})"),
                 Style::default().fg(Color::DarkGray),

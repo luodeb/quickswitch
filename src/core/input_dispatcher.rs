@@ -89,8 +89,8 @@ impl InputDispatcher {
                     let _ = provider.navigate_to_selected(state);
                     match item {
                         DisplayItem::File(file) => Some(ModeAction::Exit(Some(file))),
-                        DisplayItem::HistoryPath(path) => {
-                            let file_item = FileItem::from_path(&path);
+                        DisplayItem::History(entry) => {
+                            let file_item = FileItem::from_path(&entry.path);
                             Some(ModeAction::Exit(Some(file_item)))
                         }
                     }
@@ -341,8 +341,8 @@ impl InputDispatcher {
                             return Ok(ModeAction::Stay);
                         }
                     }
-                    DisplayItem::HistoryPath(path) => {
-                        let file_item = FileItem::from_path(&path);
+                    DisplayItem::History(entry) => {
+                        let file_item = FileItem::from_path(&entry.path);
                         return Ok(ModeAction::Exit(Some(file_item)));
                     }
                 }

@@ -63,3 +63,32 @@ fn get_default_data_dir() -> Result<PathBuf> {
         }
     }
 }
+
+/// Configuration for history functionality
+pub struct HistoryConfig {
+    /// Maximum number of history entries to keep
+    pub max_entries: usize,
+    /// Sort mode for history entries
+    pub sort_mode: crate::utils::HistorySortMode,
+    /// Number of days for time decay calculation
+    pub time_decay_days: u32,
+    /// Minimum frequency threshold for keeping entries
+    pub min_frequency_threshold: u32,
+}
+
+impl Default for HistoryConfig {
+    fn default() -> Self {
+        Self {
+            max_entries: 100,
+            sort_mode: crate::utils::HistorySortMode::FrequencyRecent,
+            time_decay_days: 30,
+            min_frequency_threshold: 1,
+        }
+    }
+}
+
+/// Get the history configuration
+pub fn get_history_config() -> HistoryConfig {
+    // In the future, this could read from a config file
+    HistoryConfig::default()
+}

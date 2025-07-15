@@ -1,8 +1,10 @@
 use anyhow::{Ok, Result};
+use chrono::{DateTime, Utc};
 use ratatui::{
     style::{Color, Style},
     text::Span,
 };
+use serde::{Deserialize, Serialize};
 use std::{
     io::IsTerminal,
     path::{Path, PathBuf},
@@ -29,17 +31,68 @@ pub enum AppMode {
     History, // History selection mode
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct HistoryEntry {
+    pub path: PathBuf,
+    pub frequency: u32,
+    pub last_accessed: DateTime<Utc>,
+    pub first_accessed: DateTime<Utc>,
+}
+
+impl HistoryEntry {
+    pub fn new(path: PathBuf) -> Self {
+        let now = Utc::now();
+        Self {
+            path,
+            frequency: 1,
+            last_accessed: now,
+            first_accessed: now,
+        }
+    }
+
+    pub fn increment_frequency(&mut self) {
+        self.frequency += 1;
+        self.last_accessed = Utc::now();
+    }
+
+    /// Calculate score for sorting (frequency with time decay)
+    pub fn calculate_score(&self, time_decay_days: u32) -> f64 {
+        let frequency_weight = self.frequency as f64;
+        let time_decay = self.calculate_time_decay(time_decay_days);
+        frequency_weight * time_decay
+    }
+
+    fn calculate_time_decay(&self, decay_days: u32) -> f64 {
+        let days_since_access = (Utc::now() - self.last_accessed).num_days();
+        if days_since_access <= 0 {
+            1.0
+        } else {
+            let decay_factor = days_since_access as f64 / decay_days as f64;
+            (1.0 - decay_factor.min(1.0)).max(0.1) // Minimum 10% weight
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum HistorySortMode {
+    Frequency,       // Sort by frequency only
+    Recent,          // Sort by last accessed time
+    FrequencyRecent, // Sort by frequency with time decay
+    Alphabetical,    // Sort alphabetically
+}
+
 #[derive(Clone, Debug)]
 pub enum DisplayItem {
     File(FileItem),
-    HistoryPath(PathBuf),
+    History(HistoryEntry),
 }
 
 impl DisplayItem {
     pub fn get_display_name(&self) -> String {
         match self {
             DisplayItem::File(file) => file.name.clone(),
-            DisplayItem::HistoryPath(path) => path
+            DisplayItem::History(entry) => entry
+                .path
                 .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or_default()
@@ -50,14 +103,14 @@ impl DisplayItem {
     pub fn get_path(&self) -> &PathBuf {
         match self {
             DisplayItem::File(file) => &file.path,
-            DisplayItem::HistoryPath(path) => path,
+            DisplayItem::History(entry) => &entry.path,
         }
     }
 
     pub fn is_directory(&self) -> bool {
         match self {
             DisplayItem::File(file) => file.is_dir,
-            DisplayItem::HistoryPath(path) => path.is_dir(),
+            DisplayItem::History(entry) => entry.path.is_dir(),
         }
     }
 }

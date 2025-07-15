@@ -71,10 +71,11 @@ fn create_file_list_item<'a>(file: &'a FileItem, search_input: &'a str) -> ListI
 fn create_display_item_list_item<'a>(item: &'a DisplayItem, search_input: &'a str) -> ListItem<'a> {
     match item {
         DisplayItem::File(file) => create_file_list_item(file, search_input),
-        DisplayItem::HistoryPath(path) => {
+        DisplayItem::History(entry) => {
             let icon = "📁";
             let style = Style::default().fg(Color::Cyan);
-            let name = path
+            let name = entry
+                .path
                 .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or_default();

@@ -86,12 +86,10 @@ impl PreviewManager {
         state: &AppState,
         item: &DisplayItem,
     ) -> (String, PreviewContent) {
-        match item {
-            DisplayItem::File(file) => PreviewGenerator::generate_preview_content(state, file),
-            DisplayItem::HistoryPath(path) => {
-                let file_item = FileItem::from_path(path);
-                PreviewGenerator::generate_preview_content(state, &file_item)
-            }
-        }
+        let file_item = match item {
+            DisplayItem::File(file) => file,
+            DisplayItem::History(entry) => &FileItem::from_path(&entry.path),
+        };
+        PreviewGenerator::generate_preview_content(state, file_item)
     }
 }
