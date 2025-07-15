@@ -89,6 +89,65 @@ pub trait DataProvider {
         false
     }
 
+    /// Navigate half page up in the list
+    fn navigate_half_page_up(&self, state: &mut AppState) -> bool {
+        let total = state.filtered_files.len();
+        if total == 0 {
+            return false;
+        }
+
+        let visible_height = state.layout.get_left_content_height();
+        let half_page = (visible_height / 2).max(1);
+
+        if let Some(selected) = state.file_list_state.selected() {
+            let new_selected = selected.saturating_sub(half_page);
+            state.file_list_state.select(Some(new_selected));
+            self.update_scroll_offset(state, visible_height);
+            if let Some(item) = self.get_selected_item(state) {
+                crate::services::PreviewManager::update_preview_for_item(state, &item);
+            }
+            return true;
+        } else if !state.filtered_files.is_empty() {
+            state.file_list_state.select(Some(state.filtered_files.len() - 1));
+            self.update_scroll_offset(state, visible_height);
+            if let Some(item) = self.get_selected_item(state) {
+                crate::services::PreviewManager::update_preview_for_item(state, &item);
+            }
+            return true;
+        }
+        false
+    }
+
+    /// Navigate half page down in the list
+    fn navigate_half_page_down(&self, state: &mut AppState) -> bool {
+        let total = state.filtered_files.len();
+        if total == 0 {
+            return false;
+        }
+
+        let visible_height = state.layout.get_left_content_height();
+        let half_page = (visible_height / 2).max(1);
+
+        if let Some(selected) = state.file_list_state.selected() {
+            let new_selected = (selected + half_page).min(total - 1);
+            state.file_list_state.select(Some(new_selected));
+            self.update_scroll_offset(state, visible_height);
+            if let Some(item) = self.get_selected_item(state) {
+                crate::services::PreviewManager::update_preview_for_item(state, &item);
+            }
+            true
+        } else if !state.filtered_files.is_empty() {
+            state.file_list_state.select(Some(0));
+            self.update_scroll_offset(state, visible_height);
+            if let Some(item) = self.get_selected_item(state) {
+                crate::services::PreviewManager::update_preview_for_item(state, &item);
+            }
+            true
+        } else {
+            false
+        }
+    }
+
     /// Get the currently selected item (file or path)
     fn get_selected_item(&self, state: &AppState) -> Option<DisplayItem> {
         if let Some(selected) = state.file_list_state.selected() {

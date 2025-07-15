@@ -70,7 +70,7 @@ impl ModeHandler for NormalModeHandler {
             // Show search results even when not actively searching
             (
                 format!(
-                    "FILTERED - '{}' - {} matches (/ to search again)",
+                    "FILTERED - '{}' - {} matches (/f to search again)",
                     state.search_input,
                     state.filtered_files.len()
                 ),
@@ -78,7 +78,7 @@ impl ModeHandler for NormalModeHandler {
             )
         } else {
             (
-                "NORMAL - hjkl navigate, / search, V history, Enter exit".to_string(),
+                "NORMAL - hjkl navigate, b/f half page, /f search, v history, Enter exit".to_string(),
                 Style::default().fg(Color::Yellow),
             )
         };

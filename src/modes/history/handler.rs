@@ -71,7 +71,7 @@ impl ModeHandler for HistoryModeHandler {
             // Show search results even when not actively searching
             (
                 format!(
-                    "FILTERED HISTORY - '{}' - {} matches (l/→ enter dir, / to search again, ESC to normal)",
+                    "FILTERED HISTORY - '{}' - {} matches (l/→ enter dir, /f to search again, ESC to normal)",
                     state.search_input,
                     state.filtered_files.len()
                 ),
@@ -80,7 +80,7 @@ impl ModeHandler for HistoryModeHandler {
         } else {
             (
                 format!(
-                    "HISTORY - {} entries (jk navigate, l/→ enter dir, / search, Enter select, ESC to normal)",
+                    "HISTORY - {} entries (jk navigate, l/→ enter dir, b/f half page, /f search, Enter select, ESC to normal)",
                     state.files.len()
                 ),
                 Style::default().fg(Color::Cyan),

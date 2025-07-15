@@ -26,6 +26,8 @@ impl Renderer for NormalHelpRenderer {
             Line::from("j/↓        - Move down"),
             Line::from("k/↑        - Move up"),
             Line::from("l/→        - Enter directory"),
+            Line::from("b          - Move up half page"),
+            Line::from("f          - Move down half page"),
             Line::from(""),
             Line::from("/          - Search files"),
             Line::from("ESC        - Exit search (when searching)"),

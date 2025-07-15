@@ -197,6 +197,17 @@ impl InputDispatcher {
                 Self::handle_preview_navigation(state, key);
                 Ok(Some(ModeAction::Stay))
             }
+            // Half-page navigation keys (only work when not searching)
+            KeyCode::Char('b') if !state.is_searching => {
+                provider.navigate_half_page_down(state);
+                Self::update_preview_if_needed(state, &*provider);
+                Ok(Some(ModeAction::Stay))
+            }
+            KeyCode::Char('f') if !state.is_searching => {
+                provider.navigate_half_page_up(state);
+                Self::update_preview_if_needed(state, &*provider);
+                Ok(Some(ModeAction::Stay))
+            }
             _ => Ok(None),
         }
     }
