@@ -16,13 +16,6 @@ impl FilesystemService {
             return Self::load_drives();
         }
 
-        // 添加当前目录
-        files.push(FileItem {
-            name: ".".to_string(),
-            path: current_dir.clone(),
-            is_dir: true,
-        });
-
         let entries = fs::read_dir(current_dir)?;
         let mut items: Vec<FileItem> = entries
             .filter_map(|entry| {
