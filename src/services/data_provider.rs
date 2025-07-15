@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use crate::{
     app_state::AppState,
     modes::{ModeAction, history, normal},
+    services::PreviewManager,
     utils::{AppMode, DisplayItem},
 };
 
@@ -43,7 +44,7 @@ pub trait DataProvider {
                 state.file_list_state.select(Some(selected - 1));
                 self.update_scroll_offset(state, visible_height);
                 if let Some(item) = self.get_selected_item(state) {
-                    crate::services::PreviewManager::update_preview_for_item(state, &item);
+                    PreviewManager::update_preview_for_item(state, &item);
                 }
                 return true;
             }
@@ -53,7 +54,7 @@ pub trait DataProvider {
                 .select(Some(state.filtered_files.len() - 1));
             self.update_scroll_offset(state, visible_height);
             if let Some(item) = self.get_selected_item(state) {
-                crate::services::PreviewManager::update_preview_for_item(state, &item);
+                PreviewManager::update_preview_for_item(state, &item);
             }
             return true;
         }
