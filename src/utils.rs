@@ -1,5 +1,6 @@
 use anyhow::{Ok, Result};
 use chrono::{DateTime, Utc};
+use clap::ValueEnum;
 use ratatui::{
     style::{Color, Style},
     text::Span,
@@ -10,13 +11,18 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum ShellType {
+    /// Bash shell
     Bash,
+    /// Zsh shell
     Zsh,
+    /// Fish shell
     Fish,
-    PowerShell,
+    /// PowerShell
+    Powershell,
+    /// Command Prompt (Windows)
     Cmd,
-    Unknown,
 }
 
 pub fn is_tty() -> bool {
@@ -25,7 +31,7 @@ pub fn is_tty() -> bool {
         && std::io::stderr().is_terminal()
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum AppMode {
     Normal,  // Default navigation mode (command mode)
     History, // History selection mode
@@ -313,11 +319,7 @@ pub fn qs_init(shell: ShellType) -> Result<()> {
         ShellType::Bash => qs_init_bash_zsh(),
         ShellType::Zsh => qs_init_bash_zsh(),
         ShellType::Fish => qs_init_fish(),
-        ShellType::PowerShell => qs_init_powershell(),
+        ShellType::Powershell => qs_init_powershell(),
         ShellType::Cmd => qs_init_cmd(),
-        ShellType::Unknown => {
-            eprintln!("Error: Unsupported shell type");
-            std::process::exit(1);
-        }
     }
 }
