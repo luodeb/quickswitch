@@ -1,12 +1,12 @@
-use ratatui::{
-    style::{Color, Style},
-    text::{Line, Span},
-};
 use crate::{
     app_state::AppState,
     preview_content::PreviewContent,
     services::PreviewGenerator,
     utils::{DisplayItem, FileItem},
+};
+use ratatui::{
+    style::{Color, Style},
+    text::{Line, Span},
 };
 
 /// Unified preview manager for handling all preview functionality
