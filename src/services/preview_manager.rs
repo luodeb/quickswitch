@@ -2,11 +2,9 @@ use ratatui::{
     style::{Color, Style},
     text::{Line, Span},
 };
-use std::cell::RefCell;
-
 use crate::{
     app_state::AppState,
-    preview_content::{ImageState, PreviewContent},
+    preview_content::PreviewContent,
     services::PreviewGenerator,
     utils::{DisplayItem, FileItem},
 };
@@ -17,10 +15,9 @@ pub struct PreviewManager;
 impl PreviewManager {
     /// Update preview for a DisplayItem (unified function for files and directories)
     pub fn update_preview_for_item(state: &mut AppState, item: &DisplayItem) {
-        let (title, content, image_state) = Self::generate_preview_content_for_item(state, item);
+        let (title, content) = Self::generate_preview_content_for_item(state, item);
         state.preview_title = title;
         state.preview_content = content;
-        state.image_state = image_state.map(RefCell::new);
         Self::reset_preview_scroll(state);
     }
 
@@ -89,7 +86,7 @@ impl PreviewManager {
     fn generate_preview_content_for_item(
         state: &AppState,
         item: &DisplayItem,
-    ) -> (String, PreviewContent, Option<ImageState>) {
+    ) -> (String, PreviewContent) {
         match item {
             DisplayItem::File(file) => PreviewGenerator::generate_preview_content(state, file),
             DisplayItem::HistoryPath(path) => {

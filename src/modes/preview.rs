@@ -1,7 +1,6 @@
 use ratatui::{
     Frame,
     layout::Rect,
-    text::Line,
     widgets::{Block, Borders, List, ListItem},
 };
 use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
@@ -21,23 +20,14 @@ impl PreviewRenderer {
 
 impl Renderer for PreviewRenderer {
     fn render(&self, f: &mut Frame, area: Rect, state: &AppState) {
-        // Check if we have an image state - if so, render the image
-        if let Some(image_state_cell) = &state.image_state {
-            if let Ok(mut image_state) = image_state_cell.try_borrow_mut() {
-                self.render_image_preview(f, area, state, &mut image_state.protocol);
-                return;
-            }
-        }
-
-        // Otherwise, render text content
         match &state.preview_content {
             PreviewContent::Text(lines) => {
                 self.render_text_preview(f, area, state, lines);
             }
-            PreviewContent::Image(_) => {
-                // This shouldn't happen with our new architecture, but fallback to text
-                let fallback_lines = vec![Line::from("Image preview unavailable")];
-                self.render_text_preview(f, area, state, &fallback_lines);
+            PreviewContent::Image(protocol) => {
+                if let Ok(mut protocol) = protocol.try_borrow_mut() {
+                    self.render_image_preview(f, area, state, &mut protocol);
+                }
             }
         }
     }

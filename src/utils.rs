@@ -111,7 +111,7 @@ impl FileItem {
                 | Some("avif")
         )
     }
-    
+
     pub fn is_pdf(&self) -> bool {
         if self.is_dir {
             return false;

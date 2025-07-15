@@ -78,7 +78,8 @@ impl ModeHandler for NormalModeHandler {
             )
         } else {
             (
-                "NORMAL - hjkl navigate, b/f half page, /f search, v history, Enter exit".to_string(),
+                "NORMAL - hjkl navigate, b/f half page, /f search, v history, Enter exit"
+                    .to_string(),
                 Style::default().fg(Color::Yellow),
             )
         };

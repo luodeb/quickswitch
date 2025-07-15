@@ -108,7 +108,9 @@ pub trait DataProvider {
             }
             return true;
         } else if !state.filtered_files.is_empty() {
-            state.file_list_state.select(Some(state.filtered_files.len() - 1));
+            state
+                .file_list_state
+                .select(Some(state.filtered_files.len() - 1));
             self.update_scroll_offset(state, visible_height);
             if let Some(item) = self.get_selected_item(state) {
                 crate::services::PreviewManager::update_preview_for_item(state, &item);

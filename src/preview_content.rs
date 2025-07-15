@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+
 use ratatui::text::Line;
 use ratatui_image::protocol::StatefulProtocol;
 
@@ -6,7 +8,7 @@ pub enum PreviewContent {
     /// Text content with lines for display
     Text(Vec<Line<'static>>),
     /// Image content with protocol for rendering
-    Image(StatefulProtocol),
+    Image(RefCell<StatefulProtocol>),
 }
 
 /// Image state that can be stored in AppState
@@ -21,7 +23,7 @@ impl PreviewContent {
     }
 
     /// Create image preview content
-    pub fn image(protocol: StatefulProtocol) -> Self {
+    pub fn image(protocol: RefCell<StatefulProtocol>) -> Self {
         Self::Image(protocol)
     }
 
@@ -44,7 +46,7 @@ impl PreviewContent {
     }
 
     /// Get image protocol if this is image content
-    pub fn as_image(&self) -> Option<&StatefulProtocol> {
+    pub fn as_image(&self) -> Option<&RefCell<StatefulProtocol>> {
         match self {
             Self::Text(_) => None,
             Self::Image(protocol) => Some(protocol),
@@ -52,7 +54,7 @@ impl PreviewContent {
     }
 
     /// Get mutable image protocol if this is image content
-    pub fn as_image_mut(&mut self) -> Option<&mut StatefulProtocol> {
+    pub fn as_image_mut(&mut self) -> Option<&mut RefCell<StatefulProtocol>> {
         match self {
             Self::Text(_) => None,
             Self::Image(protocol) => Some(protocol),
