@@ -5,9 +5,9 @@ use ratatui::{
 use std::cell::RefCell;
 
 use crate::{
-    FilesystemService,
     app_state::AppState,
     preview_content::{ImageState, PreviewContent},
+    services::PreviewGenerator,
     utils::{DisplayItem, FileItem},
 };
 
@@ -91,10 +91,10 @@ impl PreviewManager {
         item: &DisplayItem,
     ) -> (String, PreviewContent, Option<ImageState>) {
         match item {
-            DisplayItem::File(file) => FilesystemService::generate_preview_content(state, file),
+            DisplayItem::File(file) => PreviewGenerator::generate_preview_content(state, file),
             DisplayItem::HistoryPath(path) => {
                 let file_item = FileItem::from_path(path);
-                FilesystemService::generate_preview_content(state, &file_item)
+                PreviewGenerator::generate_preview_content(state, &file_item)
             }
         }
     }

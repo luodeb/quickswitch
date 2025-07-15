@@ -111,6 +111,20 @@ impl FileItem {
                 | Some("avif")
         )
     }
+    
+    pub fn is_pdf(&self) -> bool {
+        if self.is_dir {
+            return false;
+        }
+
+        let extension = self
+            .path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .map(|ext| ext.to_lowercase());
+
+        matches!(extension.as_deref(), Some("pdf"))
+    }
 }
 
 pub fn highlight_search_term<'a>(text: &'a str, search: &'a str) -> Vec<Span<'a>> {
