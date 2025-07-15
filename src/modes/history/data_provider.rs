@@ -3,6 +3,7 @@ use std::{fs, path::PathBuf};
 
 use crate::{
     app_state::AppState,
+    config::get_data_dir,
     modes::ModeAction,
     services::DataProvider,
     utils::{AppMode, DisplayItem},
@@ -13,7 +14,12 @@ pub struct HistoryDataProvider;
 
 impl HistoryDataProvider {
     fn get_history_file_path(&self) -> PathBuf {
-        std::env::temp_dir().join("quickswitch.history")
+        if let Ok(data_dir) = get_data_dir() {
+            data_dir.join("quickswitch.history")
+        } else {
+            // Fallback to temp directory if data_dir cannot be created
+            std::env::temp_dir().join("quickswitch.history")
+        }
     }
 
     fn load_history_from_file(&self) -> Result<Vec<PathBuf>> {
