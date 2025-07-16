@@ -195,41 +195,6 @@ impl HistoryDataProvider {
         self.save_history_entries(&entries)?;
         Ok(())
     }
-
-    /// Get statistics about history usage
-    pub fn get_statistics(&self) -> Result<HistoryStatistics> {
-        let entries = self.load_history_entries()?;
-
-        let total_entries = entries.len();
-        let most_visited = entries.iter().max_by_key(|entry| entry.frequency).cloned();
-
-        let total_frequency: u32 = entries.iter().map(|entry| entry.frequency).sum();
-        let average_frequency = if !entries.is_empty() {
-            total_frequency as f64 / entries.len() as f64
-        } else {
-            0.0
-        };
-
-        let oldest_entry = entries
-            .iter()
-            .min_by_key(|entry| entry.first_accessed)
-            .map(|entry| entry.first_accessed);
-
-        Ok(HistoryStatistics {
-            total_entries,
-            most_visited,
-            average_frequency,
-            oldest_entry,
-        })
-    }
-}
-
-/// Statistics about history usage
-pub struct HistoryStatistics {
-    pub total_entries: usize,
-    pub most_visited: Option<HistoryEntry>,
-    pub average_frequency: f64,
-    pub oldest_entry: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 impl DataProvider for HistoryDataProvider {
