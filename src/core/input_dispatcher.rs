@@ -4,7 +4,7 @@ use crossterm::event::{KeyCode, MouseEvent, MouseEventKind};
 use crate::{
     AppState,
     modes::ModeAction,
-    services::{PreviewManager, create_data_provider, data_provider},
+    services::{PreviewManager, create_data_provider},
     utils::{AppMode, DisplayItem, FileItem},
 };
 
@@ -69,8 +69,7 @@ impl InputDispatcher {
                     // Don't clear search_input - keep the search results visible
                     Some(ModeAction::Stay)
                 } else if current_mode == &AppMode::Normal {
-                    let provider = create_data_provider(current_mode);
-                    if provider.get_selected_item(state).is_none() {
+                    if state.get_selected_item().is_none() {
                         // In normal mode, Esc exits the application
                         return Some(ModeAction::Exit(None));
                     }
@@ -85,7 +84,7 @@ impl InputDispatcher {
             KeyCode::Enter => {
                 // Handle selection and exit using unified data provider
                 let provider = create_data_provider(current_mode);
-                if let Some(item) = provider.get_selected_item(state) {
+                if let Some(item) = state.get_selected_item() {
                     let _ = provider.navigate_to_selected(state);
                     match item {
                         DisplayItem::File(file) => Some(ModeAction::Exit(Some(file))),
@@ -142,12 +141,12 @@ impl InputDispatcher {
         match key {
             KeyCode::Up => {
                 provider.navigate_up(state).await;
-                Self::update_preview_if_needed(state, &provider);
+                PreviewManager::preview_for_selected_item(state);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Down => {
                 provider.navigate_down(state).await;
-                Self::update_preview_if_needed(state, &provider);
+                PreviewManager::preview_for_selected_item(state);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Right => {
@@ -169,12 +168,12 @@ impl InputDispatcher {
             // hjkl keys only work when not searching
             KeyCode::Char('k') if !state.is_searching => {
                 provider.navigate_up(state).await;
-                Self::update_preview_if_needed(state, &provider);
+                PreviewManager::preview_for_selected_item(state);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('j') if !state.is_searching => {
                 provider.navigate_down(state).await;
-                Self::update_preview_if_needed(state, &provider);
+                PreviewManager::preview_for_selected_item(state);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('l') if !state.is_searching => {
@@ -200,12 +199,12 @@ impl InputDispatcher {
             // Half-page navigation keys (only work when not searching)
             KeyCode::Char('b') if !state.is_searching => {
                 provider.navigate_half_page_down(state).await;
-                Self::update_preview_if_needed(state, &provider);
+                PreviewManager::preview_for_selected_item(state);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('f') if !state.is_searching => {
                 provider.navigate_half_page_up(state).await;
-                Self::update_preview_if_needed(state, &provider);
+                PreviewManager::preview_for_selected_item(state);
                 Ok(Some(ModeAction::Stay))
             }
             _ => Ok(None),
@@ -258,13 +257,6 @@ impl InputDispatcher {
         }
     }
 
-    /// Update preview if the data provider supports it
-    fn update_preview_if_needed(state: &mut AppState, provider: &data_provider::DataProviderType) {
-        if let Some(item) = provider.get_selected_item(state) {
-            PreviewManager::update_preview_for_item_async(&item);
-        }
-    }
-
     /// Handle scroll navigation using unified data providers
     async fn handle_scroll_navigation(
         state: &mut AppState,
@@ -282,7 +274,7 @@ impl InputDispatcher {
             } else {
                 provider.navigate_down(state).await;
             }
-            Self::update_preview_if_needed(state, &provider);
+            PreviewManager::preview_for_selected_item(state);
         } else if state.is_point_in_right_panel(mouse.column, mouse.row) {
             // Mouse is in right panel - scroll preview content
             if is_scroll_up {
@@ -325,14 +317,14 @@ impl InputDispatcher {
 
         // Update selection
         provider.set_selected_index(state, Some(clicked_index));
-        Self::update_preview_if_needed(state, &provider);
+        PreviewManager::preview_for_selected_item(state);
 
         // Update double-click state
         Self::update_double_click_state(state, mouse_position, clicked_index);
 
         // Handle double-click action
         if is_double_click {
-            if let Some(item) = provider.get_selected_item(state) {
+            if let Some(item) = state.get_selected_item() {
                 match item {
                     DisplayItem::File(_) => {
                         if let Some(action) = provider.navigate_into_directory(state)? {

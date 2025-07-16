@@ -44,9 +44,7 @@ pub trait DataProvider {
             if selected > 0 {
                 state.file_list_state.select(Some(selected - 1));
                 self.update_scroll_offset(state, visible_height);
-                if let Some(item) = self.get_selected_item(state) {
-                    PreviewManager::update_preview_for_item_async(&item);
-                }
+                PreviewManager::preview_for_selected_item(state);
                 return true;
             }
         } else if !state.filtered_files.is_empty() {
@@ -54,9 +52,7 @@ pub trait DataProvider {
                 .file_list_state
                 .select(Some(state.filtered_files.len() - 1));
             self.update_scroll_offset(state, visible_height);
-            if let Some(item) = self.get_selected_item(state) {
-                PreviewManager::update_preview_for_item_async(&item);
-            }
+            PreviewManager::preview_for_selected_item(state);
             return true;
         }
         false
@@ -75,17 +71,13 @@ pub trait DataProvider {
             if selected + 1 < total {
                 state.file_list_state.select(Some(selected + 1));
                 self.update_scroll_offset(state, visible_height);
-                if let Some(item) = self.get_selected_item(state) {
-                    PreviewManager::update_preview_for_item_async(&item);
-                }
+                PreviewManager::preview_for_selected_item(state);
                 return true;
             }
         } else {
             state.file_list_state.select(Some(0));
             self.update_scroll_offset(state, visible_height);
-            if let Some(item) = self.get_selected_item(state) {
-                PreviewManager::update_preview_for_item_async(&item);
-            }
+            PreviewManager::preview_for_selected_item(state);
             return true;
         }
         false
@@ -106,18 +98,14 @@ pub trait DataProvider {
             let new_selected = selected.saturating_sub(half_page);
             state.file_list_state.select(Some(new_selected));
             self.update_scroll_offset(state, visible_height);
-            if let Some(item) = self.get_selected_item(state) {
-                PreviewManager::update_preview_for_item_async(&item);
-            }
+            PreviewManager::preview_for_selected_item(state);
             return true;
         } else if !state.filtered_files.is_empty() {
             state
                 .file_list_state
                 .select(Some(state.filtered_files.len() - 1));
             self.update_scroll_offset(state, visible_height);
-            if let Some(item) = self.get_selected_item(state) {
-                PreviewManager::update_preview_for_item_async(&item);
-            }
+            PreviewManager::preview_for_selected_item(state);
             return true;
         }
         false
@@ -138,35 +126,22 @@ pub trait DataProvider {
             let new_selected = (selected + half_page).min(total - 1);
             state.file_list_state.select(Some(new_selected));
             self.update_scroll_offset(state, visible_height);
-            if let Some(item) = self.get_selected_item(state) {
-                PreviewManager::update_preview_for_item_async(&item);
-            }
+            PreviewManager::preview_for_selected_item(state);
             true
         } else if !state.filtered_files.is_empty() {
             state.file_list_state.select(Some(0));
             self.update_scroll_offset(state, visible_height);
-            if let Some(item) = self.get_selected_item(state) {
-                PreviewManager::update_preview_for_item_async(&item);
-            }
+            PreviewManager::preview_for_selected_item(state);
             true
         } else {
             false
         }
     }
 
-    /// Get the currently selected item (file or path)
-    fn get_selected_item(&self, state: &AppState) -> Option<DisplayItem> {
-        if let Some(selected) = state.file_list_state.selected() {
-            if let Some(&file_index) = state.filtered_files.get(selected) {
-                return state.files.get(file_index).cloned();
-            }
-        }
-        None
-    }
-
     /// Get the file path for preview (unified interface)
     fn get_preview_path(&self, state: &AppState) -> Option<PathBuf> {
-        self.get_selected_item(state)
+        state
+            .get_selected_item()
             .map(|item| item.get_path().clone())
     }
 
@@ -296,14 +271,6 @@ impl DataProviderType {
         match self {
             DataProviderType::Normal(provider) => provider.navigate_half_page_down(state).await,
             DataProviderType::History(provider) => provider.navigate_half_page_down(state).await,
-        }
-    }
-
-    /// Get selected item
-    pub fn get_selected_item(&self, state: &AppState) -> Option<DisplayItem> {
-        match self {
-            DataProviderType::Normal(provider) => provider.get_selected_item(state),
-            DataProviderType::History(provider) => provider.get_selected_item(state),
         }
     }
 

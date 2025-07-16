@@ -1,4 +1,5 @@
 use crate::{
+    AppState,
     services::{GlobalPreviewState, PreviewGenerator, preview::PreviewContent},
     utils::{DisplayItem, FileItem},
 };
@@ -11,15 +12,20 @@ use ratatui::{
 pub struct PreviewManager;
 
 impl PreviewManager {
-    /// Update preview for a DisplayItem with non-blocking background generation
-    pub fn update_preview_for_item_async(item: &DisplayItem) {
-        let global_state = GlobalPreviewState::instance();
+    pub fn preview_for_selected_item(state: &AppState) {
+        if let Some(item) = state.get_selected_item() {
+            // Get file info for placeholder
+            let file_item = match item {
+                DisplayItem::File(file) => file.clone(),
+                DisplayItem::History(entry) => FileItem::from_path(&entry.path),
+            };
+            Self::update_preview_for_item_async(&file_item);
+        }
+    }
 
-        // Get file info for placeholder
-        let file_item = match item {
-            DisplayItem::File(file) => file.clone(),
-            DisplayItem::History(entry) => FileItem::from_path(&entry.path),
-        };
+    /// Update preview for a DisplayItem with non-blocking background generation
+    fn update_preview_for_item_async(file_item: &FileItem) {
+        let global_state = GlobalPreviewState::instance();
 
         // Show immediate placeholder content
         let placeholder_title = format!("📄 {}", file_item.name);
@@ -34,8 +40,12 @@ impl PreviewManager {
                 Style::default().fg(Color::Gray),
             )]),
         ]);
-
-        global_state.update_preview(placeholder_title, placeholder_content);
+        global_state.set_current_file_item(Some(file_item.clone()));
+        global_state.update_preview(
+            placeholder_title,
+            placeholder_content,
+            Some(file_item.clone()),
+        );
 
         // Start background task to generate actual content
         let file_path = file_item.path.clone();
@@ -46,7 +56,7 @@ impl PreviewManager {
 
             // Update the global state with the actual content
             let global_state = GlobalPreviewState::instance();
-            global_state.update_preview(title, content);
+            global_state.update_preview(title, content, Some(file_item));
         });
     }
 

@@ -232,7 +232,7 @@ pub struct HistoryStatistics {
 impl DataProvider for HistoryDataProvider {
     fn navigate_into_directory(&self, state: &mut AppState) -> Result<Option<ModeAction>> {
         // In history mode, navigate to the selected directory and switch to normal mode
-        if let Some(item) = self.get_selected_item(state) {
+        if let Some(item) = state.get_selected_item() {
             if item.is_directory() {
                 // Add to history and change directory
                 self.add_to_history(item.get_path().clone())?;

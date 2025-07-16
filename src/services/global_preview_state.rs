@@ -1,3 +1,5 @@
+use crate::utils::FileItem;
+
 use super::preview::PreviewContent;
 use once_cell::sync::Lazy;
 use ratatui::{
@@ -12,6 +14,7 @@ pub struct PreviewState {
     pub content: PreviewContent,
     pub title: String,
     pub scroll_offset: usize,
+    pub current_file_item: Option<FileItem>,
 }
 
 impl Default for PreviewState {
@@ -23,6 +26,7 @@ impl Default for PreviewState {
             )])]),
             title: "Preview".to_string(),
             scroll_offset: 0,
+            current_file_item: None,
         }
     }
 }
@@ -40,13 +44,30 @@ impl GlobalPreviewState {
         }
     }
 
+    pub fn set_current_file_item(&self, path: Option<FileItem>) {
+        let mut state = self.state.write().unwrap();
+        state.current_file_item = path;
+    }
+
+    fn get_current_file_item(&self) -> Option<FileItem> {
+        self.state.read().unwrap().current_file_item.clone()
+    }
+
     /// Get a copy of the current preview state
     pub fn get_state(&self) -> PreviewState {
         self.state.read().unwrap().clone()
     }
 
     /// Update the preview content and title
-    pub fn update_preview(&self, title: String, content: PreviewContent) {
+    pub fn update_preview(
+        &self,
+        title: String,
+        content: PreviewContent,
+        file_item: Option<FileItem>,
+    ) {
+        if file_item != self.get_current_file_item() {
+            return;
+        }
         let mut state = self.state.write().unwrap();
         state.title = title;
         state.content = content;

@@ -14,7 +14,7 @@ pub struct FileListDataProvider;
 impl DataProvider for FileListDataProvider {
     // Use default implementations for most methods
     fn get_preview_path(&self, state: &AppState) -> Option<PathBuf> {
-        if let Some(DisplayItem::File(file)) = self.get_selected_item(state) {
+        if let Some(DisplayItem::File(file)) = state.get_selected_item() {
             Some(file.path)
         } else {
             None
@@ -22,7 +22,7 @@ impl DataProvider for FileListDataProvider {
     }
 
     fn navigate_into_directory(&self, state: &mut AppState) -> Result<Option<ModeAction>> {
-        if let Some(file) = self.get_selected_item(state) {
+        if let Some(file) = state.get_selected_item() {
             if file.is_directory() {
                 // Save current position before changing directory
                 self.save_position(state);
