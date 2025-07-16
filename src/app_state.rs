@@ -3,7 +3,6 @@ use std::{collections::HashMap, path::PathBuf, time::Instant};
 
 use crate::{
     core::layout::LayoutManager,
-    preview_content::PreviewContent,
     utils::{DisplayItem, FileItem},
 };
 
@@ -21,9 +20,6 @@ pub struct AppState {
     pub files: Vec<DisplayItem>,
     pub filtered_files: Vec<usize>,
     pub file_list_state: ListState,
-    pub preview_content: PreviewContent,
-    pub preview_title: String,
-    pub preview_scroll_offset: usize,
     pub dir_positions: HashMap<PathBuf, usize>,
     pub double_click_state: DoubleClickState,
     pub layout: LayoutManager,
@@ -39,9 +35,6 @@ impl AppState {
             files: Vec::new(),
             filtered_files: Vec::new(),
             file_list_state: ListState::default(),
-            preview_content: PreviewContent::default(),
-            preview_title: String::new(),
-            preview_scroll_offset: 0,
             dir_positions: HashMap::new(),
             double_click_state: DoubleClickState {
                 last_click_time: None,

@@ -1,5 +1,6 @@
-use std::cell::RefCell;
+use std::sync::Arc;
 
+use tokio::sync::Mutex;
 use ratatui::{
     style::{Color, Style},
     text::{Line, Span},
@@ -40,7 +41,7 @@ impl PreviewGeneratorTrait for ImagePreviewGenerator {
                 // Create a protocol for the image
                 let protocol = picker.new_resize_protocol(img);
 
-                (title, PreviewContent::image(RefCell::new(protocol)))
+                (title, PreviewContent::image(Arc::new(Mutex::new(protocol))))
             }
             Err(e) => {
                 let content = vec![

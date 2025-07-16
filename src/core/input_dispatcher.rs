@@ -75,7 +75,7 @@ impl InputDispatcher {
                         return Some(ModeAction::Exit(None));
                     }
                     state.file_list_state.select(None);
-                    PreviewManager::clear_preview(state);
+                    PreviewManager::clear_preview();
                     Some(ModeAction::Stay)
                 } else {
                     // In other modes, Esc returns to normal mode
@@ -142,12 +142,12 @@ impl InputDispatcher {
         match key {
             KeyCode::Up => {
                 provider.navigate_up(state).await;
-                Self::update_preview_if_needed(state, &provider).await;
+                Self::update_preview_if_needed(state, &provider);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Down => {
                 provider.navigate_down(state).await;
-                Self::update_preview_if_needed(state, &provider).await;
+                Self::update_preview_if_needed(state, &provider);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Right => {
@@ -169,12 +169,12 @@ impl InputDispatcher {
             // hjkl keys only work when not searching
             KeyCode::Char('k') if !state.is_searching => {
                 provider.navigate_up(state).await;
-                Self::update_preview_if_needed(state, &provider).await;
+                Self::update_preview_if_needed(state, &provider);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('j') if !state.is_searching => {
                 provider.navigate_down(state).await;
-                Self::update_preview_if_needed(state, &provider).await;
+                Self::update_preview_if_needed(state, &provider);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('l') if !state.is_searching => {
@@ -200,12 +200,12 @@ impl InputDispatcher {
             // Half-page navigation keys (only work when not searching)
             KeyCode::Char('b') if !state.is_searching => {
                 provider.navigate_half_page_down(state).await;
-                Self::update_preview_if_needed(state, &provider).await;
+                Self::update_preview_if_needed(state, &provider);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('f') if !state.is_searching => {
                 provider.navigate_half_page_up(state).await;
-                Self::update_preview_if_needed(state, &provider).await;
+                Self::update_preview_if_needed(state, &provider);
                 Ok(Some(ModeAction::Stay))
             }
             _ => Ok(None),
@@ -249,22 +249,22 @@ impl InputDispatcher {
         let visible_height = state.layout.get_right_content_height();
         match key {
             KeyCode::PageUp => {
-                PreviewManager::scroll_preview_page_up(state, visible_height);
+                PreviewManager::scroll_preview_page_up(visible_height);
             }
             KeyCode::PageDown => {
-                PreviewManager::scroll_preview_page_down(state, visible_height);
+                PreviewManager::scroll_preview_page_down(visible_height);
             }
             _ => {}
         }
     }
 
     /// Update preview if the data provider supports it
-    async fn update_preview_if_needed(
+    fn update_preview_if_needed(
         state: &mut AppState,
         provider: &data_provider::DataProviderType,
     ) {
         if let Some(item) = provider.get_selected_item(state) {
-            PreviewManager::update_preview_for_item(state, &item).await;
+            PreviewManager::update_preview_for_item_async(&item);
         }
     }
 
@@ -285,13 +285,13 @@ impl InputDispatcher {
             } else {
                 provider.navigate_down(state).await;
             }
-            Self::update_preview_if_needed(state, &provider).await;
+            Self::update_preview_if_needed(state, &provider);
         } else if state.is_point_in_right_panel(mouse.column, mouse.row) {
             // Mouse is in right panel - scroll preview content
             if is_scroll_up {
-                PreviewManager::scroll_preview_up(state);
+                PreviewManager::scroll_preview_up();
             } else {
-                PreviewManager::scroll_preview_down(state);
+                PreviewManager::scroll_preview_down();
             }
         }
 
@@ -328,7 +328,7 @@ impl InputDispatcher {
 
         // Update selection
         provider.set_selected_index(state, Some(clicked_index));
-        Self::update_preview_if_needed(state, &provider).await;
+        Self::update_preview_if_needed(state, &provider);
 
         // Update double-click state
         Self::update_double_click_state(state, mouse_position, clicked_index);

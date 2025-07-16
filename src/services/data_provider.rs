@@ -45,7 +45,7 @@ pub trait DataProvider {
                 state.file_list_state.select(Some(selected - 1));
                 self.update_scroll_offset(state, visible_height);
                 if let Some(item) = self.get_selected_item(state) {
-                    PreviewManager::update_preview_for_item(state, &item).await;
+                    PreviewManager::update_preview_for_item_async(&item);
                 }
                 return true;
             }
@@ -55,7 +55,7 @@ pub trait DataProvider {
                 .select(Some(state.filtered_files.len() - 1));
             self.update_scroll_offset(state, visible_height);
             if let Some(item) = self.get_selected_item(state) {
-                PreviewManager::update_preview_for_item(state, &item).await;
+                PreviewManager::update_preview_for_item_async(&item);
             }
             return true;
         }
@@ -76,7 +76,7 @@ pub trait DataProvider {
                 state.file_list_state.select(Some(selected + 1));
                 self.update_scroll_offset(state, visible_height);
                 if let Some(item) = self.get_selected_item(state) {
-                    crate::services::PreviewManager::update_preview_for_item(state, &item).await;
+                    crate::services::PreviewManager::update_preview_for_item_async(&item);
                 }
                 return true;
             }
@@ -84,7 +84,7 @@ pub trait DataProvider {
             state.file_list_state.select(Some(0));
             self.update_scroll_offset(state, visible_height);
             if let Some(item) = self.get_selected_item(state) {
-                crate::services::PreviewManager::update_preview_for_item(state, &item).await;
+                crate::services::PreviewManager::update_preview_for_item_async(&item);
             }
             return true;
         }
@@ -107,7 +107,7 @@ pub trait DataProvider {
             state.file_list_state.select(Some(new_selected));
             self.update_scroll_offset(state, visible_height);
             if let Some(item) = self.get_selected_item(state) {
-                crate::services::PreviewManager::update_preview_for_item(state, &item).await;
+                crate::services::PreviewManager::update_preview_for_item_async(&item);
             }
             return true;
         } else if !state.filtered_files.is_empty() {
@@ -116,7 +116,7 @@ pub trait DataProvider {
                 .select(Some(state.filtered_files.len() - 1));
             self.update_scroll_offset(state, visible_height);
             if let Some(item) = self.get_selected_item(state) {
-                crate::services::PreviewManager::update_preview_for_item(state, &item).await;
+                crate::services::PreviewManager::update_preview_for_item_async(&item);
             }
             return true;
         }
@@ -139,14 +139,14 @@ pub trait DataProvider {
             state.file_list_state.select(Some(new_selected));
             self.update_scroll_offset(state, visible_height);
             if let Some(item) = self.get_selected_item(state) {
-                crate::services::PreviewManager::update_preview_for_item(state, &item).await;
+                crate::services::PreviewManager::update_preview_for_item_async(&item);
             }
             true
         } else if !state.filtered_files.is_empty() {
             state.file_list_state.select(Some(0));
             self.update_scroll_offset(state, visible_height);
             if let Some(item) = self.get_selected_item(state) {
-                crate::services::PreviewManager::update_preview_for_item(state, &item).await;
+                crate::services::PreviewManager::update_preview_for_item_async(&item);
             }
             true
         } else {

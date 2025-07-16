@@ -6,7 +6,7 @@ use ratatui::{
 use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
 
 use super::Renderer;
-use crate::{AppState, preview_content::PreviewContent};
+use crate::{preview_content::PreviewContent, services::{global_preview_state::PreviewState, GlobalPreviewState}, AppState};
 
 /// Renderer for preview panel showing file/directory content
 #[derive(Default)]
@@ -19,14 +19,17 @@ impl PreviewRenderer {
 }
 
 impl Renderer for PreviewRenderer {
-    fn render(&self, f: &mut Frame, area: Rect, state: &AppState) {
-        match &state.preview_content {
+    fn render(&self, f: &mut Frame, area: Rect, _state: &AppState) {
+        let global_state = GlobalPreviewState::instance();
+        let preview_state = global_state.get_state();
+
+        match &preview_state.content {
             PreviewContent::Text(lines) => {
-                self.render_text_preview(f, area, state, lines);
+                self.render_text_preview(f, area, &preview_state, lines);
             }
             PreviewContent::Image(protocol) => {
-                if let Ok(mut protocol) = protocol.try_borrow_mut() {
-                    self.render_image_preview(f, area, state, &mut protocol);
+                if let Ok(mut protocol_guard) = protocol.try_lock() {
+                    self.render_image_preview(f, area, &preview_state, &mut *protocol_guard);
                 }
             }
         }
@@ -39,13 +42,13 @@ impl PreviewRenderer {
         &self,
         f: &mut Frame,
         area: Rect,
-        state: &AppState,
+        preview_state: &PreviewState,
         lines: &[ratatui::text::Line<'static>],
     ) {
         // Calculate the visible content based on scroll offset
         let total_lines = lines.len();
         let visible_height = area.height.saturating_sub(2) as usize; // Account for borders
-        let scroll_offset = state.preview_scroll_offset;
+        let scroll_offset = preview_state.scroll_offset;
 
         // Determine the range of lines to display
         let start_line = scroll_offset;
@@ -64,7 +67,7 @@ impl PreviewRenderer {
         let preview_list = List::new(visible_content).block(
             Block::default()
                 .borders(Borders::ALL)
-                .title(&*state.preview_title),
+                .title(preview_state.title.as_str()),
         );
 
         f.render_widget(preview_list, area);
@@ -75,13 +78,13 @@ impl PreviewRenderer {
         &self,
         f: &mut Frame,
         area: Rect,
-        state: &AppState,
+        preview_state: &PreviewState,
         protocol: &mut StatefulProtocol,
     ) {
         // Create the StatefulImage widget with a border
         let block = Block::default()
             .borders(Borders::ALL)
-            .title(&*state.preview_title);
+            .title(preview_state.title.as_str());
         let inner_area = block.inner(area);
 
         // Render the block first

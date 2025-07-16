@@ -20,13 +20,13 @@ impl App {
         let data_provider = create_data_provider(&initial_mode);
         data_provider.load_data(&mut state)?;
 
-        let mut app = App {
+        let app = App {
             state,
             mode_manager: ModeManager::new(&initial_mode),
         };
 
         // Clear preview
-        PreviewManager::clear_preview(&mut app.state);
+        PreviewManager::clear_preview();
 
         Ok(app)
     }

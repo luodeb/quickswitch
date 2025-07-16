@@ -127,7 +127,7 @@ impl DataProvider for FileListDataProvider {
         self.restore_position(state);
 
         // Clear preview
-        PreviewManager::clear_preview(state);
+        PreviewManager::clear_preview();
 
         Ok(())
     }

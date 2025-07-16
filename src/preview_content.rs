@@ -1,4 +1,6 @@
-use std::cell::RefCell;
+use std::sync::Arc;
+
+use tokio::sync::Mutex;
 
 use ratatui::text::Line;
 use ratatui_image::protocol::StatefulProtocol;
@@ -8,7 +10,7 @@ pub enum PreviewContent {
     /// Text content with lines for display
     Text(Vec<Line<'static>>),
     /// Image content with protocol for rendering
-    Image(RefCell<StatefulProtocol>),
+    Image(Arc<Mutex<StatefulProtocol>>),
 }
 
 /// Image state that can be stored in AppState
@@ -23,7 +25,7 @@ impl PreviewContent {
     }
 
     /// Create image preview content
-    pub fn image(protocol: RefCell<StatefulProtocol>) -> Self {
+    pub fn image(protocol: Arc<Mutex<StatefulProtocol>>) -> Self {
         Self::Image(protocol)
     }
 
@@ -46,7 +48,7 @@ impl PreviewContent {
     }
 
     /// Get image protocol if this is image content
-    pub fn as_image(&self) -> Option<&RefCell<StatefulProtocol>> {
+    pub fn as_image(&self) -> Option<&Arc<Mutex<StatefulProtocol>>> {
         match self {
             Self::Text(_) => None,
             Self::Image(protocol) => Some(protocol),
@@ -54,7 +56,7 @@ impl PreviewContent {
     }
 
     /// Get mutable image protocol if this is image content
-    pub fn as_image_mut(&mut self) -> Option<&mut RefCell<StatefulProtocol>> {
+    pub fn as_image_mut(&mut self) -> Option<&mut Arc<Mutex<StatefulProtocol>>> {
         match self {
             Self::Text(_) => None,
             Self::Image(protocol) => Some(protocol),
@@ -84,11 +86,7 @@ impl Clone for PreviewContent {
     fn clone(&self) -> Self {
         match self {
             Self::Text(lines) => Self::Text(lines.clone()),
-            Self::Image(_) => {
-                // For images, we'll return an empty text content as a fallback
-                // since StatefulProtocol doesn't implement Clone
-                Self::Text(vec![Line::from("Image content (clone not supported)")])
-            }
+            Self::Image(image) => Self::Image(image.clone()),
         }
     }
 }
@@ -96,5 +94,17 @@ impl Clone for PreviewContent {
 impl Default for PreviewContent {
     fn default() -> Self {
         Self::Text(Vec::new())
+    }
+}
+
+impl std::fmt::Debug for PreviewContent {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Text(lines) => f
+                .debug_tuple("Text")
+                .field(&format!("{} lines", lines.len()))
+                .finish(),
+            Self::Image(_) => f.debug_tuple("Image").field(&"StatefulProtocol").finish(),
+        }
     }
 }
