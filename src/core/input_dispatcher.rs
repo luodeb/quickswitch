@@ -218,7 +218,15 @@ impl InputDispatcher {
         if state.is_searching {
             Self::handle_search_keys(state, key)
         } else {
-            Ok(ModeAction::Stay)
+            // Handle non-search mode keys
+            match key.code {
+                KeyCode::Char('.') => {
+                    // Toggle hidden files visibility
+                    state.toggle_hidden_files();
+                    Ok(ModeAction::Stay)
+                }
+                _ => Ok(ModeAction::Stay),
+            }
         }
     }
 

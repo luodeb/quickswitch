@@ -16,6 +16,7 @@ pub struct DoubleClickState {
 pub struct AppState {
     pub search_input: String,
     pub is_searching: bool,
+    pub show_hidden_files: bool,
     pub current_dir: PathBuf,
     pub files: Vec<DisplayItem>,
     pub filtered_files: Vec<usize>,
@@ -31,6 +32,7 @@ impl AppState {
         Ok(Self {
             search_input: String::new(),
             is_searching: false,
+            show_hidden_files: false,
             current_dir,
             files: Vec::new(),
             filtered_files: Vec::new(),
@@ -73,14 +75,26 @@ impl AppState {
 
     /// Reset filter and selection
     pub fn reset_filter(&mut self) {
-        self.filtered_files = (0..self.files.len()).collect();
+        self.filtered_files = self
+            .files
+            .iter()
+            .enumerate()
+            .filter(|(_, item)| self.should_show_item(item))
+            .map(|(i, _)| i)
+            .collect();
         self.file_list_state.select(None);
     }
 
     /// Apply search filter to current items
     pub fn apply_search_filter(&mut self) {
         if self.search_input.is_empty() {
-            self.filtered_files = (0..self.files.len()).collect();
+            self.filtered_files = self
+                .files
+                .iter()
+                .enumerate()
+                .filter(|(_, item)| self.should_show_item(item))
+                .map(|(i, _)| i)
+                .collect();
         } else {
             let search_lower = self.search_input.to_lowercase();
             self.filtered_files = self
@@ -88,9 +102,11 @@ impl AppState {
                 .iter()
                 .enumerate()
                 .filter(|(_, item)| {
-                    item.get_display_name()
-                        .to_lowercase()
-                        .contains(&search_lower)
+                    self.should_show_item(item)
+                        && item
+                            .get_display_name()
+                            .to_lowercase()
+                            .contains(&search_lower)
                 })
                 .map(|(i, _)| i)
                 .collect();
@@ -106,5 +122,30 @@ impl AppState {
             }
         }
         None
+    }
+
+    /// Check if an item should be shown based on current filter settings
+    fn should_show_item(&self, item: &DisplayItem) -> bool {
+        // Always show non-file items (like history entries)
+        if !matches!(item, DisplayItem::File(_)) {
+            return true;
+        }
+
+        let name = item.get_display_name();
+
+        // Check if it's a hidden file (starts with '.')
+        if name.starts_with('.') {
+            // Show hidden files only if show_hidden_files is true
+            self.show_hidden_files
+        } else {
+            // Always show non-hidden files
+            true
+        }
+    }
+
+    /// Toggle hidden files visibility and reapply filters
+    pub fn toggle_hidden_files(&mut self) {
+        self.show_hidden_files = !self.show_hidden_files;
+        self.apply_search_filter();
     }
 }
