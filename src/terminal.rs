@@ -64,7 +64,7 @@ where
             match event::read()? {
                 Event::Key(key) => {
                     if key.kind == KeyEventKind::Press
-                        && !events::handle_key_event(app, key.code).await?
+                        && !events::handle_key_event(app, key).await?
                     {
                         break;
                     }

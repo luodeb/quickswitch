@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crossterm::event::{KeyCode, MouseEvent, MouseEventKind};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
 
 use crate::{
     AppState,
@@ -16,7 +16,7 @@ impl InputDispatcher {
     /// Handle keyboard input uniformly across all modes
     pub async fn handle_key_event(
         state: &mut AppState,
-        key: KeyCode,
+        key: KeyEvent,
         current_mode: &AppMode,
     ) -> Result<ModeAction> {
         // Handle exit keys first (highest priority)
@@ -58,10 +58,10 @@ impl InputDispatcher {
     /// Handle exit keys (Esc, Enter) - unified across all modes
     fn handle_exit_keys(
         state: &mut AppState,
-        key: KeyCode,
+        key: KeyEvent,
         current_mode: &AppMode,
     ) -> Option<ModeAction> {
-        match key {
+        match key.code {
             KeyCode::Esc => {
                 // If searching, exit search mode but keep search input and results
                 if state.is_searching {
@@ -82,6 +82,9 @@ impl InputDispatcher {
                 }
             }
             KeyCode::Enter => {
+                if key.modifiers == KeyModifiers::CONTROL {
+                    return Some(ModeAction::Stay);
+                }
                 // Handle selection and exit using unified data provider
                 let provider = create_data_provider(current_mode);
                 if let Some(item) = state.get_selected_item() {
@@ -105,10 +108,10 @@ impl InputDispatcher {
     /// Handle mode switching keys - unified across all modes
     fn handle_mode_switch_keys(
         state: &mut AppState,
-        key: KeyCode,
+        key: KeyEvent,
         current_mode: &AppMode,
     ) -> Option<ModeAction> {
-        match key {
+        match key.code {
             KeyCode::Char('/') => {
                 // Enable search functionality in normal and history modes
                 if matches!(current_mode, AppMode::Normal | AppMode::History) && !state.is_searching
@@ -133,12 +136,12 @@ impl InputDispatcher {
     /// Handle navigation keys - unified using data providers
     async fn handle_navigation_keys(
         state: &mut AppState,
-        key: KeyCode,
+        key: KeyEvent,
         current_mode: &AppMode,
     ) -> Result<Option<ModeAction>> {
         let provider = create_data_provider(current_mode);
 
-        match key {
+        match key.code {
             KeyCode::Up => {
                 provider.navigate_up(state).await;
                 Ok(Some(ModeAction::Stay))
@@ -208,7 +211,7 @@ impl InputDispatcher {
     /// Handle mode-specific keys that don't fit into common patterns
     fn handle_mode_specific_keys(
         state: &mut AppState,
-        key: KeyCode,
+        key: KeyEvent,
         _current_mode: &AppMode,
     ) -> Result<ModeAction> {
         // Handle search input when in search mode
@@ -220,8 +223,8 @@ impl InputDispatcher {
     }
 
     /// Handle search mode specific keys
-    fn handle_search_keys(state: &mut AppState, key: KeyCode) -> Result<ModeAction> {
-        match key {
+    fn handle_search_keys(state: &mut AppState, key: KeyEvent) -> Result<ModeAction> {
+        match key.code {
             KeyCode::Char(c) => {
                 state.search_input.push(c);
                 state.apply_search_filter();
@@ -237,10 +240,10 @@ impl InputDispatcher {
     }
 
     /// Handle preview navigation (Page Up/Down)
-    fn handle_preview_navigation(state: &mut AppState, key: KeyCode) {
+    fn handle_preview_navigation(state: &mut AppState, key: KeyEvent) {
         // Use the actual right panel content height from layout manager
         let visible_height = state.layout.get_right_content_height();
-        match key {
+        match key.code {
             KeyCode::PageUp => {
                 PreviewManager::scroll_preview_page_up(visible_height);
             }
