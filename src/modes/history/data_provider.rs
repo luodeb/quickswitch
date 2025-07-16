@@ -1,4 +1,5 @@
 use anyhow::Result;
+use bincode::config;
 use std::{fs, path::PathBuf};
 
 use crate::{
@@ -39,8 +40,9 @@ impl HistoryDataProvider {
         // If the binary file exists, load from it
         if file_path.exists() {
             let data = fs::read(&file_path)?;
-            match bincode::deserialize(&data) {
-                Ok(entries) => return Ok(entries),
+            let config = config::standard();
+            match bincode::serde::decode_from_slice(&data, config) {
+                Ok((entries, _)) => return Ok(entries),
                 Err(e) => {
                     // If deserialization fails, try to migrate from legacy format
                     eprintln!("Error loading history data: {}", e);
@@ -93,7 +95,8 @@ impl HistoryDataProvider {
 
     /// Save history entries to file
     fn save_history_entries(&self, entries: &[HistoryEntry]) -> Result<()> {
-        let data = bincode::serialize(entries)?;
+        let config = config::standard();
+        let data = bincode::serde::encode_to_vec(entries, config)?;
         let file_path = self.get_history_file_path();
 
         // Ensure directory exists

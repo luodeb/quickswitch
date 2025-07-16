@@ -141,12 +141,10 @@ impl InputDispatcher {
         match key {
             KeyCode::Up => {
                 provider.navigate_up(state).await;
-                PreviewManager::preview_for_selected_item(state);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Down => {
                 provider.navigate_down(state).await;
-                PreviewManager::preview_for_selected_item(state);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Right => {
@@ -168,12 +166,10 @@ impl InputDispatcher {
             // hjkl keys only work when not searching
             KeyCode::Char('k') if !state.is_searching => {
                 provider.navigate_up(state).await;
-                PreviewManager::preview_for_selected_item(state);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('j') if !state.is_searching => {
                 provider.navigate_down(state).await;
-                PreviewManager::preview_for_selected_item(state);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('l') if !state.is_searching => {
@@ -199,12 +195,10 @@ impl InputDispatcher {
             // Half-page navigation keys (only work when not searching)
             KeyCode::Char('b') if !state.is_searching => {
                 provider.navigate_half_page_down(state).await;
-                PreviewManager::preview_for_selected_item(state);
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('f') if !state.is_searching => {
                 provider.navigate_half_page_up(state).await;
-                PreviewManager::preview_for_selected_item(state);
                 Ok(Some(ModeAction::Stay))
             }
             _ => Ok(None),
