@@ -63,13 +63,13 @@ where
         if event::poll(std::time::Duration::from_millis(100))? {
             match event::read()? {
                 Event::Key(key) => {
-                    if key.kind == KeyEventKind::Press && !events::handle_key_event(app, key.code)?
+                    if key.kind == KeyEventKind::Press && !events::handle_key_event(app, key.code).await?
                     {
                         break;
                     }
                 }
                 Event::Mouse(mouse) => {
-                    if !events::handle_mouse_event(app, mouse)? {
+                    if !events::handle_mouse_event(app, mouse).await? {
                         break;
                     }
                 }

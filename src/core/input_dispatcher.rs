@@ -4,7 +4,7 @@ use crossterm::event::{KeyCode, MouseEvent, MouseEventKind};
 use crate::{
     AppState,
     modes::ModeAction,
-    services::{DataProvider, PreviewManager, create_data_provider},
+    services::{PreviewManager, create_data_provider, data_provider},
     utils::{AppMode, DisplayItem, FileItem},
 };
 
@@ -14,7 +14,7 @@ pub struct InputDispatcher;
 
 impl InputDispatcher {
     /// Handle keyboard input uniformly across all modes
-    pub fn handle_key_event(
+    pub async fn handle_key_event(
         state: &mut AppState,
         key: KeyCode,
         current_mode: &AppMode,
@@ -30,7 +30,7 @@ impl InputDispatcher {
         }
 
         // Handle navigation keys (unified for all modes)
-        if let Some(action) = Self::handle_navigation_keys(state, key, current_mode)? {
+        if let Some(action) = Self::handle_navigation_keys(state, key, current_mode).await? {
             return Ok(action);
         }
 
@@ -39,17 +39,17 @@ impl InputDispatcher {
     }
 
     /// Handle mouse input uniformly across all modes
-    pub fn handle_mouse_event(
+    pub async fn handle_mouse_event(
         state: &mut AppState,
         mouse: MouseEvent,
         current_mode: &AppMode,
     ) -> Result<ModeAction> {
         match mouse.kind {
             MouseEventKind::ScrollUp | MouseEventKind::ScrollDown => {
-                Self::handle_scroll_navigation(state, mouse, current_mode)
+                Self::handle_scroll_navigation(state, mouse, current_mode).await
             }
             MouseEventKind::Up(crossterm::event::MouseButton::Left) => {
-                Self::handle_left_click(state, mouse, current_mode)
+                Self::handle_left_click(state, mouse, current_mode).await
             }
             _ => Ok(ModeAction::Stay),
         }
@@ -132,7 +132,7 @@ impl InputDispatcher {
     }
 
     /// Handle navigation keys - unified using data providers
-    fn handle_navigation_keys(
+    async fn handle_navigation_keys(
         state: &mut AppState,
         key: KeyCode,
         current_mode: &AppMode,
@@ -141,13 +141,13 @@ impl InputDispatcher {
 
         match key {
             KeyCode::Up => {
-                provider.navigate_up(state);
-                Self::update_preview_if_needed(state, &*provider);
+                provider.navigate_up(state).await;
+                Self::update_preview_if_needed(state, &provider).await;
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Down => {
-                provider.navigate_down(state);
-                Self::update_preview_if_needed(state, &*provider);
+                provider.navigate_down(state).await;
+                Self::update_preview_if_needed(state, &provider).await;
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Right => {
@@ -168,13 +168,13 @@ impl InputDispatcher {
             }
             // hjkl keys only work when not searching
             KeyCode::Char('k') if !state.is_searching => {
-                provider.navigate_up(state);
-                Self::update_preview_if_needed(state, &*provider);
+                provider.navigate_up(state).await;
+                Self::update_preview_if_needed(state, &provider).await;
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('j') if !state.is_searching => {
-                provider.navigate_down(state);
-                Self::update_preview_if_needed(state, &*provider);
+                provider.navigate_down(state).await;
+                Self::update_preview_if_needed(state, &provider).await;
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('l') if !state.is_searching => {
@@ -199,13 +199,13 @@ impl InputDispatcher {
             }
             // Half-page navigation keys (only work when not searching)
             KeyCode::Char('b') if !state.is_searching => {
-                provider.navigate_half_page_down(state);
-                Self::update_preview_if_needed(state, &*provider);
+                provider.navigate_half_page_down(state).await;
+                Self::update_preview_if_needed(state, &provider).await;
                 Ok(Some(ModeAction::Stay))
             }
             KeyCode::Char('f') if !state.is_searching => {
-                provider.navigate_half_page_up(state);
-                Self::update_preview_if_needed(state, &*provider);
+                provider.navigate_half_page_up(state).await;
+                Self::update_preview_if_needed(state, &provider).await;
                 Ok(Some(ModeAction::Stay))
             }
             _ => Ok(None),
@@ -259,14 +259,17 @@ impl InputDispatcher {
     }
 
     /// Update preview if the data provider supports it
-    fn update_preview_if_needed(state: &mut AppState, provider: &dyn DataProvider) {
+    async fn update_preview_if_needed(
+        state: &mut AppState,
+        provider: &data_provider::DataProviderType,
+    ) {
         if let Some(item) = provider.get_selected_item(state) {
-            PreviewManager::update_preview_for_item(state, &item);
+            PreviewManager::update_preview_for_item(state, &item).await;
         }
     }
 
     /// Handle scroll navigation using unified data providers
-    fn handle_scroll_navigation(
+    async fn handle_scroll_navigation(
         state: &mut AppState,
         mouse: MouseEvent,
         current_mode: &AppMode,
@@ -278,11 +281,11 @@ impl InputDispatcher {
             // Mouse is in left panel - scroll list using unified provider
             let provider = create_data_provider(current_mode);
             if is_scroll_up {
-                provider.navigate_up(state);
+                provider.navigate_up(state).await;
             } else {
-                provider.navigate_down(state);
+                provider.navigate_down(state).await;
             }
-            Self::update_preview_if_needed(state, &*provider);
+            Self::update_preview_if_needed(state, &provider).await;
         } else if state.is_point_in_right_panel(mouse.column, mouse.row) {
             // Mouse is in right panel - scroll preview content
             if is_scroll_up {
@@ -296,7 +299,7 @@ impl InputDispatcher {
     }
 
     /// Handle left mouse click using unified data providers
-    fn handle_left_click(
+    async fn handle_left_click(
         state: &mut AppState,
         mouse: MouseEvent,
         current_mode: &AppMode,
@@ -325,7 +328,7 @@ impl InputDispatcher {
 
         // Update selection
         provider.set_selected_index(state, Some(clicked_index));
-        Self::update_preview_if_needed(state, &*provider);
+        Self::update_preview_if_needed(state, &provider).await;
 
         // Update double-click state
         Self::update_double_click_state(state, mouse_position, clicked_index);

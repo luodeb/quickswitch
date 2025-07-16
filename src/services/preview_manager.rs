@@ -14,8 +14,8 @@ pub struct PreviewManager;
 
 impl PreviewManager {
     /// Update preview for a DisplayItem (unified function for files and directories)
-    pub fn update_preview_for_item(state: &mut AppState, item: &DisplayItem) {
-        let (title, content) = Self::generate_preview_content_for_item(state, item);
+    pub async fn update_preview_for_item(state: &mut AppState, item: &DisplayItem) {
+        let (title, content) = Self::generate_preview_content_for_item(state, item).await;
         state.preview_title = title;
         state.preview_content = content;
         Self::reset_preview_scroll(state);
@@ -82,7 +82,7 @@ impl PreviewManager {
     }
 
     /// Generate preview content for a DisplayItem (unified function)
-    fn generate_preview_content_for_item(
+    async fn generate_preview_content_for_item(
         state: &AppState,
         item: &DisplayItem,
     ) -> (String, PreviewContent) {
@@ -90,6 +90,6 @@ impl PreviewManager {
             DisplayItem::File(file) => file,
             DisplayItem::History(entry) => &FileItem::from_path(&entry.path),
         };
-        PreviewGenerator::generate_preview_content(state, file_item)
+        PreviewGenerator::generate_preview_content(state, file_item).await
     }
 }

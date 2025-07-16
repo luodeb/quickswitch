@@ -18,7 +18,7 @@ impl PreviewGeneratorTrait for ImagePreviewGenerator {
         file.is_image()
     }
 
-    fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+    async fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
         let title = format!("🖼️ {}", file.name);
 
         // Try to load the image

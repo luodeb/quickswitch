@@ -17,7 +17,7 @@ impl PreviewGeneratorTrait for PdfPreviewGenerator {
         file.is_pdf()
     }
 
-    fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+    async fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
         let title = format!("📄 {}", file.name);
 
         // Try to read the PDF file

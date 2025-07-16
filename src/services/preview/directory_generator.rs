@@ -17,7 +17,7 @@ impl PreviewGeneratorTrait for DirectoryPreviewGenerator {
         file.is_dir
     }
 
-    fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+    async fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
         // Special handling for Windows drives view
         if file.path.to_string_lossy() == "DRIVES:" {
             return Self::generate_drives_preview();

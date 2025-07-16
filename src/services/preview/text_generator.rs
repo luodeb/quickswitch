@@ -18,7 +18,7 @@ impl PreviewGeneratorTrait for TextPreviewGenerator {
         fs::read_to_string(&file.path).is_ok()
     }
 
-    fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+    async fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
         let title = format!("📄 {}", file.name);
 
         // First check file size to avoid reading large files

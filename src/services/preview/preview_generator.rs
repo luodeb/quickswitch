@@ -9,7 +9,8 @@ use crate::{app_state::AppState, preview_content::PreviewContent, utils::FileIte
 /// Trait for preview generators
 pub trait PreviewGeneratorTrait {
     /// Generate preview content for a file
-    fn generate_preview(&self, state: &AppState, file: &FileItem) -> (String, PreviewContent);
+    #[allow(async_fn_in_trait)]
+    async fn generate_preview(&self, state: &AppState, file: &FileItem) -> (String, PreviewContent);
 
     /// Check if this generator can handle the given file
     fn can_handle(&self, file: &FileItem) -> bool;
@@ -19,28 +20,62 @@ use super::{
     DirectoryPreviewGenerator, ImagePreviewGenerator, PdfPreviewGenerator, TextPreviewGenerator,
 };
 
+/// Enum for different preview generators to support async trait methods
+pub enum PreviewGeneratorType {
+    Directory(DirectoryPreviewGenerator),
+    Image(ImagePreviewGenerator),
+    Pdf(PdfPreviewGenerator),
+    Text(TextPreviewGenerator),
+    Binary(BinaryPreviewGenerator),
+}
+
+impl PreviewGeneratorType {
+    /// Check if this generator can handle the given file
+    pub fn can_handle(&self, file: &FileItem) -> bool {
+        match self {
+            PreviewGeneratorType::Directory(generator) => generator.can_handle(file),
+            PreviewGeneratorType::Image(generator) => generator.can_handle(file),
+            PreviewGeneratorType::Pdf(generator) => generator.can_handle(file),
+            PreviewGeneratorType::Text(generator) => generator.can_handle(file),
+            PreviewGeneratorType::Binary(generator) => generator.can_handle(file),
+        }
+    }
+
+    /// Generate preview content for a file
+    pub async fn generate_preview(&self, state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+        match self {
+            PreviewGeneratorType::Directory(generator) => generator.generate_preview(state, file).await,
+            PreviewGeneratorType::Image(generator) => generator.generate_preview(state, file).await,
+            PreviewGeneratorType::Pdf(generator) => generator.generate_preview(state, file).await,
+            PreviewGeneratorType::Text(generator) => generator.generate_preview(state, file).await,
+            PreviewGeneratorType::Binary(generator) => generator.generate_preview(state, file).await,
+        }
+    }
+}
+
 /// Main service for generating preview content for files and directories
 pub struct PreviewGenerator;
 
 impl PreviewGenerator {
     /// Generate preview content for a file or directory
-    pub fn generate_preview_content(state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+    pub async fn generate_preview_content(state: &AppState, file: &FileItem) -> (String, PreviewContent) {
         // Try different file preview generators in order
-        let generators: Vec<Box<dyn PreviewGeneratorTrait>> = vec![
-            Box::new(DirectoryPreviewGenerator),
-            Box::new(ImagePreviewGenerator),
-            Box::new(PdfPreviewGenerator),
-            Box::new(TextPreviewGenerator),
+        let generators = vec![
+            PreviewGeneratorType::Directory(DirectoryPreviewGenerator),
+            PreviewGeneratorType::Image(ImagePreviewGenerator),
+            PreviewGeneratorType::Pdf(PdfPreviewGenerator),
+            PreviewGeneratorType::Text(TextPreviewGenerator),
         ];
 
         for generator in generators {
             if generator.can_handle(file) {
-                return generator.generate_preview(state, file);
+                return generator.generate_preview(state, file).await;
             }
         }
 
         // Fallback to binary file preview
-        BinaryPreviewGenerator.generate_preview(state, file)
+        let binary_gen = PreviewGeneratorType::Binary(BinaryPreviewGenerator);
+        binary_gen.generate_preview(state, file).await
     }
 }
 
@@ -85,7 +120,7 @@ impl PreviewGeneratorTrait for BinaryPreviewGenerator {
         true
     }
 
-    fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+    async fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
         let title = format!("📄 {}", file.name);
 
         // Get file metadata
