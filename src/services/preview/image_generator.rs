@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
-use tokio::sync::Mutex;
 use ratatui::{
     style::{Color, Style},
     text::{Line, Span},
 };
-use ratatui_image::picker::Picker;
+use tokio::sync::Mutex;
 
-use crate::{AppState, preview_content::PreviewContent, utils::FileItem};
+use super::PreviewContent;
+use crate::{services::preview::GLOBAL_PICKER, utils::FileItem};
 
 use super::PreviewGeneratorTrait;
 
@@ -19,27 +19,14 @@ impl PreviewGeneratorTrait for ImagePreviewGenerator {
         file.is_image()
     }
 
-    async fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+    async fn generate_preview(&self, file: &FileItem) -> (String, PreviewContent) {
         let title = format!("🖼️ {}", file.name);
 
         // Try to load the image
         match image::open(&file.path) {
             Ok(img) => {
-                // Create a picker with auto-detected settings from terminal
-                let picker = match Picker::from_query_stdio() {
-                    Ok(picker) => {
-                        // Successfully detected terminal settings - this should give the best quality
-                        picker
-                    }
-                    Err(_) => {
-                        // Fallback: use reasonable default font size
-                        // Most terminals use roughly 1:2 width:height ratio for font cells
-                        Picker::from_fontsize((8, 16))
-                    }
-                };
-
                 // Create a protocol for the image
-                let protocol = picker.new_resize_protocol(img);
+                let protocol = GLOBAL_PICKER.new_resize_protocol(img);
 
                 (title, PreviewContent::image(Arc::new(Mutex::new(protocol))))
             }

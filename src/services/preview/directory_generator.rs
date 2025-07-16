@@ -5,7 +5,8 @@ use ratatui::{
     text::{Line, Span},
 };
 
-use crate::{AppState, preview_content::PreviewContent, utils::FileItem};
+use super::PreviewContent;
+use crate::utils::FileItem;
 
 use super::PreviewGeneratorTrait;
 
@@ -17,7 +18,7 @@ impl PreviewGeneratorTrait for DirectoryPreviewGenerator {
         file.is_dir
     }
 
-    async fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+    async fn generate_preview(&self, file: &FileItem) -> (String, PreviewContent) {
         // Special handling for Windows drives view
         if file.path.to_string_lossy() == "DRIVES:" {
             return Self::generate_drives_preview();

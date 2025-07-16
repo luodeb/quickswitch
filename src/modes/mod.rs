@@ -68,7 +68,7 @@ impl ModeManager {
     pub fn new(initial_mode: &AppMode) -> Self {
         Self {
             current_handler: create_mode_handler(initial_mode),
-            current_mode: initial_mode.clone(),
+            current_mode: *initial_mode,
         }
     }
 
@@ -84,7 +84,7 @@ impl ModeManager {
         data_provider.load_data(state)?;
 
         self.current_handler = create_mode_handler(new_mode);
-        self.current_mode = new_mode.clone();
+        self.current_mode = *new_mode;
         self.current_handler.on_enter(state)?;
         Ok(())
     }

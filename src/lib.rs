@@ -3,7 +3,6 @@ pub mod app_state;
 pub mod config;
 pub mod core;
 pub mod modes;
-pub mod preview_content;
 pub mod services;
 pub mod terminal;
 pub mod utils;

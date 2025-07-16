@@ -3,7 +3,7 @@ use anyhow::Result;
 use crate::{
     app_state::AppState,
     modes::ModeManager,
-    services::{PreviewManager, create_data_provider},
+    services::{PreviewManager, create_data_provider, preview::GLOBAL_PICKER},
     utils::AppMode,
 };
 
@@ -14,6 +14,7 @@ pub struct App {
 
 impl App {
     pub fn new(initial_mode: AppMode) -> Result<Self> {
+        GLOBAL_PICKER.font_size();
         let mut state = AppState::new()?;
 
         // Load initial data using data provider

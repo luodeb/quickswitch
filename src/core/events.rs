@@ -17,14 +17,14 @@ use crate::{
 /// Main entry point for keyboard event handling
 /// Now delegates to the app instead of handling directly
 pub async fn handle_key_event(app: &mut App, key: KeyCode) -> Result<bool> {
-    let current_mode = app.mode_manager.get_current_mode().clone();
+    let current_mode = *app.mode_manager.get_current_mode();
     let action = InputDispatcher::handle_key_event(&mut app.state, key, &current_mode).await?;
     handle_action(app, action)
 }
 
 /// Handle mouse events
 pub async fn handle_mouse_event(app: &mut App, mouse: MouseEvent) -> Result<bool> {
-    let current_mode = app.mode_manager.get_current_mode().clone();
+    let current_mode = *app.mode_manager.get_current_mode();
     let action = InputDispatcher::handle_mouse_event(&mut app.state, mouse, &current_mode).await?;
     handle_action(app, action)
 }

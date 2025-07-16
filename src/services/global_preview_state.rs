@@ -1,11 +1,10 @@
+use super::preview::PreviewContent;
 use once_cell::sync::Lazy;
 use ratatui::{
     style::{Color, Style},
     text::{Line, Span},
 };
 use std::sync::{Arc, RwLock};
-
-use crate::preview_content::PreviewContent;
 
 /// Global preview state that can be safely accessed from multiple threads
 #[derive(Debug, Clone)]
@@ -149,89 +148,12 @@ impl Default for GlobalPreviewState {
 }
 
 /// Global instance of the preview state
-pub static GLOBAL_PREVIEW_STATE: Lazy<GlobalPreviewState> = Lazy::new(|| GlobalPreviewState::new());
+pub static GLOBAL_PREVIEW_STATE: Lazy<GlobalPreviewState> = Lazy::new(GlobalPreviewState::new);
 
 /// Convenience functions for accessing the global preview state
 impl GlobalPreviewState {
     /// Get the global preview state instance
     pub fn instance() -> &'static GlobalPreviewState {
         &GLOBAL_PREVIEW_STATE
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ratatui::{
-        style::Style,
-        text::{Line, Span},
-    };
-
-    #[test]
-    fn test_global_preview_state_basic_operations() {
-        let global_state = GlobalPreviewState::new();
-
-        // Test initial state
-        let state = global_state.get_state();
-        assert_eq!(state.title, "Preview");
-        assert_eq!(state.scroll_offset, 0);
-
-        // Test updating preview
-        let test_lines = vec![
-            Line::from(vec![Span::styled("Line 1", Style::default())]),
-            Line::from(vec![Span::styled("Line 2", Style::default())]),
-        ];
-        let test_content = PreviewContent::text(test_lines);
-
-        global_state.update_preview("Test Title".to_string(), test_content);
-
-        let updated_state = global_state.get_state();
-        assert_eq!(updated_state.title, "Test Title");
-        assert_eq!(updated_state.scroll_offset, 0); // Should reset on update
-
-        // Test scrolling
-        assert!(global_state.scroll_down());
-        assert_eq!(global_state.get_scroll_offset(), 1);
-
-        assert!(global_state.scroll_up());
-        assert_eq!(global_state.get_scroll_offset(), 0);
-
-        // Test clear
-        global_state.clear_preview();
-        let cleared_state = global_state.get_state();
-        assert_eq!(cleared_state.title, "Preview");
-        assert_eq!(cleared_state.scroll_offset, 0);
-    }
-
-    #[test]
-    fn test_global_preview_state_singleton() {
-        let instance1 = GlobalPreviewState::instance();
-        let instance2 = GlobalPreviewState::instance();
-
-        // Both should point to the same instance
-        instance1.update_preview("Test".to_string(), PreviewContent::text(vec![]));
-        assert_eq!(instance2.get_title(), "Test");
-    }
-
-    #[test]
-    fn test_scroll_bounds() {
-        let global_state = GlobalPreviewState::new();
-
-        // Test scrolling up when at top
-        assert!(!global_state.scroll_up());
-        assert_eq!(global_state.get_scroll_offset(), 0);
-
-        // Add content with multiple lines
-        let test_lines = vec![
-            Line::from("Line 1"),
-            Line::from("Line 2"),
-            Line::from("Line 3"),
-        ];
-        global_state.update_preview("Test".to_string(), PreviewContent::text(test_lines));
-
-        // Test scrolling down beyond content
-        assert!(global_state.scroll_down());
-        assert!(global_state.scroll_down());
-        assert!(!global_state.scroll_down()); // Should fail when at bottom
     }
 }

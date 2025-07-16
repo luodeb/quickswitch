@@ -97,4 +97,14 @@ impl AppState {
         }
         self.file_list_state.select(None);
     }
+
+    /// Get selected item
+    pub fn get_selected_item(&self) -> Option<DisplayItem> {
+        if let Some(selected) = self.file_list_state.selected() {
+            if let Some(&file_index) = self.filtered_files.get(selected) {
+                return self.files.get(file_index).cloned();
+            }
+        }
+        None
+    }
 }

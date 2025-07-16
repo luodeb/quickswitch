@@ -5,7 +5,8 @@ use ratatui::{
     text::{Line, Span},
 };
 
-use crate::{AppState, preview_content::PreviewContent, utils::FileItem};
+use super::PreviewContent;
+use crate::utils::FileItem;
 
 use super::{PreviewGeneratorTrait, process_special_characters};
 
@@ -17,7 +18,7 @@ impl PreviewGeneratorTrait for PdfPreviewGenerator {
         file.is_pdf()
     }
 
-    async fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+    async fn generate_preview(&self, file: &FileItem) -> (String, PreviewContent) {
         let title = format!("📄 {}", file.name);
 
         // Try to read the PDF file

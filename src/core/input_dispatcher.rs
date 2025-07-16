@@ -259,10 +259,7 @@ impl InputDispatcher {
     }
 
     /// Update preview if the data provider supports it
-    fn update_preview_if_needed(
-        state: &mut AppState,
-        provider: &data_provider::DataProviderType,
-    ) {
+    fn update_preview_if_needed(state: &mut AppState, provider: &data_provider::DataProviderType) {
         if let Some(item) = provider.get_selected_item(state) {
             PreviewManager::update_preview_for_item_async(&item);
         }

@@ -4,13 +4,14 @@ use ratatui::{
 };
 use std::fs;
 
-use crate::{app_state::AppState, preview_content::PreviewContent, utils::FileItem};
+use super::PreviewContent;
+use crate::utils::FileItem;
 
 /// Trait for preview generators
 pub trait PreviewGeneratorTrait {
     /// Generate preview content for a file
     #[allow(async_fn_in_trait)]
-    async fn generate_preview(&self, state: &AppState, file: &FileItem) -> (String, PreviewContent);
+    async fn generate_preview(&self, file: &FileItem) -> (String, PreviewContent);
 
     /// Check if this generator can handle the given file
     fn can_handle(&self, file: &FileItem) -> bool;
@@ -42,13 +43,13 @@ impl PreviewGeneratorType {
     }
 
     /// Generate preview content for a file
-    pub async fn generate_preview(&self, state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+    pub async fn generate_preview(&self, file: &FileItem) -> (String, PreviewContent) {
         match self {
-            PreviewGeneratorType::Directory(generator) => generator.generate_preview(state, file).await,
-            PreviewGeneratorType::Image(generator) => generator.generate_preview(state, file).await,
-            PreviewGeneratorType::Pdf(generator) => generator.generate_preview(state, file).await,
-            PreviewGeneratorType::Text(generator) => generator.generate_preview(state, file).await,
-            PreviewGeneratorType::Binary(generator) => generator.generate_preview(state, file).await,
+            PreviewGeneratorType::Directory(generator) => generator.generate_preview(file).await,
+            PreviewGeneratorType::Image(generator) => generator.generate_preview(file).await,
+            PreviewGeneratorType::Pdf(generator) => generator.generate_preview(file).await,
+            PreviewGeneratorType::Text(generator) => generator.generate_preview(file).await,
+            PreviewGeneratorType::Binary(generator) => generator.generate_preview(file).await,
         }
     }
 }
@@ -58,7 +59,7 @@ pub struct PreviewGenerator;
 
 impl PreviewGenerator {
     /// Generate preview content for a file or directory
-    pub async fn generate_preview_content(state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+    pub async fn generate_preview_content(file: &FileItem) -> (String, PreviewContent) {
         // Try different file preview generators in order
         let generators = vec![
             PreviewGeneratorType::Directory(DirectoryPreviewGenerator),
@@ -69,13 +70,13 @@ impl PreviewGenerator {
 
         for generator in generators {
             if generator.can_handle(file) {
-                return generator.generate_preview(state, file).await;
+                return generator.generate_preview(file).await;
             }
         }
 
         // Fallback to binary file preview
         let binary_gen = PreviewGeneratorType::Binary(BinaryPreviewGenerator);
-        binary_gen.generate_preview(state, file).await
+        binary_gen.generate_preview(file).await
     }
 }
 
@@ -120,7 +121,7 @@ impl PreviewGeneratorTrait for BinaryPreviewGenerator {
         true
     }
 
-    async fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+    async fn generate_preview(&self, file: &FileItem) -> (String, PreviewContent) {
         let title = format!("📄 {}", file.name);
 
         // Get file metadata

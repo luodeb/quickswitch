@@ -13,11 +13,6 @@ pub enum PreviewContent {
     Image(Arc<Mutex<StatefulProtocol>>),
 }
 
-/// Image state that can be stored in AppState
-pub struct ImageState {
-    pub protocol: StatefulProtocol,
-}
-
 impl PreviewContent {
     /// Create text preview content
     pub fn text(lines: Vec<Line<'static>>) -> Self {

@@ -5,7 +5,8 @@ use ratatui::{
     text::{Line, Span},
 };
 
-use crate::{AppState, preview_content::PreviewContent, utils::FileItem};
+use super::PreviewContent;
+use crate::utils::FileItem;
 
 use super::{PreviewGeneratorTrait, process_special_characters};
 
@@ -18,7 +19,7 @@ impl PreviewGeneratorTrait for TextPreviewGenerator {
         fs::read_to_string(&file.path).is_ok()
     }
 
-    async fn generate_preview(&self, _state: &AppState, file: &FileItem) -> (String, PreviewContent) {
+    async fn generate_preview(&self, file: &FileItem) -> (String, PreviewContent) {
         let title = format!("📄 {}", file.name);
 
         // First check file size to avoid reading large files

@@ -6,7 +6,10 @@ use ratatui::{
 use ratatui_image::{StatefulImage, protocol::StatefulProtocol};
 
 use super::Renderer;
-use crate::{preview_content::PreviewContent, services::{global_preview_state::PreviewState, GlobalPreviewState}, AppState};
+use crate::{
+    AppState,
+    services::{GlobalPreviewState, global_preview_state::PreviewState, preview::PreviewContent},
+};
 
 /// Renderer for preview panel showing file/directory content
 #[derive(Default)]
@@ -29,7 +32,7 @@ impl Renderer for PreviewRenderer {
             }
             PreviewContent::Image(protocol) => {
                 if let Ok(mut protocol_guard) = protocol.try_lock() {
-                    self.render_image_preview(f, area, &preview_state, &mut *protocol_guard);
+                    self.render_image_preview(f, area, &preview_state, &mut protocol_guard);
                 }
             }
         }
