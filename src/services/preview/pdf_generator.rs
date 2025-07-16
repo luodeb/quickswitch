@@ -29,7 +29,7 @@ impl PreviewGeneratorTrait for PdfPreviewGenerator {
                     Ok(text) => {
                         let lines_count = text.lines().count();
                         let size_info = Line::from(vec![Span::styled(
-                            format!("PDF Document - {} lines extracted", lines_count),
+                            format!("PDF Document - {lines_count} lines extracted"),
                             Style::default().fg(Color::Cyan),
                         )]);
 

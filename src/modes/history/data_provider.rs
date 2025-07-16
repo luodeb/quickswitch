@@ -45,7 +45,7 @@ impl HistoryDataProvider {
                 Ok((entries, _)) => return Ok(entries),
                 Err(e) => {
                     // If deserialization fails, try to migrate from legacy format
-                    eprintln!("Error loading history data: {}", e);
+                    eprintln!("Error loading history data: {e}");
                     if let Ok(entries) = self.migrate_from_legacy() {
                         return Ok(entries);
                     }

@@ -145,7 +145,7 @@ impl PreviewGeneratorTrait for BinaryPreviewGenerator {
             )]),
             Line::from(vec![Span::raw("".to_string())]),
             Line::from(vec![Span::styled(
-                format!("Size: {} bytes", file_size),
+                format!("Size: {file_size} bytes"),
                 Style::default().fg(Color::Gray),
             )]),
             Line::from(vec![Span::styled(
