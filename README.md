@@ -276,7 +276,7 @@ sudo cp target/release/quickswitch /usr/local/bin/
 你也可以使用类似[env-logger](https://docs.rs/env_logger/latest/env_logger/#enabling-logging)的环境变量指示日志级别（大小写忽略，不支持模块定向级别，环境变量优先级低于命令行参数）。
 
 **日志文件说明：**
-日志只能存放在文件中，日志路径不可用时将直接退出。文件不存在将被创建，若已存在将尝试追加。参数缺省时通过[tempfile](https://docs.rs/tempfile/latest/tempfile/)库创建临时文件，文件名格式为`qw-[date]-[pid].log`。
+日志只能存放在文件中，日志路径不可用时将直接退出。文件不存在将被创建，若已存在将尝试追加。参数缺省时通过[tempfile](https://docs.rs/tempfile/latest/tempfile/)库创建临时文件，文件名格式为`qw-[date]-[pid]-[rand].log`。
 
 - `Linux`和`macOS`：存放在环境变量`TMPDIR`、`TMP`、`TEMP`指定的目录，缺省时为`/tmp`
 - `Windows`：存放在`C:\Users\<Username>\AppData\Local\Temp`
@@ -287,10 +287,8 @@ sudo cp target/release/quickswitch /usr/local/bin/
 quickswitch -v
 
 # 启用DEBUG级别日志，指定日志文件
-quickswitch -vv ./debug.log
+quickswitch -vv --log_file ./debug.log
 
-# 启用TRACE级别日志，指定日志文件
-quickswitch -vvv /tmp/quickswitch.log
 ```
 
 ## 开发贡献
