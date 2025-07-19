@@ -6,6 +6,7 @@ use ratatui::{
     text::Span,
 };
 use serde::{Deserialize, Serialize};
+use tracing::{debug, instrument, error};
 use std::{
     io::IsTerminal,
     path::{Path, PathBuf},
@@ -225,6 +226,7 @@ pub fn run_non_interactive() -> Result<()> {
 }
 
 // Init Bash and Zsh functions for quickswitch
+#[instrument]
 fn qs_init_bash_zsh() -> Result<()> {
     let bash_init = r#"
 qs() {
@@ -244,10 +246,12 @@ qshs() {
 }
     "#;
     println!("{bash_init}");
+    debug!("{bash_init}");
 
     Ok(())
 }
 
+#[instrument]
 fn qs_init_fish() -> Result<()> {
     let fish_init = r#"
 function qs
@@ -279,10 +283,12 @@ function qshs
 end
     "#;
     println!("{fish_init}");
+    debug!("{fish_init}");
 
     Ok(())
 }
 
+#[instrument]
 fn qs_init_powershell() -> Result<()> {
     let powershell_init = r#"
 function qs {
@@ -306,11 +312,14 @@ function qshs {
 }
     "#;
     println!("{powershell_init}");
+    debug!("{powershell_init}");
 
     Ok(())
 }
 
+#[instrument]
 fn qs_init_cmd() -> Result<()> {
+    error!("CMD initialization is not implemented yet. Please use PowerShell or another shell.");
     todo!("CMD initialization is not implemented yet");
 }
 
