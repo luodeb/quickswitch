@@ -142,7 +142,10 @@ impl HistoryDataProvider {
 
         // Apply max entries limit
         if entries.len() > config.max_entries {
-            info!("Trimming history entries to max limit: {}", config.max_entries);
+            info!(
+                "Trimming history entries to max limit: {}",
+                config.max_entries
+            );
             entries.truncate(config.max_entries);
         }
 

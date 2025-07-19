@@ -27,14 +27,13 @@ pub fn init_logging(verbose_level: u8, log_file: Option<&std::path::Path>) -> Re
         Some(path) => OpenOptions::new()
             .create(true)
             .append(true)
-            .write(true)
             .open(path)
             .map_err(|e| anyhow::anyhow!("Failed to open log file {:?}: {}", path, e))?,
         None => {
             let date = Local::now().format("%Y-%m-%d").to_string();
             let pid = std::process::id();
             let file = tempfile::Builder::new()
-                .prefix(&format!("qw-{}-{}-", date, pid))
+                .prefix(&format!("qw-{date}-{pid}-"))
                 .suffix(".log")
                 .rand_bytes(5)
                 .tempfile()?

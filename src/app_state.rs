@@ -1,6 +1,6 @@
 use ratatui::widgets::ListState;
-use tracing::{debug, instrument, warn};
 use std::{collections::HashMap, path::PathBuf, time::Instant};
+use tracing::{debug, instrument, warn};
 
 use crate::{
     core::layout::LayoutManager,
@@ -53,7 +53,11 @@ impl AppState {
     /// Update the layout based on terminal size
     #[instrument(skip(self))]
     pub fn update_layout(&mut self, terminal_size: ratatui::layout::Rect) {
-        debug!(width = terminal_size.width, height = terminal_size.height, "Updating layout");
+        debug!(
+            width = terminal_size.width,
+            height = terminal_size.height,
+            "Updating layout"
+        );
         self.layout.update_layout(terminal_size);
     }
 
@@ -109,7 +113,7 @@ impl AppState {
     #[instrument(skip(self), fields(search_term = %self.search_input))]
     pub fn apply_search_filter(&mut self) {
         debug!("Applying search filter with term: '{}'", self.search_input);
-        
+
         if self.search_input.is_empty() {
             self.filtered_files = self
                 .files
@@ -135,7 +139,10 @@ impl AppState {
                 .collect();
         }
         self.file_list_state.select(None);
-        debug!("Search filter applied, {} items matched", self.filtered_files.len());
+        debug!(
+            "Search filter applied, {} items matched",
+            self.filtered_files.len()
+        );
     }
 
     /// Get selected item
@@ -168,11 +175,20 @@ impl AppState {
         if name.starts_with('.') {
             // Show hidden files only if show_hidden_files is true
             let should_show = self.show_hidden_files;
-            debug!(is_hidden = true, show_hidden_files = self.show_hidden_files, should_show, "Hidden file visibility check");
+            debug!(
+                is_hidden = true,
+                show_hidden_files = self.show_hidden_files,
+                should_show,
+                "Hidden file visibility check"
+            );
             should_show
         } else {
             // Always show non-hidden files
-            debug!(is_hidden = false, should_show = true, "Non-hidden file, showing");
+            debug!(
+                is_hidden = false,
+                should_show = true,
+                "Non-hidden file, showing"
+            );
             true
         }
     }
@@ -182,7 +198,11 @@ impl AppState {
     pub fn toggle_hidden_files(&mut self) {
         let old_state = self.show_hidden_files;
         self.show_hidden_files = !self.show_hidden_files;
-        debug!(old_state, new_state = self.show_hidden_files, "Toggled hidden files visibility");
+        debug!(
+            old_state,
+            new_state = self.show_hidden_files,
+            "Toggled hidden files visibility"
+        );
         self.apply_search_filter();
     }
 }

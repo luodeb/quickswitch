@@ -1,6 +1,6 @@
 use anyhow::Result;
-use tracing::{debug, instrument};
 use std::{fs, path::PathBuf};
+use tracing::{debug, instrument};
 
 /// Get the data directory for quickswitch
 ///

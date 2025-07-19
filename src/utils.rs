@@ -6,11 +6,11 @@ use ratatui::{
     text::Span,
 };
 use serde::{Deserialize, Serialize};
-use tracing::{debug, instrument, error};
 use std::{
     io::IsTerminal,
     path::{Path, PathBuf},
 };
+use tracing::{debug, error, instrument};
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum ShellType {
