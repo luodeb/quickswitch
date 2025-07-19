@@ -223,6 +223,7 @@ sudo cp target/release/quickswitch /usr/local/bin/
 - `crossterm`: 跨平台终端操作库
 - `anyhow`: 错误处理库
 - `tokio`: 异步运行时
+- `tracing`: 日志收集
 
 ## 故障排除
 
@@ -258,6 +259,37 @@ sudo cp target/release/quickswitch /usr/local/bin/
    - 确保修改了脚本中的 quickswitch 路径
    - 确保重新加载了 shell 配置
    - 检查可执行文件权限
+
+### 日志
+
+日志功能由[tracing](https://github.com/tokio-rs/tracing)实现，使用以下参数启动日志。有关日志级别详见[tracing::Level](https://docs.rs/tracing/latest/tracing/struct.Level.html)。
+
+**日志级别参数：**
+- `-v/--verbose` 收集INFO级别日志
+- `-vv` 收集DEBUG级别日志
+- `-vvv` 收集TRACE级别日志
+
+**日志文件路径：**
+- `-v/-vv/-vvv/--verbose` 在设定日志级别的同时指定日志文件路径
+
+**环境变量支持：**
+你也可以使用类似[env-logger](https://docs.rs/env_logger/latest/env_logger/#enabling-logging)的环境变量指示日志级别（大小写忽略，不支持模块定向级别，环境变量优先级低于命令行参数）。
+
+**日志文件说明：**
+日志只能存放在文件中，日志路径不可用时将直接退出。文件不存在将被创建，若已存在将尝试追加。参数缺省时通过[tempfile](https://docs.rs/tempfile/latest/tempfile/)库创建临时文件，文件名格式为`qw-[date]-[pid]-[rand].log`。
+
+- `Linux`和`macOS`：存放在环境变量`TMPDIR`、`TMP`、`TEMP`指定的目录，缺省时为`/tmp`
+- `Windows`：存放在`C:\Users\<Username>\AppData\Local\Temp`
+
+**使用示例：**
+```bash
+# 启用INFO级别日志，使用默认临时文件
+quickswitch -v
+
+# 启用DEBUG级别日志，指定日志文件
+quickswitch -vv --log_file ./debug.log
+
+```
 
 ## 开发贡献
 

@@ -2,6 +2,7 @@ pub mod app;
 pub mod app_state;
 pub mod config;
 pub mod core;
+pub mod logging;
 pub mod modes;
 pub mod services;
 pub mod terminal;

@@ -1,6 +1,7 @@
 use anyhow::Result;
 use bincode::config;
 use std::{fs, path::PathBuf};
+use tracing::{error, info, instrument};
 
 use crate::{
     app_state::AppState,
@@ -11,6 +12,7 @@ use crate::{
 };
 
 /// Data provider for history list (History mode)
+#[derive(Debug)]
 pub struct HistoryDataProvider;
 
 impl HistoryDataProvider {
@@ -34,6 +36,7 @@ impl HistoryDataProvider {
     }
 
     /// Load history entries from file
+    #[instrument(skip(self))]
     fn load_history_entries(&self) -> Result<Vec<HistoryEntry>> {
         let file_path = self.get_history_file_path();
 
@@ -41,11 +44,12 @@ impl HistoryDataProvider {
         if file_path.exists() {
             let data = fs::read(&file_path)?;
             let config = config::standard();
+            info!(path = %file_path.display(), "Loading history data from file");
             match bincode::serde::decode_from_slice(&data, config) {
                 Ok((entries, _)) => return Ok(entries),
                 Err(e) => {
                     // If deserialization fails, try to migrate from legacy format
-                    eprintln!("Error loading history data: {e}");
+                    error!("Error loading history data: {e}");
                     if let Ok(entries) = self.migrate_from_legacy() {
                         return Ok(entries);
                     }
@@ -56,16 +60,19 @@ impl HistoryDataProvider {
 
         // If binary file doesn't exist, try to migrate from legacy format
         if self.get_legacy_history_file_path().exists() {
+            info!("Legacy history file found, migrating to new format");
             if let Ok(entries) = self.migrate_from_legacy() {
                 return Ok(entries);
             }
         }
 
         // If all else fails, return empty list
+        info!("No history data found, returning empty list");
         Ok(Vec::new())
     }
 
     /// Migrate from legacy text-based history format
+    #[instrument(skip(self))]
     fn migrate_from_legacy(&self) -> Result<Vec<HistoryEntry>> {
         let legacy_path = self.get_legacy_history_file_path();
         if let Ok(content) = fs::read_to_string(&legacy_path) {
@@ -83,6 +90,7 @@ impl HistoryDataProvider {
 
             // Backup the legacy file
             if legacy_path.exists() {
+                info!("Backing up legacy history file to .bak");
                 let backup_path = legacy_path.with_extension("history.bak");
                 let _ = fs::rename(&legacy_path, backup_path);
             }
@@ -94,6 +102,7 @@ impl HistoryDataProvider {
     }
 
     /// Save history entries to file
+    #[instrument(skip(self, entries))]
     fn save_history_entries(&self, entries: &[HistoryEntry]) -> Result<()> {
         let config = config::standard();
         let data = bincode::serde::encode_to_vec(entries, config)?;
@@ -102,15 +111,17 @@ impl HistoryDataProvider {
         // Ensure directory exists
         if let Some(parent) = file_path.parent() {
             if !parent.exists() {
+                info!(path = %parent.display(), "Creating directory for history file");
                 fs::create_dir_all(parent)?;
             }
         }
-
+        info!(path = %file_path.display(), "Saving history data to file");
         fs::write(file_path, data)?;
         Ok(())
     }
 
     /// Add a path to history or update its frequency if it already exists
+    #[instrument(skip(self), fields(path = %path.display()))]
     pub fn add_to_history(&self, path: PathBuf) -> Result<()> {
         let mut entries = self.load_history_entries()?;
         let config = get_history_config();
@@ -119,17 +130,22 @@ impl HistoryDataProvider {
         let existing_index = entries.iter().position(|entry| entry.path == path);
 
         if let Some(index) = existing_index {
-            // Update existing entry
+            info!(path = %path.display(), "Updating frequency for existing history entry: {}", path.display());
             let mut entry = entries.remove(index);
             entry.increment_frequency();
             entries.insert(0, entry); // Move to top
         } else {
             // Add new entry
+            info!(path = %path.display(), "Adding new history entry: {}", path.display());
             entries.insert(0, HistoryEntry::new(path));
         }
 
         // Apply max entries limit
         if entries.len() > config.max_entries {
+            info!(
+                "Trimming history entries to max limit: {}",
+                config.max_entries
+            );
             entries.truncate(config.max_entries);
         }
 
@@ -139,6 +155,7 @@ impl HistoryDataProvider {
     }
 
     /// Get sorted history entries based on the configured sort mode
+    #[instrument(skip(self))]
     pub fn get_sorted_entries(&self, sort_mode: &HistorySortMode) -> Result<Vec<HistoryEntry>> {
         let mut entries = self.load_history_entries()?;
         let config = get_history_config();
@@ -177,7 +194,7 @@ impl HistoryDataProvider {
             }
         }
 
-        // Filter out entries that don't exist anymore
+        info!("Filtering out non-existent history entries");
         entries.retain(|entry| entry.path.exists());
 
         Ok(entries)

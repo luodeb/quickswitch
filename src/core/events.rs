@@ -3,7 +3,7 @@ use crossterm::{
     cursor::Show,
     event::{DisableMouseCapture, KeyEvent, MouseEvent},
     execute,
-    terminal::{disable_raw_mode, LeaveAlternateScreen},
+    terminal::{LeaveAlternateScreen, disable_raw_mode},
 };
 use std::{env, io};
 

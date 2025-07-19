@@ -1,4 +1,5 @@
 use anyhow::Result;
+use tracing::instrument;
 
 use crate::{
     app_state::AppState,
@@ -13,6 +14,7 @@ pub struct App {
 }
 
 impl App {
+    #[instrument]
     pub fn new(initial_mode: AppMode) -> Result<Self> {
         GLOBAL_PICKER.font_size();
         let mut state = AppState::new()?;
