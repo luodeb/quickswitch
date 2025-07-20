@@ -1,7 +1,9 @@
 use clap::Parser;
 use quickswitch::{
-    Result, ShellType, qs_init, run_interactive_mode, run_non_interactive, utils::AppMode,
+    Result, ShellType, logging::init_logging, qs_init, run_interactive_mode, run_non_interactive,
+    utils::AppMode,
 };
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(
@@ -22,11 +24,22 @@ struct Cli {
     /// Initialize shell configuration (bash, zsh, fish, powershell, cmd)
     #[arg(long, value_enum)]
     init: Option<ShellType>,
+
+    /// Enable verbose logging (-v=INFO, -vv=DEBUG, -vvv=TRACE)
+    #[arg(short = 'v', action = clap::ArgAction::Count)]
+    verbose: u8,
+
+    /// Log file path (creates temp file `qw-[date]-[pid].log` if not specified)
+    #[arg(long)]
+    log_file: Option<PathBuf>,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    // Initialize logging if verbose flag is set
+    init_logging(cli.verbose, cli.log_file.as_deref())?;
 
     // Handle init option
     if let Some(shell) = cli.init {

@@ -1,5 +1,6 @@
 use anyhow::Result;
 use std::{fs, path::PathBuf};
+use tracing::{debug, instrument};
 
 /// Get the data directory for quickswitch
 ///
@@ -65,6 +66,7 @@ fn get_default_data_dir() -> Result<PathBuf> {
 }
 
 /// Configuration for history functionality
+#[derive(Debug)]
 pub struct HistoryConfig {
     /// Maximum number of history entries to keep
     pub max_entries: usize,
@@ -77,13 +79,16 @@ pub struct HistoryConfig {
 }
 
 impl Default for HistoryConfig {
+    #[instrument]
     fn default() -> Self {
-        Self {
+        let config = Self {
             max_entries: 100,
             sort_mode: crate::utils::HistorySortMode::FrequencyRecent,
             time_decay_days: 30,
             min_frequency_threshold: 1,
-        }
+        };
+        debug!(?config, "Created default HistoryConfig");
+        config
     }
 }
 
